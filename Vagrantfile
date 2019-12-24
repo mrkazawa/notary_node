@@ -26,6 +26,8 @@ Vagrant.configure("2") do |config|
     end
   end
 
+  config.vm.synced_folder "src/", "/home/vagrant/src", type: "rsync"
+
   config.vm.provision "shell", path: "provision.sh", privileged: true
   config.vm.provision "shell", path: "conda_provision.sh", privileged: false
   config.vm.provision "shell", path: "nvm_provision.sh", privileged: false
@@ -40,10 +42,4 @@ Vagrant.configure("2") do |config|
   # within the machine from a port on the host machine and only allow access
   # via 127.0.0.1 to disable public access
   # config.vm.network "forwarded_port", guest: 80, host: 8080, host_ip: "127.0.0.1"
-
-  # Share an additional folder to the guest VM. The first argument is
-  # the path on the host to the actual folder. The second argument is
-  # the path on the guest to mount the folder. And the optional third
-  # argument is a set of non-required options.
-  # config.vm.synced_folder "sync/", "/home/vagrant/vagrant_data", type: "virtualbox"
 end
