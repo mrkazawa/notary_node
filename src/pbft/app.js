@@ -48,10 +48,12 @@ app.get("/blocks", (req, res) => {
 
 // creates transactions for the sent data
 app.post("/transact", (req, res) => {
+  //console.log(req.body);
   const { data } = req.body;
   const transaction = wallet.createTransaction(data);
   p2pserver.broadcastTransaction(transaction);
-  res.redirect("/transactions");
+  //res.redirect("/transactions");
+  res.status(200).send('transaction_received');
 });
 
 // starts the app server

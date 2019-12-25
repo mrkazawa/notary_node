@@ -50,7 +50,7 @@ class Blockchain {
       console.log("BLOCK VALID");
       return true;
     } else {
-      console.log("BLOCK INVLAID");
+      console.log("BLOCK INVALID");
       return false;
     }
   }

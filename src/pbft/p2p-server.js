@@ -161,7 +161,7 @@ class P2pserver {
     socket.on("message", message => {
       const data = JSON.parse(message);
 
-      console.log("RECEIVED", data.type);
+      //console.log("RECEIVED", data.type);
 
       // select a perticular message handler
       switch (data.type) {
@@ -180,20 +180,21 @@ class P2pserver {
 
             // check if limit reached
             if (thresholdReached) {
-              console.log("THRESHOLD REACHED");
+              //console.log("THRESHOLD REACHED");
               // check the current node is the proposer
               if (this.blockchain.getProposer() == this.wallet.getPublicKey()) {
-                console.log("PROPOSING BLOCK");
+                //console.log("PROPOSING BLOCK");
                 // if the node is the proposer, create a block and broadcast it
                 let block = this.blockchain.createBlock(
                   this.transactionPool.transactions,
                   this.wallet
                 );
-                console.log("CREATED BLOCK", block);
+                //console.log("CREATED BLOCK", block);
+                //console.log("CREATED BLOCK");
                 this.broadcastPrePrepare(block);
               }
             } else {
-              console.log("Transaction Added");
+              //console.log("Transaction Added");
             }
           }
           break;
@@ -275,9 +276,13 @@ class P2pserver {
 
         case MESSAGE_TYPE.round_change:
           // check the validity of the round change message
-          if (
+          /* if (
             !this.messagePool.existingMessage(data.message) &&
             this.messagePool.isValidMessage(data.message) &&
+            this.validators.isValidValidator(data.message.publicKey)
+          ) { */
+          if (
+            !this.messagePool.existingMessage(data.message) &&
             this.validators.isValidValidator(data.message.publicKey)
           ) {
             // add to pool
@@ -292,6 +297,11 @@ class P2pserver {
               MIN_APPROVALS
             ) {
               this.transactionPool.clear();
+              // my additions
+              this.blockPool.clear();
+              this.preparePool.clear();
+              this.commitPool.clear();
+              this.messagePool.clear();
             }
           }
           break;
