@@ -14,3 +14,7 @@ In `notary3`
 ```bash
 SECRET="NODE2" P2P_PORT=5002 HTTP_PORT=3002 PEERS=ws://notary2.local:5001,ws://notary1.local:5000 node app
 ```
+
+
+Running the Private IPFS Network
+https://medium.com/@s_van_laar/deploy-a-private-ipfs-network-on-ubuntu-in-5-steps-5aad95f7261b

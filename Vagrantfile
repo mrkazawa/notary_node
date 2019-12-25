@@ -29,6 +29,9 @@ Vagrant.configure("2") do |config|
   config.vm.synced_folder "src/", "/home/vagrant/src", type: "rsync"
 
   config.vm.provision "shell", path: "provision.sh", privileged: true
+  config.vm.provision "shell", path: "go_provision.sh", privileged: true
+  config.vm.provision "shell", path: "ipfs_provision.sh", privileged: true
+
   config.vm.provision "shell", path: "conda_provision.sh", privileged: false
   config.vm.provision "shell", path: "nvm_provision.sh", privileged: false
 

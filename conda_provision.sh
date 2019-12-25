@@ -3,6 +3,9 @@
 MINI_CONDA=Miniconda2-4.7.12.1-Linux-x86_64.sh
 
 cd /home/vagrant
+mkdir conda_installer
+cd conda_installer
+
 if [[ ! -f $MINI_CONDA ]]; then
     wget --quiet https://repo.anaconda.com/miniconda/$MINI_CONDA
     chmod +x $MINI_CONDA
