@@ -7,7 +7,7 @@ cd /home/vagrant
 mkdir bazel_installer
 cd bazel_installer
 
-if [[ ! -f $GO_INSTALLER ]]; then
+if [[ ! -f $BAZEL_INSTALLER ]]; then
     wget --quiet https://github.com/bazelbuild/bazel/releases/download/$BAZEL_VERSION/$BAZEL_INSTALLER
     chmod +x $BAZEL_INSTALLER
     ./$BAZEL_INSTALLER --user
