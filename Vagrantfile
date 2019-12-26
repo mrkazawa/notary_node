@@ -8,7 +8,7 @@ BOX_IMAGE = "bento/ubuntu-16.04"
 BOX_MEMORY = "4096"
 BOX_CPU = 2
 
-NODE_COUNT = 3
+NODE_COUNT = 4
 
 Vagrant.configure("2") do |config|
   (1..NODE_COUNT).each do |i|
@@ -34,6 +34,9 @@ Vagrant.configure("2") do |config|
 
   config.vm.provision "shell", path: "conda_provision.sh", privileged: false
   config.vm.provision "shell", path: "nvm_provision.sh", privileged: false
+  config.vm.provision "shell", path: "bazel_provision.sh", privileged: false
+
+  config.vm.provision "docker"
 
   # Create a forwarded port mapping which allows access to a specific port
   # within the machine from a port on the host machine. In the example below,

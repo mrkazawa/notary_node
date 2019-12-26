@@ -1,0 +1,11 @@
+{
+  "seed": "MYSEEDHEREPLEASEREPLACEMEIMMEDIATELYWITHSOMETHINGSECURE99999999999999999999999999",
+  "powMode": "CURLP81",
+  "sigMode": "CURLP27",
+  "security": 1,
+  "depth": 8,
+  "milestoneStart": 0,
+  "mwm": 9,
+  "tick": 60000,
+  "host": "http://localhost:14265"
+}
