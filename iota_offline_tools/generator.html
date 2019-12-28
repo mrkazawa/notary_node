@@ -1,0 +1,100 @@
+<!doctype html>
+<html>
+	<head>
+		<script src="jquery-3.2.1.js"></script>
+		<script src="iota.js"></script>	
+		
+		<style>
+			body, input
+			{
+				font-family: "Courier New";
+				font-size: 12pt;
+			}
+			
+			#error { color: red }
+			
+			#seed {	width: 800px; }
+			
+			#address { width: 920px; }
+		</style>
+	</head>
+
+	<body>
+		<h1>iota 2.4.0 - IRI 1.3.1 offline address generator</h1>
+		<pre>
+- store the "iota-offline-address-generator" folder on an USB-Stick
+- take this USB-Stick to any computer that was never connected to the internet
+- double click "generator.html"
+- enter seed (just type 81 characters using this alphabet: '9ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+- click "generate address"
+	(for more address, increase the "Index" and generate again)
+	
+If you would like to donate some IOTAs: DQKCOAAGQAHUMNTESIUHVE9CXFA9RQHHFHGAWWSDNMH9WDHNVILAWJGCTXYYYXVEOKVUXCA9TPJTVVHKWAMLFKRGGZ
+		</pre>
+		<form>
+			<table>
+				<tr>
+					<td><label for="seed">Seed</label></td>
+					<td><input type="text" id="seed" value=""/></td>
+				</tr>
+				<tr>
+					<td><label>Index</label></td>
+					<td><input type="text" id="index" value="0"/></td>
+				</tr>				
+				<tr>
+					<td><label>Address</label></td>
+					<td><input type="text" id="address" size="90" /></td>
+				</tr>				
+				<tr>
+					<td></td>
+					<td><input type="button" onclick="GenerateAddressFromInput()" value="Generate Address" /></td>
+				</tr>				
+			</table>
+		</form>
+		
+		<pre id="error"></pre>
+	</body>	
+</html>
+
+<script>
+
+	function GenerateAddressFromInput()
+	{
+		$('#address').val('');
+		$('#error').text('');
+		
+		
+		var seed = $('#seed').val();
+		
+		if (seed.length != 81)
+			$('#error').append("Your seed should be 81 characters long\r\n");
+		
+		var index = $('#index').val();
+		if(!(Math.floor(index) == index && $.isNumeric(index) && index >= 0))
+		{
+			$('#error').append("Your index needs to be a positiv number\r\n");
+			return;
+		}
+		
+		try
+		{
+			$('#address').val(GenerateAddress(seed,index));
+		}
+		catch(err)
+		{
+			$('#error').append(err + "\r\n");			
+		}		
+		
+		if ($('#error').text().length != 0)
+			$('#error').append("Make sure to use the correct alphabet and length!\r\n");
+	}
+	
+	function GenerateAddress(seed,index)
+	{
+		var iota = new IOTA({
+			"host": null,
+			"port": null
+		});
+		return(iota.api.__proto__._newAddress(seed, index, 2, true));		
+	}	
+</script>
