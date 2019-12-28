@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "@iota/core": "^1.0.0-beta.27",
+    "@iota/extract-json": "^1.0.0-beta.23",
     "request": "^2.88.0"
   }
 }
