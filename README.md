@@ -121,9 +121,9 @@ Just run this code.
 ```bash
 # ONLY RUN THIS WHEN MILESTONES ALREADY REACHED!
 # AT THIS POINT, THE COO IS CRASHED!
+# MAKE A BIGGER DEPTH IN config.json
+# THEN RUN THIS
 cd /compass/docs/private_tangle
-sudo rm -rf data
-sudo rm -rf db
 ./01_calculate_layers.sh
 
 # run IRI node
@@ -167,7 +167,7 @@ For simulation purpose, we can use NOT RANDOM SEED just for testing.
 However, for production case, we have to generate RANDOM SEED.
 
 Then, we configure the `depth` to a lower value to save time to build the tree.
-For example, we set it to have the value of `12`.
+For example, we set it to have the value of `16`.
 The `depth` of the tree will impact on the network uptime.
 The coordinator will crash when it reaches the latest milestones.
 More of info can be found here <https://docs.iota.org/docs/compass/0.1/references/merkle-tree-compute-times>
@@ -185,7 +185,7 @@ More configuration detail can be seen here <https://docs.iota.org/docs/compass/0
   "powMode": "CURLP81",
   "sigMode": "CURLP27",
   "security": 1,
-  "depth": 12,
+  "depth": 16,
   "milestoneStart": 0,
   "mwm": 9,
   "tick": 60000,
@@ -220,7 +220,8 @@ The format of `snapshot.txt` is `<address>;<value>`.
 Total number of values in the snapshot need to be equal to `2779530283277761`
 
 ```txt
-VZAWPZERLCVLNUCPGPKLNDDDGQLIODLWZNXVRYZVRHGDMKCSEEHRMJXBACJVLPGAQS9GKRJDMSMZEWKUY;2779530283277761
+VZAWPZERLCVLNUCPGPKLNDDDGQLIODLWZNXVRYZVRHGDMKCSEEHRMJXBACJVLPGAQS9GKRJDMSMZEWKUY;1779530283277761
+OM9ZFKCUDDOK9UCE9IPXENYOIPSJDCIDEEJGYCENLRFR9CIVNEBQCMWBHSROGPOGKJCABAWJHDEIITJSZ;1000000000000000
 ```
 
 ***Then, finally we run this***

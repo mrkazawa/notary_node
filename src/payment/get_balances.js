@@ -2,7 +2,7 @@ const request = require('request');
 const iota = require('@iota/core');
 
 Iota = iota.composeAPI({
-    provider: 'http://notary1.local:14265'
+    provider: 'http://localhost:14265'
 });
 
 var address = iota.generateAddress('SENDER99999999999999999999999999999999999999999999999999999999999999999999999999A',0);
@@ -20,7 +20,7 @@ function getBalance(address) {
     }
 
     var options = {
-    url: 'http://notary1.local:14265',
+    url: 'http://localhost:14265',
     method: 'POST',
     headers: {
     'Content-Type': 'application/json',
