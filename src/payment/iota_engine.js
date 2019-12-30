@@ -91,7 +91,6 @@ var iota_engine = {
             const confirmed = await iota.getLatestInclusion([tailTransactionHash]);
             if (confirmed[0]) {
                 console.log("transaction for", recipientAddress, "is confirmed!!!");
-                getCurrentBalance(recipientAddress);
                 break;
             }
         }
