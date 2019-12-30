@@ -25,14 +25,17 @@ getCurrentBalance(recipientAddress);
 // send
 sendTransaction(recipientAddress, 1);
 
-// end
-//getCurrentBalance(senderAddress);
-getCurrentBalance(recipientAddress);
-
-
+/**
+ * Get the current balance for given address in the Tangle (IOTA Network).
+ * 
+ * @param {string} address      the IOTA address (90 trytes)
+ */
 async function getCurrentBalance(address) {
-    const balance = await iota.getBalances([address], 100);
-    console.log(address, "balance is", parseInt(balance.balances));
+    const balanceObj = await iota.getBalances([address], 100);
+    const balance = parseInt(balanceObj.balances)
+    console.log(address, "balance is", balance);
+
+    return balance;
 }
 
 async function attachToTangle(address) {
@@ -60,12 +63,18 @@ async function attachToTangle(address) {
     }
 }
 
-async function sendTransaction(recipientAddress, amount) {
+/**
+ * Send a transaction to the Tangle (IOTA Network).
+ * 
+ * @param {string} recipientAddress     the recipient IOTA address that should be in the transaction (90 trytes)
+ * @param {number} amount               the amount of IOTA that should be in the transaction
+ * @param {string} tag                  the tag that should be in the transaction (27 trytes)
+ */
+async function sendTransaction(recipientAddress, amount, tag) {
     const transfers = [{
         address: recipientAddress,
-        value: amount, // 0Ki
-        tag: '', // optional tag of `0-27` trytes
-        message: '' // optional message in trytes
+        value: amount,
+        tag: tag
     }]
 
     // sending transactions to the network
@@ -79,11 +88,52 @@ async function sendTransaction(recipientAddress, amount) {
         if (confirmed[0]) {
             console.log(recipientAddress, "transaction is confirmed!!!");
             getCurrentBalance(recipientAddress);
+
+            
+            verifyTransaction(tailTransactionHash, recipientAddress, amount, 'YUSTUS999999999999999999999');
             break;
         }
     }
+
+    return tailTransactionHash;
 }
 
+/**
+ * Verify if the given hash from the transaction is valid in Tangle (IOTA Network).
+ * 
+ * @param {string} tailHash             the tail hash of the bundle in the transaction
+ * @param {string} recipientAddress     the recipient IOTA address that should be in the transaction (90 trytes)
+ * @param {number} amount               the amount of IOTA that should be in the transaction
+ * @param {string} tag                  the tag that should be in the transaction (27 trytes)
+ */
+async function verifyTransaction(tailHash, recipientAddress, amount, tag) {
+    // remove the checksums
+    recipientAddress = recipientAddress.slice(0, -9);
+    const confirmed = await iota.getLatestInclusion([tailHash]);
+
+    if (confirmed[0]) {
+        const bundleObj = await iota.getBundle(tailHash);
+        const txRecipientAddress = bundleObj[0].address;
+        const txRecipientAmount = bundleObj[0].value;
+        const txRecipientTag = bundleObj[0].tag;
+
+        if (recipientAddress != txRecipientAddress) {
+            console.log("transaction is invalid, recipient address does not match");
+        } else if (amount != txRecipientAmount) {
+            console.log("transaction is invalid, amount does not match");
+        } else if (tag != txRecipientTag) {
+            console.log("transaction is invalid, tag does not match");
+        } else {
+            console.log("transaction is valid, according to the given params");
+
+            return true;
+        }
+    } else {
+        console.log("transaction is not confirmed by the network yet");
+    }
+
+    return false;
+}
 
 
 
@@ -212,7 +262,7 @@ const transfers = [{
 }]
 
 // Depth or how far to go for tip selection entry point.
-const depth = 3 
+const depth = 3
 
 // Difficulty of Proof-of-Work required to attach transaction to tangle.
 // Minimum value on mainnet is `14`, `7` on spamnet and `9` on devnet and other testnets.
