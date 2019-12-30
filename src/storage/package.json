@@ -1,0 +1,15 @@
+{
+  "name": "storage",
+  "version": "1.0.0",
+  "description": "",
+  "main": "ipfs_engine.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ipfs-http-client": "^40.1.0",
+    "is-ipfs": "^0.6.1"
+  }
+}
