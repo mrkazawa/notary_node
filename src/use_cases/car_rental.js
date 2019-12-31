@@ -21,6 +21,9 @@ async function main() {
     if (ipfs_engine.isValidIpfs(ipfsHash)) {
         console.log("Storing Car Data Done!");
     }
+
+    const carObj = await ipfs_engine.getFromIpfsHash(ipfsHash);
+    console.log(carObj);
 }
 
 //do_iota_payment();
@@ -45,7 +48,7 @@ function createRandomIotaTag() {
     }
 
     return result;
- }
+}
 
 function getCarOwnerAddress() {
     let data = fs.readFileSync(OWNER_DATA, 'utf8');

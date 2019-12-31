@@ -13,8 +13,8 @@ if [[ ! -f $NVM_INSTALLER ]]; then
 
     source $HOME/.nvm/nvm.sh
     # Install latest stable node and make it default
-    nvm install 8.9.4
-    nvm alias default 8.9.4
+    nvm install 10.18.0
+    nvm alias default 10.18.0
 else
     echo "Skipping, NVM is already installed"
 fi

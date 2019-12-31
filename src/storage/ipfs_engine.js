@@ -1,11 +1,11 @@
 const ipfsClient = require('ipfs-http-client');
 const isIPFS = require('is-ipfs');
 
-const ipfs = ipfsClient({ host: 'notary1.local', port: '5001', protocol: 'http' });
+const ipfs = ipfsClient({ host: 'localhost', port: '5001', protocol: 'http' });
 
 var ipfs_engine = {
-    isValidIpfs: function(ipfsUrl) {
-        return isIPFS.cid(ipfsUrl);
+    isValidIpfs: function(ipfsString) {
+        return isIPFS.cid(ipfsString);
     },
 
     storeFromLocalFile: async function (filePath) {
@@ -13,9 +13,15 @@ var ipfs_engine = {
         return results[0].hash;
     },
 
-    getJson: async function (ipfsHash) {
-        const queriedData = await ipfs.get(ipfsHash);
-        return JSON.parse(queriedData);
+    getFromIpfsHash: async function (ipfsHash) {
+        const files = await ipfs.get(ipfsHash);
+
+        var result;
+        files.forEach((file) => {
+            result = JSON.parse(file.content.toString('utf8'));
+        })
+
+        return result;
     }
 }
 
