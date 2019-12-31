@@ -15,6 +15,7 @@ const OWNER_DATA = './car_owner.json';
 
 // storage params
 const CAR_DATA = './car_data.json';
+const MOCK_IPFS_HASH = 'QmYvDcdhRBh3aNR2tJn9rC5RVJBabtGXNBJrV8jaLS9L1M';
 
 async function main() {
     const ipfsHash = await ipfs_engine.storeFromLocalFile(CAR_DATA);

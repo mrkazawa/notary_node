@@ -1,25 +1,6 @@
-const fs = require('fs');
-const Web3 = require('web3');
+const bs58 = require('bs58')
 
-
-
-// connect to ganache network
-// run the following command to activate ganache
-// ganache-cli -m dongseo
-const web3 = new Web3(new Web3.providers.HttpProvider('http://notary2.local:8545'));
-
-var self = {
-        /**
-     * Read JSON file and return the contents of the file in object.
-     * Also convert the address of Ethereum (if any) to checksum format.
-     * @param {string} path     path to the JSON file.
-     */
-    readFile: function (path) {
-        
-    }
-}
-
-var ethereum_engine = {
+module.exports = {
     // Return bytes32 hex string from base58 encoded ipfs hash,
     // stripping leading 2 bytes from 34 byte IPFS hash
     // Assume IPFS defaults: function:0x12=sha2, size:0x20=256 bits
@@ -40,7 +21,4 @@ var ethereum_engine = {
         const hashStr = bs58.encode(hashBytes)
         return hashStr
     }
-
 }
-
-module.exports = ethereum_engine;

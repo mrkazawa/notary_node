@@ -3,5 +3,7 @@
     "model": "M15",
     "color": "black",
     "license": "LOST 1234",
-    "year": 2017
+    "year": 2017,
+    "paymentAddress": "OPWZTSFCTVNDYXFLCAJPOQAONK9THEHWZPDT9JMRPHXSJNXNM9PXARVBDUM9YTDG9YRYEPNJNIFZRWNZCZWDWBEGWY",
+    "rentFee": 10,
 }
