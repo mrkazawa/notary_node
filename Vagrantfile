@@ -30,8 +30,6 @@ Vagrant.configure("2") do |config|
     end
   end
 
-  config.vm.synced_folder "src/", "/home/vagrant/src", type: "rsync"
-
   # Installing basic stuffs
   config.vm.provision "shell", path: "shell/base_install.sh", privileged: true
   config.vm.provision "shell", path: "shell/go_install.sh", privileged: true
@@ -43,6 +41,10 @@ Vagrant.configure("2") do |config|
 
   # node JS has to be provisioned last
   config.vm.provision "shell", path: "shell/nvm_install.sh", privileged: false
+
+  # shared folders setup using RSYNC
+  config.vm.synced_folder "src/", "/home/vagrant/src", type: "rsync"
+    
   
 
   # Create a forwarded port mapping which allows access to a specific port
