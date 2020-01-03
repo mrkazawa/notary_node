@@ -11,9 +11,12 @@ const TAG = iota_engine.createRandomIotaTag();
 const RENT_FEE = 1;
 
 // compute params
-const OWNER_DATA_PATH = '/home/vagrant/src/use_cases/car_owner.json';
-const NOTARY_DATA_PATH = '/home/vagrant/src/use_cases/notary.json';
-const RENTER_DATA_PATH = '/home/vagrant/src/use_cases/car_renter.json';
+const CONTRACT_PATH = '/home/vagrant/src/use_cases/config/contract.json';
+const CONTRACT_ABI_PATH = '/home/vagrant/src/compute/build/contracts/CarRentalContract.json';
+
+const OWNER_DATA_PATH = '/home/vagrant/src/use_cases/config/car_owner.json';
+const NOTARY_DATA_PATH = '/home/vagrant/src/use_cases/config/notary.json';
+const RENTER_DATA_PATH = '/home/vagrant/src/use_cases/config/car_renter.json';
 
 // storage params
 const CAR_DATA_PATH = '/home/vagrant/src/use_cases/car_data.json';
@@ -32,6 +35,8 @@ var carDataTemplate = {
 // car params
 const CAR_ACCESS_ENDPOINT = 'http://localhost:6901/access';
 
+// TODO: Add error handling for this use case
+
 async function main() {
     console.log("=======================================");
     console.log("    Car Rental Application Use Case    ");
@@ -43,16 +48,18 @@ async function main() {
     fs.writeFileSync(CAR_DATA_PATH, json, {encoding:'utf8', flag:'w'});
 
     console.log("Car owner storing car data in IPFS...");
-    const ipfsHash = await ipfs_engine.storeFromLocalFile(CAR_DATA_PATH);
-    if (ipfs_engine.isValidIpfs(ipfsHash)) {
+    const ipfsHash = await ipfs_engine.storeJsonFromLocalFile(CAR_DATA_PATH);
+    if (ipfs_engine.isValidIpfsHash(ipfsHash)) {
         console.log("Storing car data done!", ipfsHash);
     }
 
     console.log("Notary node constructing smart contract...");
-    const carRental = eth_engine.constructSmartContract(eth_engine.getContractABI(), eth_engine.getContractAddress());
-    const carOwnerAddress = eth_engine.getEthereumAddressFromJsonFile(OWNER_DATA_PATH);
+    const contractAbi = eth_engine.getContractAbiFromJsonFile(CONTRACT_ABI_PATH);
+    const contractAddress = eth_engine.getEthereumAddressFromJsonFile(CONTRACT_PATH);
+    const carRental = eth_engine.constructSmartContract(contractAbi, contractAddress);
 
     console.log("Car owner storing rental car to the smart contract...");
+    const carOwnerAddress = eth_engine.getEthereumAddressFromJsonFile(OWNER_DATA_PATH);
     const ipfsHashInBytes = eth_engine.getBytes32FromIpfsHash(ipfsHash);
     let tx = await carRental.methods.storeRentalCar(ipfsHashInBytes).send({
         from: carOwnerAddress,
@@ -65,98 +72,73 @@ async function main() {
         console.log('Car Owner: ', event.returnValues['carOwner']);
         console.log('Car Hash: ', event.returnValues['ipfsHash']);
 
-    } else {
-        console.log('ERROR! Tx not stored!');
-    }
-
-    console.log("Car renter looking for car to rent...");
-    // skip this
-
-    console.log("Car renter getting payment address, tag, and fee...");
-    const carObj = await ipfs_engine.getFromIpfsHash(ipfsHash);
-
-    console.log("Car renter paying for the rent fee...");
-    await iota_engine.getCurrentBalance(carObj.paymentAddress);
-    const tailHash = await iota_engine.sendTransaction(carObj.paymentAddress, carObj.paymentFee, carObj.paymentTag);
-
-    console.log("Car renter submitting the transaction proof...");
-    // skip this
-
-    console.log("Notary node check if this proof is valid...");
-    // also need to check if we see use this tail hash sometime before
-    const txResult = await iota_engine.verifyTransaction(tailHash, carObj.paymentAddress, carObj.paymentFee, carObj.paymentTag);
-    if (txResult) {
-        await iota_engine.getCurrentBalance(carObj.paymentAddress);
-
-        console.log("Notary node storing tx proof to the smart contract...");
-        const notaryAddress = eth_engine.getEthereumAddressFromJsonFile(NOTARY_DATA_PATH);
-        const carRenterAddress = eth_engine.getEthereumAddressFromJsonFile(RENTER_DATA_PATH);
-
-        let tx = await carRental.methods.authorizeRentalCar(ipfsHashInBytes, carRenterAddress).send({
-            from: notaryAddress,
-            gas: 1000000
-        });
-
-        const event = tx.events.RentalCarRented; 
-        if (typeof event !== 'undefined') {
-            console.log('Tx stored in the block!');
-            console.log('Car Renter: ', event.returnValues['carRenter']);
-            console.log('Car Hash: ', event.returnValues['ipfsHash']);
-
-        } else {
-            console.log('ERROR! Tx not stored!');
-        }
-
-        console.log("Car renter accessing the rental car...");
-        const renterPrivateKey = eth_engine.getPrivateKeyFromJsonFile(RENTER_DATA_PATH);
-        const signature = eth_engine.signMessage(ipfsHash, renterPrivateKey);
-        const payload = {
-            carHash: ipfsHash,
-            signature: signature
-        }
-
-        let options = {
-            method: 'POST',
-            uri: CAR_ACCESS_ENDPOINT,
-            body: payload,
-            resolveWithFullResponse: true,
-            json: true // Automatically stringifies the body to JSON
-        };
-        rp(options).then(function (response) {
-            console.log('Response status code: ', response.statusCode)
-            console.log('Response body: ', response.body);
-        }).catch(function (err) {
-            console.log(err);
-        });
-
-    } else {
-        console.log("Tx proof is invalid");
-    }
-
+        console.log("Car renter looking for car to rent...");
+        // TODO: implement the web service for this
+        // skip this
     
+        console.log("Car renter getting payment address, tag, and fee...");
+        const carObj = await ipfs_engine.getJsonFromIpfsHash(ipfsHash);
+    
+        console.log("Car renter paying for the rent fee...");
+        await iota_engine.getCurrentBalance(carObj.paymentAddress);
+        const tailHash = await iota_engine.sendTransaction(carObj.paymentAddress, carObj.paymentFee, carObj.paymentTag);
+    
+        console.log("Car renter submitting the transaction proof...");
+        // TODO: implement the web service for this
+        // skip this
+    
+        console.log("Notary node check if this proof is valid...");
+        // TODO: also need to check if we see use this tail hash sometime before
+        const txResult = await iota_engine.verifyTransaction(tailHash, carObj.paymentAddress, carObj.paymentFee, carObj.paymentTag);
+        if (txResult) {
+            await iota_engine.getCurrentBalance(carObj.paymentAddress);
+    
+            console.log("Notary node storing tx proof to the smart contract...");
+            const notaryAddress = eth_engine.getEthereumAddressFromJsonFile(NOTARY_DATA_PATH);
+            const carRenterAddress = eth_engine.getEthereumAddressFromJsonFile(RENTER_DATA_PATH);
+    
+            let tx = await carRental.methods.authorizeRentalCar(ipfsHashInBytes, carRenterAddress).send({
+                from: notaryAddress,
+                gas: 1000000
+            });
+    
+            const event = tx.events.RentalCarRented; 
+            if (typeof event !== 'undefined') {
+                console.log('Tx stored in the block!');
+                console.log('Car Renter: ', event.returnValues['carRenter']);
+                console.log('Car Hash: ', event.returnValues['ipfsHash']);
 
-    /*
-    const ipfsHash = await ipfs_engine.storeFromLocalFile(CAR_DATA);
-    if (ipfs_engine.isValidIpfs(ipfsHash)) {
-        console.log("Storing Car Data Done!");
+                console.log("Car renter accessing the rental car...");
+                const renterPrivateKey = eth_engine.getPrivateKeyFromJsonFile(RENTER_DATA_PATH);
+                const signature = eth_engine.signMessage(ipfsHash, renterPrivateKey);
+                const payload = {
+                    carHash: ipfsHash,
+                    signature: signature
+                }
+        
+                let options = {
+                    method: 'POST',
+                    uri: CAR_ACCESS_ENDPOINT,
+                    body: payload,
+                    resolveWithFullResponse: true,
+                    json: true // Automatically stringifies the body to JSON
+                };
+                rp(options).then(function (response) {
+                    console.log('Response status code: ', response.statusCode)
+                    console.log('Response body: ', response.body);
+                }).catch(function (err) {
+                    console.warn(err);
+                });
+    
+            } else {
+                console.warn('ERROR! Tx not stored!');
+            }
+        } else {
+            console.warn("Tx proof is invalid");
+        }
+    } else {
+        console.warn('ERROR! Tx not stored!');
     }
-
-    const carObj = await ipfs_engine.getFromIpfsHash(ipfsHash);
-    console.log(carObj);
-    */
 }
-
-//do_iota_payment();
-
-async function do_iota_payment() {
-    await iota_engine.getCurrentBalance(RECIPIENT_ADDRESS);
-    const tailHash = await iota_engine.sendTransaction(RECIPIENT_ADDRESS, RENT_FEE, TAG);
-    const txResult = await iota_engine.verifyTransaction(tailHash, RECIPIENT_ADDRESS, RENT_FEE, TAG);
-    if (txResult) {
-        console.log("Car Payment Done!");
-    }
-}
-
-
 
 main();

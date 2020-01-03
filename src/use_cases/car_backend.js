@@ -1,11 +1,16 @@
-const express = require('express');
 const eth_engine = require('../compute/ethereum_engine');
 
-const CAR_DATA_PATH = '/home/vagrant/src/use_cases/car.json';
+const express = require('express');
+
+const CAR_DATA_PATH = '/home/vagrant/src/use_cases/config/car.json';
+const CONTRACT_PATH = '/home/vagrant/src/use_cases/config/contract.json';
+const CONTRACT_ABI_PATH = '/home/vagrant/src/compute/build/contracts/CarRentalContract.json';
 const APP_PORT = 6901;
 
 console.log("Car backend constructing smart contract object...");
-const carRental = eth_engine.constructSmartContract(eth_engine.getContractABI(), eth_engine.getContractAddress());
+const contractAbi = eth_engine.getContractAbiFromJsonFile(CONTRACT_ABI_PATH);
+const contractAddress = eth_engine.getEthereumAddressFromJsonFile(CONTRACT_PATH);
+const carRental = eth_engine.constructSmartContract(contractAbi, contractAddress);
 
 const app = express();
 app.use(express.json());

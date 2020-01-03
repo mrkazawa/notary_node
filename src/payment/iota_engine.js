@@ -6,7 +6,7 @@ const SECURITY_LEVEL = 0;
 
 const SEED = 'SENDER99999999999999999999999999999999999999999999999999999999999999999999999999A';
 
-// connect to Tangle (IOTA Network)
+// specify the location of the IRI node
 iota = IOTA.composeAPI({
     provider: 'http://localhost:14265'
 });
@@ -65,6 +65,7 @@ var iota_engine = {
      */
     sendTransaction: async function (recipientAddress, amount, tag) {
         let senderAddress = self.generateNextAddress();
+        // FIXME: do the attach to tangle the correct way
         await self.attachToTangle(senderAddress);
 
         const transfers = [{

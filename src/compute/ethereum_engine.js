@@ -2,13 +2,10 @@ const fs = require('fs');
 const Web3 = require('web3');
 const bs58 = require('bs58');
 
-// connect to ganache network
-// run the following command to activate ganache
+// specify the location of the ethereum node
+// for local development, use the following command
 // ganache-cli -m dongseo
 const web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
-
-const CONTRACT_PATH = '/home/vagrant/src/compute/config/contract.json';
-const CONTRACT_ABI_PATH = '/home/vagrant/src/compute/build/contracts/CarRentalContract.json';
 
 var self = {
     /**
@@ -34,19 +31,13 @@ var ethereum_engine = {
     },
 
     /**
-     * Get contract address from ganache after 'truffle deploy'.
-     */
-    getContractAddress: function () {
-        let obj = self.readFile(CONTRACT_PATH);
-        return web3.utils.toChecksumAddress(obj.address);
-    },
-
-    /**
-     * Parsing the local contract ABI from truffle.
+     * Parsing the local contract ABI from truffle JSON file.
      * in live network, the ABI can be queried from etherscan.io
+     * 
+     * @param {string} absolutePath     The absolute path to the JSON file
      */
-    getContractABI: function () {
-        let obj = self.readFile(CONTRACT_ABI_PATH);
+    getContractAbiFromJsonFile: function (absolutePath) {
+        let obj = self.readFile(absolutePath);
         return obj.abi;
     },
 
