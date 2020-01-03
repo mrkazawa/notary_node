@@ -128,7 +128,7 @@ Just run this code.
 # AT THIS POINT, THE COO IS CRASHED!
 # MAKE A BIGGER DEPTH IN config.json
 # THEN RUN THIS
-cd /compass/docs/private_tangle
+cd ~/compass/docs/private_tangle
 ./01_calculate_layers.sh
 
 # run IRI node

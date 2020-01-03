@@ -73,7 +73,7 @@ var iota_engine = {
      */
     sendTransaction: async function (recipientAddress, amount, tag) {
         let senderAddress = self.generateNextAddress();
-        self.attachToTangle(senderAddress);
+        await self.attachToTangle(senderAddress);
 
         const transfers = [{
             address: recipientAddress,
