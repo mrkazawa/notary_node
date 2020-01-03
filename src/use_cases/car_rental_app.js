@@ -2,21 +2,21 @@ const iota_engine = require('../payment/iota_engine');
 const ipfs_engine = require('../storage/ipfs_engine');
 const eth_engine = require('../compute/ethereum_engine');
 
-const Web3Utils = require('web3-utils');
 const fs = require('fs');
+const rp = require('request-promise-native');
 
 // payment params
 const RECIPIENT_ADDRESS = 'OPWZTSFCTVNDYXFLCAJPOQAONK9THEHWZPDT9JMRPHXSJNXNM9PXARVBDUM9YTDG9YRYEPNJNIFZRWNZCZWDWBEGWY';
-const TAG = createRandomIotaTag();
+const TAG = iota_engine.createRandomIotaTag();
 const RENT_FEE = 1;
 
 // compute params
-const OWNER_DATA_PATH = './car_owner.json';
-const NOTARY_DATA_PATH = './notary.json';
-const RENTER_DATA_PATH = './car_renter.json';
+const OWNER_DATA_PATH = '/home/vagrant/src/use_cases/car_owner.json';
+const NOTARY_DATA_PATH = '/home/vagrant/src/use_cases/notary.json';
+const RENTER_DATA_PATH = '/home/vagrant/src/use_cases/car_renter.json';
 
 // storage params
-const CAR_DATA_PATH = './car_data.json';
+const CAR_DATA_PATH = '/home/vagrant/src/use_cases/car_data.json';
 var carDataTemplate = {
     timestamp: 0,
     manufacturer: "Hyundai",
@@ -28,6 +28,9 @@ var carDataTemplate = {
     paymentTag: TAG,
     paymentFee: RENT_FEE,
 };
+
+// car params
+const CAR_ACCESS_ENDPOINT = 'http://localhost:6901/access';
 
 async function main() {
     console.log("=======================================");
@@ -47,7 +50,7 @@ async function main() {
 
     console.log("Notary node constructing smart contract...");
     const carRental = eth_engine.constructSmartContract(eth_engine.getContractABI(), eth_engine.getContractAddress());
-    const carOwnerAddress = getEthereumAddress(OWNER_DATA_PATH);
+    const carOwnerAddress = eth_engine.getEthereumAddressFromJsonFile(OWNER_DATA_PATH);
 
     console.log("Car owner storing rental car to the smart contract...");
     const ipfsHashInBytes = eth_engine.getBytes32FromIpfsHash(ipfsHash);
@@ -59,7 +62,7 @@ async function main() {
     const event = tx.events.NewRentalCarAdded; 
     if (typeof event !== 'undefined') {
         console.log('Tx stored in the block!');
-        console.log('From: ', event.returnValues['carOwner']);
+        console.log('Car Owner: ', event.returnValues['carOwner']);
         console.log('Car Hash: ', event.returnValues['ipfsHash']);
 
     } else {
@@ -86,8 +89,8 @@ async function main() {
         await iota_engine.getCurrentBalance(carObj.paymentAddress);
 
         console.log("Notary node storing tx proof to the smart contract...");
-        const notaryAddress = getEthereumAddress(NOTARY_DATA_PATH);
-        const carRenterAddress = getEthereumAddress(RENTER_DATA_PATH);
+        const notaryAddress = eth_engine.getEthereumAddressFromJsonFile(NOTARY_DATA_PATH);
+        const carRenterAddress = eth_engine.getEthereumAddressFromJsonFile(RENTER_DATA_PATH);
 
         let tx = await carRental.methods.authorizeRentalCar(ipfsHashInBytes, carRenterAddress).send({
             from: notaryAddress,
@@ -97,7 +100,7 @@ async function main() {
         const event = tx.events.RentalCarRented; 
         if (typeof event !== 'undefined') {
             console.log('Tx stored in the block!');
-            console.log('New Renter: ', event.returnValues['carRenter']);
+            console.log('Car Renter: ', event.returnValues['carRenter']);
             console.log('Car Hash: ', event.returnValues['ipfsHash']);
 
         } else {
@@ -105,6 +108,26 @@ async function main() {
         }
 
         console.log("Car renter accessing the rental car...");
+        const renterPrivateKey = eth_engine.getPrivateKeyFromJsonFile(RENTER_DATA_PATH);
+        const signature = eth_engine.signMessage(ipfsHash, renterPrivateKey);
+        const payload = {
+            carHash: ipfsHash,
+            signature: signature
+        }
+
+        let options = {
+            method: 'POST',
+            uri: CAR_ACCESS_ENDPOINT,
+            body: payload,
+            resolveWithFullResponse: true,
+            json: true // Automatically stringifies the body to JSON
+        };
+        rp(options).then(function (response) {
+            console.log('Response status code: ', response.statusCode)
+            console.log('Response body: ', response.body);
+        }).catch(function (err) {
+            console.log(err);
+        });
 
     } else {
         console.log("Tx proof is invalid");
@@ -134,24 +157,6 @@ async function do_iota_payment() {
     }
 }
 
-function createRandomIotaTag() {
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ9';
-    const charactersLength = characters.length;
-    const length = 27; // IOTA tag length is 27 trytes
 
-    var result = '';
-    for ( var i = 0; i < length; i++ ) {
-       result += characters.charAt(Math.floor(Math.random() * charactersLength));
-    }
-
-    return result;
-}
-
-function getEthereumAddress(path) {
-    let data = fs.readFileSync(path, 'utf8');
-    let obj = JSON.parse(data);
-
-    return Web3Utils.toChecksumAddress(obj.address);
-}
 
 main();

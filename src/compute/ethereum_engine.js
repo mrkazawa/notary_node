@@ -51,6 +51,26 @@ var ethereum_engine = {
     },
 
     /**
+     * Parse ethereum address from a JSON file.
+     * 
+     * @param {string} absolutePath     The absolute path to the JSON file
+     */
+    getEthereumAddressFromJsonFile: function (absolutePath) {
+        let obj = self.readFile(absolutePath);
+        return web3.utils.toChecksumAddress(obj.address);
+    },
+
+    /**
+     * Parse ethereum private key from a JSON file.
+     * 
+     * @param {string} absolutePath     The absolute path to the JSON file
+     */
+    getPrivateKeyFromJsonFile: function (absolutePath) {
+        let obj = self.readFile(absolutePath);
+        return obj.privateKey;
+    },
+
+    /**
      * A converter to change IPFS hash string to bytes32 for smart contract storage.
      * 
      * Return bytes32 hex string from base58 encoded ipfs hash,
@@ -61,7 +81,7 @@ var ethereum_engine = {
      * 
      * @param {string} ipfsListing      The IPFS hash to be converted
      */
-    getBytes32FromIpfsHash(ipfsListing) {
+    getBytes32FromIpfsHash: function (ipfsListing) {
         return "0x"+bs58.decode(ipfsListing).slice(2).toString('hex');
     },
 
@@ -75,7 +95,7 @@ var ethereum_engine = {
      * 
      * @param {bytes32} bytes32Hex      The IPFS bytes32 to be converted
      */
-    getIpfsHashFromBytes32(bytes32Hex) {
+    getIpfsHashFromBytes32: function (bytes32Hex) {
         // Add our default ipfs values for first 2 bytes:
         // function:0x12=sha2, size:0x20=256 bits
         // and cut off leading "0x"
@@ -85,8 +105,32 @@ var ethereum_engine = {
         const hashStr = bs58.encode(hashBytes);
 
         return hashStr;
-    }
+    },
 
+    /**
+     * Sign the given message with the given private key.
+     * This function will return the signature.
+     * 
+     * @param {string} message      The message to be signed
+     * @param {string} privateKey   The private key to sign the message
+     */
+    signMessage: function (message, privateKey) {
+        let m = web3.eth.accounts.sign(message, privateKey);
+        return m.signature;
+    },
+
+    /**
+     * Verify whether the given message and signature is valid.
+     * It returns true if indeed the given address has signed this messsage.
+     * 
+     * @param {string} message      The message
+     * @param {string} signature    The corresponding signature of the message
+     * @param {string} address      The corresponding address that signs the message
+     */
+    verifySignature: function (message, signature, address) {
+        let addr = web3.eth.accounts.recover(message, signature);
+        return (addr == address);
+    }
 }
 
 module.exports = ethereum_engine;

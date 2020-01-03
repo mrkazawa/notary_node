@@ -4,11 +4,6 @@ const DEPTH = 3;
 const MINIMUM_WEIGHT_MAGNITUDE = 9;
 const SECURITY_LEVEL = 0;
 
-// Define a seed and an address.
-// These do not need to belong to anyone or have IOTA tokens.
-// They must only contain a maximum of 81 trytes
-// or 90 trytes with a valid checksum
-const RECIPIENT_ADDRESS = 'OPWZTSFCTVNDYXFLCAJPOQAONK9THEHWZPDT9JMRPHXSJNXNM9PXARVBDUM9YTDG9YRYEPNJNIFZRWNZCZWDWBEGWY';
 const SEED = 'SENDER99999999999999999999999999999999999999999999999999999999999999999999999999A';
 
 // connect to Tangle (IOTA Network)
@@ -19,9 +14,6 @@ iota = IOTA.composeAPI({
 // TODO: Implement the generate address and attach to Tangle to correct way
 
 var self = {
-    /**
-     * Generate the next usable IOTA address from the seed.
-     */
     generateNextAddress: function () {
         return IOTA.generateAddress(SEED, SECURITY_LEVEL);
     },
@@ -133,6 +125,22 @@ var iota_engine = {
         }
 
         return false;
+    },
+
+    /**
+     * Create a random IOTA tag for transactions.
+     */
+    createRandomIotaTag: function () {
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ9';
+        const charactersLength = characters.length;
+        const length = 27; // IOTA tag length is 27 trytes
+    
+        var result = '';
+        for ( var i = 0; i < length; i++ ) {
+           result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        }
+    
+        return result;
     }
 }
 
