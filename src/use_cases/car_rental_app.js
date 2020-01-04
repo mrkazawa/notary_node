@@ -3,6 +3,7 @@ const ipfs_engine = require('../storage/ipfs_engine');
 const eth_engine = require('../compute/ethereum_engine');
 
 const fs = require('fs');
+const { performance } = require('perf_hooks');
 const rp = require('request-promise-native');
 
 // payment params
@@ -35,12 +36,18 @@ var carDataTemplate = {
 // car params
 const CAR_ACCESS_ENDPOINT = 'http://localhost:6901/access';
 
+// performance params
+const RESULT_DATA_PATH = '/home/vagrant/result.csv';
+
 // TODO: Add error handling for this use case
 
 async function main() {
     console.log("=======================================");
     console.log("    Car Rental Application Use Case    ");
     console.log("=======================================");
+
+    // FIXME: initialize, also APP_START_TIME
+    var t0 = performance.now();
 
     console.log("Car owner preparing car data...");
     carDataTemplate.timestamp = Math.floor(new Date() / 1000); // get current timestmap in epoch
@@ -52,6 +59,9 @@ async function main() {
     if (ipfs_engine.isValidIpfsHash(ipfsHash)) {
         console.log("Storing car data done!", ipfsHash);
     }
+
+    // FIXME: storing car details in IPFS time
+    var t1 = performance.now();
 
     console.log("Notary node constructing smart contract...");
     const contractAbi = eth_engine.getContractAbiFromJsonFile(CONTRACT_ABI_PATH);
@@ -72,6 +82,9 @@ async function main() {
         console.log('Car Owner: ', event.returnValues['carOwner']);
         console.log('Car Hash: ', event.returnValues['ipfsHash']);
 
+        // FIXME: storing car metadata in EVM time
+        var t2 = performance.now();
+
         console.log("Car renter looking for car to rent...");
         // TODO: implement the web service for this
         // skip this
@@ -82,6 +95,9 @@ async function main() {
         console.log("Car renter paying for the rent fee...");
         await iota_engine.getCurrentBalance(carObj.paymentAddress);
         const tailHash = await iota_engine.sendTransaction(carObj.paymentAddress, carObj.paymentFee, carObj.paymentTag);
+
+        // FIXME: sending payment to IOTA time
+        var t3 = performance.now();
     
         console.log("Car renter submitting the transaction proof...");
         // TODO: implement the web service for this
@@ -92,6 +108,9 @@ async function main() {
         const txResult = await iota_engine.verifyTransaction(tailHash, carObj.paymentAddress, carObj.paymentFee, carObj.paymentTag);
         if (txResult) {
             await iota_engine.getCurrentBalance(carObj.paymentAddress);
+
+            // FIXME: verifying tx proof in IOTA time
+            var t4 = performance.now();
     
             console.log("Notary node storing tx proof to the smart contract...");
             const notaryAddress = eth_engine.getEthereumAddressFromJsonFile(NOTARY_DATA_PATH);
@@ -107,6 +126,9 @@ async function main() {
                 console.log('Tx stored in the block!');
                 console.log('Car Renter: ', event.returnValues['carRenter']);
                 console.log('Car Hash: ', event.returnValues['ipfsHash']);
+
+                // FIXME: authorizing car access in EVM time
+                var t5 = performance.now();
 
                 console.log("Car renter accessing the rental car...");
                 const renterPrivateKey = eth_engine.getPrivateKeyFromJsonFile(RENTER_DATA_PATH);
@@ -126,6 +148,14 @@ async function main() {
                 rp(options).then(function (response) {
                     console.log('Response status code: ', response.statusCode)
                     console.log('Response body: ', response.body);
+
+                    // FIXME: accessing car time, also APP_END_TIME
+                    var t6 = performance.now();
+
+                    // appending result to file
+                    const time_result = t0+","+t1+","+t2+","+t3+","+t4+","+t5+","+t6+"\r\n";
+                    fs.appendFileSync(RESULT_DATA_PATH, time_result);
+
                 }).catch(function (err) {
                     console.warn(err);
                 });
