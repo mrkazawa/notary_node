@@ -2,6 +2,7 @@
 const TRANSACTION_THRESHOLD = 1000;
 
 // Total number of nodes in the network
+// FIXME: Investigate why this PBFT cannot work if more than 3 nodes
 const NUMBER_OF_NODES = 3;
 
 // Total number of tolerable faulty nodes in the network

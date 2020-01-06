@@ -167,9 +167,13 @@ class P2pserver {
       switch (data.type) {
         case MESSAGE_TYPE.transaction:
           // check if transactions is valid
-          if (
+          /*if (
             !this.transactionPool.transactionExists(data.transaction) &&
             this.transactionPool.verifyTransaction(data.transaction) &&
+            this.validators.isValidValidator(data.transaction.from)
+          ) {*/
+          if (
+            !this.transactionPool.transactionExists(data.transaction) &&
             this.validators.isValidValidator(data.transaction.from)
           ) {
             let thresholdReached = this.transactionPool.addTransaction(
@@ -216,9 +220,13 @@ class P2pserver {
           break;
         case MESSAGE_TYPE.prepare:
           // check if the prepare message is valid
-          if (
+          /*if (
             !this.preparePool.existingPrepare(data.prepare) &&
             this.preparePool.isValidPrepare(data.prepare, this.wallet) &&
+            this.validators.isValidValidator(data.prepare.publicKey)
+          ) {*/
+          if (
+            !this.preparePool.existingPrepare(data.prepare) &&
             this.validators.isValidValidator(data.prepare.publicKey)
           ) {
             // add prepare message to the pool
@@ -240,9 +248,13 @@ class P2pserver {
           break;
         case MESSAGE_TYPE.commit:
           // check the validity commit messages
-          if (
+          /*if (
             !this.commitPool.existingCommit(data.commit) &&
             this.commitPool.isValidCommit(data.commit) &&
+            this.validators.isValidValidator(data.commit.publicKey)
+          ) {*/
+          if (
+            !this.commitPool.existingCommit(data.commit) &&
             this.validators.isValidValidator(data.commit.publicKey)
           ) {
             // add to pool

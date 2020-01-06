@@ -588,10 +588,11 @@ const instance = autocannon({
   headers: {
     "content-type": "application/json"
   },
-  body: JSON.stringify(payload_350_bytes),
-  connections: 1,
+  body: JSON.stringify(payload_20526_bytes),
+  connections: 1, // concurrent connection
   pipelining: 1, // default
-  duration: 600
+  bailout: 100, // tolerable number of errors
+  duration: 10
 }, console.log)
 
 // this is used to kill the instance on CTRL-C
