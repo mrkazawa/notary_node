@@ -1,5 +1,5 @@
 // Maximum number of transactions that can be present in a block and transaction pool
-const TRANSACTION_THRESHOLD = 1000;
+const TRANSACTION_THRESHOLD = 4;
 
 // Total number of nodes in the network
 const NUMBER_OF_NODES = 4;

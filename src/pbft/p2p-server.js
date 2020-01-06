@@ -180,21 +180,23 @@ class P2pserver {
 
             // check if limit reached
             if (thresholdReached) {
-              //console.log("THRESHOLD REACHED");
+              console.log("THRESHOLD REACHED");
               // check the current node is the proposer
+              console.log(this.blockchain.getProposer());
+              console.log(this.wallet.getPublicKey());
+
               if (this.blockchain.getProposer() == this.wallet.getPublicKey()) {
-                //console.log("PROPOSING BLOCK");
+                console.log("PROPOSING BLOCK");
                 // if the node is the proposer, create a block and broadcast it
                 let block = this.blockchain.createBlock(
                   this.transactionPool.transactions,
                   this.wallet
                 );
-                //console.log("CREATED BLOCK", block);
-                //console.log("CREATED BLOCK");
+                console.log("CREATED BLOCK", block);
                 this.broadcastPrePrepare(block);
               }
             } else {
-              //console.log("Transaction Added");
+              console.log("Transaction Added");
             }
           }
           break;
@@ -297,11 +299,7 @@ class P2pserver {
               MIN_APPROVALS
             ) {
               this.transactionPool.clear();
-              // my additions
-              this.blockPool.clear();
-              this.preparePool.clear();
-              this.commitPool.clear();
-              this.messagePool.clear();
+              // TODO: Add clear for blockPool, preparePool, commitPool, and messagePool
             }
           }
           break;
