@@ -267,3 +267,60 @@ docker ps # get the CCONTAINER_ID
 # docker stop <CCONTAINER_ID>
 docker stop 6bd47de08e3b
 ```
+
+
+## Running Tendermint ##
+
+Taken from https://github.com/tendermint/tendermint/blob/master/docs/introduction/install.md
+
+### Setting Go environment ###
+
+```bash
+echo export GOPATH=\"\$HOME/go\" >> ~/.bash_profile
+echo export PATH=\"\$PATH:\$GOPATH/bin\" >> ~/.bash_profile
+echo export GO111MODULE=on >> ~/.bash_profile
+source ~/.bash_profile
+```
+
+### Get the source code ###
+
+```bash
+mkdir -p $GOPATH/src/github.com/tendermint
+cd $GOPATH/src/github.com/tendermint
+git clone https://github.com/tendermint/tendermint.git
+cd tendermint
+git checkout tags/v0.31.11
+```
+
+### Get tools and dependencies ###
+
+make tools
+
+### Compile ###
+
+```bash
+# to put the binary in $GOPATH/bin
+make install
+```
+
+```bash
+# to put the binary in ./build
+make build
+```
+
+kvstore are in Base64 encoded
+
+
+sshpass -p "vagrant" scp ~/mytestnet/node2/* vagrant@notary2.local:~/mytestnet/node2/*
+
+
+ID1, ID2, ID3, ID4
+45132f5388262bbc2f113c5e0f69f56622c55198
+6c23607b22b9adb745e6e95adba6220eda55cc0b
+b82614e823b911a9b5360da18e344c106e033dee
+5d3ef69cb6e5b530071bbbde2c3ec9e80219d309
+
+tendermint node --home ./mytestnet/node0 --proxy_app=kvstore --p2p.persistent_peers="ID1@IP1:26656,ID2@IP2:26656,ID3@IP3:26656,ID4@IP4:26656"
+tendermint node --home ./mytestnet/node1 --proxy_app=kvstore --p2p.persistent_peers="ID1@IP1:26656,ID2@IP2:26656,ID3@IP3:26656,ID4@IP4:26656"
+tendermint node --home ./mytestnet/node2 --proxy_app=kvstore --p2p.persistent_peers="ID1@IP1:26656,ID2@IP2:26656,ID3@IP3:26656,ID4@IP4:26656"
+tendermint node --home ./mytestnet/node3 --proxy_app=kvstore --p2p.persistent_peers="ID1@IP1:26656,ID2@IP2:26656,ID3@IP3:26656,ID4@IP4:26656"

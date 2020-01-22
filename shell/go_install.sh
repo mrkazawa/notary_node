@@ -12,7 +12,7 @@ if [[ ! -f $GO_INSTALLER ]]; then
 
     cat >> /home/vagrant/.bashrc << END
 # add for go install
-PATH=$PATH:/usr/local/go/bin
+PATH=/usr/local/go/bin:\$PATH
 END
 
     source /home/vagrant/.bashrc

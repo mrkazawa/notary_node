@@ -13,7 +13,7 @@ if [[ ! -f $MINI_CONDA ]]; then
     
     cat >> /home/vagrant/.bashrc << END
 # add for anaconda install
-PATH=/home/vagrant/anaconda/bin:\$PATH
+PATH=$HOME/anaconda/bin:\$PATH
 END
     
     source /home/vagrant/.bashrc

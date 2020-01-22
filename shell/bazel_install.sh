@@ -14,7 +14,7 @@ if [[ ! -f $BAZEL_INSTALLER ]]; then
 
     cat >> /home/vagrant/.bashrc << END
 # add for bazel install
-PATH=$PATH:$HOME/bin
+PATH=$HOME/bin:\$PATH
 END
 
     source /home/vagrant/.bashrc
