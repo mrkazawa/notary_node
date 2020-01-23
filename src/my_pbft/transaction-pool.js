@@ -16,15 +16,9 @@ class TransactionPool {
   // returns true if it is full
   // else returns false
   addTransaction(transaction) {
-    success = this.transactions.set(transaction.id, transaction);
-    if (success) {
-      
-    }
+    this.transactions.set(transaction.id, transaction);
     let stats = this.transactions.getStats();
-    this.transactions.push(transaction);
-
-    
-    if (this.transactions.length >= TRANSACTION_THRESHOLD) {
+    if (stats.keys >= TRANSACTION_THRESHOLD) {
       return true;
     } else {
       return false;
@@ -38,14 +32,14 @@ class TransactionPool {
 
   // checks if transactions exists or not
   transactionExists(transaction) {
-    let exists = this.transactions.find(t => t.id === transaction.id);
-    return exists;
+    let value = this.transactions.get(transaction.id);
+    return (value != undefined);
   }
 
   // empties the pool
   clear() {
     //console.log("TRANSACTION POOL CLEARED");
-    this.transactions = [];
+    this.transactions.flushAll();
   }
 }
 

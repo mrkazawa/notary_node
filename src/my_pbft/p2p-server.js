@@ -180,7 +180,7 @@ class P2pserver {
 
             // check if limit reached
             if (thresholdReached) {
-              //console.log("THRESHOLD REACHED");
+              console.log("THRESHOLD REACHED");
               // check the current node is the proposer
               if (this.blockchain.getProposer() == this.wallet.getPublicKey()) {
                 //console.log("PROPOSING BLOCK");

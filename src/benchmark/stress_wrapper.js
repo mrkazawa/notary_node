@@ -20,12 +20,16 @@ const payload_350_bytes = {
 const payload_in_string = JSON.stringify(payload_350_bytes).replace(/"/g, '\'');
 
 const instance = autocannon({
-    url: 'http://10.0.0.11:26657/broadcast_tx_commit?tx="' + uuid.v4() + '=' + payload_in_string + '"',
-    method: 'GET',
+    url: 'http://10.0.0.12:3000/transactions',
+    method: 'POST',
+    headers: {
+      "content-type": "application/json"
+    },
+    body: JSON.stringify(payload_350_bytes),
     connections: 1, // concurrent connection
     pipelining: 1, // default
     bailout: 20, // tolerable number of errors
-    // overallRate: 10, // rate of requests to make per second from all connections
+    //overallRate: 200, // rate of requests to make per second from all connections
     duration: 10
 }, console.log)
 
@@ -40,29 +44,3 @@ autocannon.track(instance, {
     renderResultsTable: true,
     renderLatencyTable: false
 })
-
-instance.on('done', handleResults)
-instance.on('tick', () => console.log('ticking'))
-instance.on('response', handleResponse)
-
-function setupClient(client) {
-    client.on('body', handleResponseInClient)
-}
-
-function handleResponseInClient(resBuffer) {
-    //console.log(resBuffer.toString());
-}
-
-function handleResponse(client, statusCode, resBytes, responseTime) {
-    //console.log(`Got response with code ${statusCode} in ${responseTime} milliseconds`)
-    //console.log(`response: ${resBytes.toString()}`)
-    const request = {
-        url: '10.0.0.11:26657/broadcast_tx_commit?tx="' + uuid.v4() + '=' + payload_in_string + '"',
-        method: 'GET'
-    };
-    client.setRequest(request);
-}
-
-function handleResults(result) {
-    // ...
-}
