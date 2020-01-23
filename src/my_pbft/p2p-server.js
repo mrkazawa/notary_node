@@ -34,7 +34,6 @@ class P2pserver {
     validators
   ) {
     this.blockchain = blockchain;
-    this.sockets = [];
     this.transactionPool = transactionPool;
     this.wallet = wallet;
     this.blockPool = blockPool;
@@ -42,6 +41,7 @@ class P2pserver {
     this.commitPool = commitPool;
     this.messagePool = messagePool;
     this.validators = validators;
+    this.sockets = [];
   }
 
   // Creates a server on a given port
@@ -155,6 +155,8 @@ class P2pserver {
     );
   }
 
+  //-------------------------- Receive Handlers --------------------------//
+
   // handles any message sent to the current node
   messageHandler(socket) {
     // registers message handler
@@ -183,20 +185,21 @@ class P2pserver {
               console.log("THRESHOLD REACHED");
               // check the current node is the proposer
               if (this.blockchain.getProposer() == this.wallet.getPublicKey()) {
-                //console.log("PROPOSING BLOCK");
+                console.log("PROPOSING BLOCK");
                 // if the node is the proposer, create a block and broadcast it
                 let block = this.blockchain.createBlock(
                   this.transactionPool.transactions,
                   this.wallet
                 );
-                //console.log("CREATED BLOCK", block);
+                console.log("CREATED BLOCK", block);
                 this.broadcastPrePrepare(block);
               }
             } else {
-              //console.log("Transaction Added");
+              console.log("Transaction Added");
             }
           }
           break;
+
         case MESSAGE_TYPE.pre_prepare:
           // check if block is valid
           if (
@@ -214,6 +217,7 @@ class P2pserver {
             this.broadcastPrepare(prepare);
           }
           break;
+
         case MESSAGE_TYPE.prepare:
           // check if the prepare message is valid
           if (
@@ -238,6 +242,7 @@ class P2pserver {
             }
           }
           break;
+          
         case MESSAGE_TYPE.commit:
           // check the validity commit messages
           if (

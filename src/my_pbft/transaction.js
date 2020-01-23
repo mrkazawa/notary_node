@@ -5,8 +5,8 @@ class Transaction {
   // the wallet instance will be passed as a parameter to the constructor
   // along with the data to be stored.
   constructor(data, wallet) {
-    this.id = ChainUtil.id();
-    this.from = wallet.publicKey;
+    this.id = ChainUtil.generateId();
+    this.from = wallet.getPublicKey();
     this.input = { data: data, timestamp: Date.now() };
     this.hash = ChainUtil.hash(this.input);
     this.signature = wallet.sign(this.hash);

@@ -14,6 +14,7 @@ class Validators {
   generateAddresses(numberOfValidators) {
     let list = [];
     for (let i = 0; i < numberOfValidators; i++) {
+      // TODO: Still using static SECRET for NODE+i
       list.push(new Wallet("NODE" + i).getPublicKey());
     }
     return list;
@@ -24,4 +25,5 @@ class Validators {
     return this.list.includes(validator);
   }
 }
+
 module.exports = Validators;

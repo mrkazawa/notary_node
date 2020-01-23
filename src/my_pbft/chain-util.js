@@ -15,7 +15,7 @@ class ChainUtil {
   }
 
   // returns ids used in transactions
-  static id() {
+  static generateId() {
     return uuidV1();
   }
 

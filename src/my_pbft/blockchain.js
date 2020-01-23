@@ -8,7 +8,7 @@ class Blockchain {
   // the constructor takes an argument validators class object
   // this is used to create a list of validators
   constructor(validators) {
-    this.validatorList = validators.generateAddresses(NUMBER_OF_NODES);
+    this.validatorList = validators.list;
     this.chain = [Block.genesis()];
   }
 
@@ -32,8 +32,7 @@ class Blockchain {
   // calculates the next proposers by calculating a random index of the validators list
   // index is calculated using the hash of the latest block
   getProposer() {
-    let index =
-      this.chain[this.chain.length - 1].hash[0].charCodeAt(0) % NUMBER_OF_NODES;
+    let index = this.chain[this.chain.length - 1].hash[0].charCodeAt(0) % NUMBER_OF_NODES;
     return this.validatorList[index];
   }
 
@@ -43,11 +42,11 @@ class Blockchain {
     if (
       lastBlock.sequenceNo + 1 == block.sequenceNo &&
       block.lastHash === lastBlock.hash &&
-      block.hash === Block.blockHash(block) &&
+      block.hash === Block.getBlockHash(block) &&
       Block.verifyBlock(block) &&
       Block.verifyProposer(block, this.getProposer())
     ) {
-      //console.log("BLOCK VALID");
+      console.log("BLOCK VALID");
       return true;
     } else {
       console.log("BLOCK INVALID");

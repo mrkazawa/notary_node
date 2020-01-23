@@ -13,8 +13,7 @@ class Wallet {
 
   // Used for printing the wallet details
   toString() {
-    return `Wallet - 
-            publicKey: ${this.publicKey.toString()}`;
+    return `Wallet publicKey: ${this.publicKey.toString()}`;
   }
 
   // Used for signing data hashes

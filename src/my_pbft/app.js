@@ -17,8 +17,10 @@ const HTTP_PORT = process.env.HTTP_PORT || 3001;
 const app = express();
 app.use(bodyParser.json());
 
+// TODO: Using other SECRET will not work only use NODE0, NODE1, and so on..
 const wallet = new Wallet(process.env.SECRET);
 const transactionPool = new TransactionPool();
+// TODO: add proposer validator registraion procedure
 const validators = new Validators(NUMBER_OF_NODES);
 const blockchain = new Blockchain(validators);
 const blockPool = new BlockPool();

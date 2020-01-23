@@ -1,4 +1,4 @@
-const NodeCache = require( "node-cache" );
+const HashMap = require('hashmap');
 
 // Import transaction class used for verification
 const Transaction = require("./transaction");
@@ -9,7 +9,7 @@ const { TRANSACTION_THRESHOLD } = require("./config");
 
 class TransactionPool {
   constructor() {
-    this.transactions = new NodeCache();
+    this.transactions = new HashMap();
   }
 
   // pushes transactions in the list
@@ -17,8 +17,7 @@ class TransactionPool {
   // else returns false
   addTransaction(transaction) {
     this.transactions.set(transaction.id, transaction);
-    let stats = this.transactions.getStats();
-    if (stats.keys >= TRANSACTION_THRESHOLD) {
+    if (this.transactions.size >= TRANSACTION_THRESHOLD) {
       return true;
     } else {
       return false;
@@ -32,14 +31,13 @@ class TransactionPool {
 
   // checks if transactions exists or not
   transactionExists(transaction) {
-    let value = this.transactions.get(transaction.id);
-    return (value != undefined);
+    return this.transactions.has(transaction.id);
   }
 
   // empties the pool
   clear() {
     //console.log("TRANSACTION POOL CLEARED");
-    this.transactions.flushAll();
+    this.transactions.clear();
   }
 }
 
