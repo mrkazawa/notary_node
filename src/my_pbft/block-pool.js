@@ -1,26 +1,24 @@
-const Block = require("./block");
+const HashMap = require('hashmap');
 
 class BlockPool {
   constructor() {
-    this.list = [];
-  }
-
-  // check if the block exisits or not
-  exisitingBlock(block) {
-    let exists = this.list.find(b => b.hash === block.hash);
-    return exists;
+    this.pendingBlocks = new HashMap();
   }
 
   // pushes block to the chain
-  addBlock(block) {
-    this.list.push(block);
+  add(block) {
+    this.pendingBlocks.set(block.hash, block);
     //console.log("added block to pool");
   }
 
   // returns the blcok for the given hash
   getBlock(hash) {
-    let exists = this.list.find(b => b.hash === hash);
-    return exists;
+    return this.pendingBlocks.get(hash);
+  }
+
+  // check if the block exisits or not
+  exist(block) {
+    return this.pendingBlocks.has(block.hash);
   }
 }
 

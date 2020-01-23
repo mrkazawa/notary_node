@@ -31,6 +31,7 @@ class Blockchain {
 
   // calculates the next proposers by calculating a random index of the validators list
   // index is calculated using the hash of the latest block
+  // TODO: need to investigate what happen to this when one node fails
   getProposer() {
     let index = this.chain[this.chain.length - 1].hash[0].charCodeAt(0) % NUMBER_OF_NODES;
     return this.validatorList[index];
@@ -40,7 +41,7 @@ class Blockchain {
   isValidBlock(block) {
     const lastBlock = this.chain[this.chain.length - 1];
     if (
-      lastBlock.sequenceNo + 1 == block.sequenceNo &&
+      block.sequenceNo == lastBlock.sequenceNo + 1 &&
       block.lastHash === lastBlock.hash &&
       block.hash === Block.getBlockHash(block) &&
       Block.verifyBlock(block) &&

@@ -203,11 +203,11 @@ class P2pserver {
         case MESSAGE_TYPE.pre_prepare:
           // check if block is valid
           if (
-            !this.blockPool.exisitingBlock(data.block) &&
+            !this.blockPool.exist(data.block) &&
             this.blockchain.isValidBlock(data.block)
           ) {
             // add block to pool
-            this.blockPool.addBlock(data.block);
+            this.blockPool.add(data.block);
 
             // send to other nodes
             this.broadcastPrePrepare(data.block);
@@ -242,7 +242,7 @@ class P2pserver {
             }
           }
           break;
-          
+
         case MESSAGE_TYPE.commit:
           // check the validity commit messages
           if (
