@@ -170,11 +170,11 @@ class P2pserver {
         case MESSAGE_TYPE.transaction:
           // check if transactions is valid
           if (
-            !this.transactionPool.transactionExists(data.transaction) &&
-            this.transactionPool.verifyTransaction(data.transaction) &&
+            !this.transactionPool.exist(data.transaction) &&
+            this.transactionPool.isValidTransaction(data.transaction) &&
             this.validators.isValidValidator(data.transaction.from)
           ) {
-            let thresholdReached = this.transactionPool.addTransaction(
+            let thresholdReached = this.transactionPool.add(
               data.transaction
             );
             // send transactions to other nodes
@@ -188,10 +188,9 @@ class P2pserver {
                 console.log("PROPOSING BLOCK");
                 // if the node is the proposer, create a block and broadcast it
                 let block = this.blockchain.createBlock(
-                  this.transactionPool.transactions,
+                  this.transactionPool.getAllPendingTransactions(),
                   this.wallet
                 );
-                console.log("CREATED BLOCK", block);
                 this.broadcastPrePrepare(block);
               }
             } else {

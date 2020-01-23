@@ -15,7 +15,7 @@ class Blockchain {
   // pushes confirmed blocks into the chain
   addBlock(block) {
     this.chain.push(block);
-    //console.log("NEW BLOCK ADDED TO CHAIN");
+    console.log("NEW BLOCK ADDED TO CHAIN");
     return block;
   }
 

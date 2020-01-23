@@ -40,7 +40,7 @@ const p2pserver = new P2pserver(
 
 // sends all transactions in the transaction pool to the user
 app.get("/transactions", (req, res) => {
-  res.json(transactionPool.transactions);
+  res.json(transactionPool.pendingTransactions);
 });
 
 // sends the entire chain to the user

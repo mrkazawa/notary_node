@@ -10,7 +10,7 @@ const SHA256 = require("crypto-js/sha256");
 
 class ChainUtil {
   // a static function to return keypair generated using a secret phrase
-  static genKeyPair(secret) {
+  static generateKeyPair(secret) {
     return eddsa.keyFromSecret(secret);
   }
 

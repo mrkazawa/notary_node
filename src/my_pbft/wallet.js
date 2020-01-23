@@ -7,7 +7,7 @@ class Wallet {
   // The secret phase is passed an argument when creating a wallet
   // The keypair generated for a secret phrase is always the same
   constructor(secret) {
-    this.keyPair = ChainUtil.genKeyPair(secret);
+    this.keyPair = ChainUtil.generateKeyPair(secret);
     this.publicKey = this.keyPair.getPublic("hex");
   }
 
