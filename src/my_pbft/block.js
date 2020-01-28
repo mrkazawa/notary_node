@@ -47,7 +47,6 @@ class Block {
     );
   }
 
-  // creates a block using the passed lastblock, transactions and wallet instance
   static createBlock(lastBlock, data, wallet) {
     let timestamp = Date.now();
     const lastHash = lastBlock.hash;
@@ -65,19 +64,16 @@ class Block {
     );
   }
 
-  // hashes the passed values
   static calculateBlockHash(timestamp, lastHash, data) {
-    return SHA256(JSON.stringify(`${timestamp}${lastHash}${data}`)).toString();
+    return ChainUtil.hash(`${timestamp}${lastHash}${data}`);
   }
 
-  // returns the hash of a block
-  static getBlockHash(block) {
+  static verifyBlockHash(block, hash) {
     const { timestamp, lastHash, data } = block;
-    return this.calculateBlockHash(timestamp, lastHash, data);
+    return (hash === this.calculateBlockHash(timestamp, lastHash, data));
   }
 
-  // checks if the block is valid
-  static verifyBlock(block) {
+  static verifyBlockSignature(block) {
     return ChainUtil.verifySignature(
       block.proposer,
       block.signature,
@@ -85,8 +81,7 @@ class Block {
     );
   }
 
-  // verifies the proposer of the block with the passed public key
-  static verifyProposer(block, proposer) {
+  static verifyBlockProposer(block, proposer) {
     return (block.proposer == proposer);
   }
 }

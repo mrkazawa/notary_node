@@ -32,20 +32,20 @@ class Blockchain {
   // calculates the next proposers by calculating a random index of the validators list
   // index is calculated using the hash of the latest block
   // TODO: need to investigate what happen to this when one node fails
-  getProposer() {
-    let index = this.chain[this.chain.length - 1].hash[0].charCodeAt(0) % NUMBER_OF_NODES;
+  getCurrentProposer() {
+    let index = this.getLatestBlock().hash[0].charCodeAt(0) % NUMBER_OF_NODES;
     return this.validatorList[index];
   }
 
   // checks if the received block is valid
   isValidBlock(block) {
-    const lastBlock = this.chain[this.chain.length - 1];
+    const lastBlock = this.getLatestBlock();
     if (
       block.sequenceNo == lastBlock.sequenceNo + 1 &&
       block.lastHash === lastBlock.hash &&
-      block.hash === Block.getBlockHash(block) &&
-      Block.verifyBlock(block) &&
-      Block.verifyProposer(block, this.getProposer())
+      Block.verifyBlockHash(block, block.hash) &&
+      Block.verifyBlockSignature(block) &&
+      Block.verifyBlockProposer(block, this.getCurrentProposer())
     ) {
       console.log("BLOCK VALID");
       return true;
@@ -61,6 +61,14 @@ class Blockchain {
     block.prepareMessages = preparePool.list[hash];
     block.commitMessages = commitPool.list[hash];
     this.addBlock(block);
+  }
+
+  getAllBlocks() {
+    return this.chain;
+  }
+
+  getLatestBlock() {
+    return this.chain[this.chain.length - 1];
   }
 }
 module.exports = Blockchain;

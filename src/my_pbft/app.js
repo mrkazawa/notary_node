@@ -17,7 +17,7 @@ const HTTP_PORT = process.env.HTTP_PORT || 3001;
 const app = express();
 app.use(bodyParser.json());
 
-// TODO: Using other SECRET will not work only use NODE0, NODE1, and so on..
+// FIXME: Using other SECRET will not work only use NODE0, NODE1, and so on..
 const wallet = new Wallet(process.env.SECRET);
 const transactionPool = new TransactionPool();
 // TODO: add proposer validator registraion procedure
@@ -40,12 +40,12 @@ const p2pserver = new P2pserver(
 
 // sends all transactions in the transaction pool to the user
 app.get("/transactions", (req, res) => {
-  res.json(transactionPool.pendingTransactions);
+  res.json(transactionPool.getAllPendingTransactions());
 });
 
 // sends the entire chain to the user
 app.get("/blocks", (req, res) => {
-  res.json(blockchain.chain);
+  res.json(blockchain.getAllBlocks());
 });
 
 // creates transactions for the sent data

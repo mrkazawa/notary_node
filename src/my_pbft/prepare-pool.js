@@ -1,3 +1,5 @@
+const HashMap = require('hashmap');
+
 const ChainUtil = require("./chain-util");
 
 class PreparePool {

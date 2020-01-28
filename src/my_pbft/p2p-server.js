@@ -184,7 +184,7 @@ class P2pserver {
             if (thresholdReached) {
               console.log("THRESHOLD REACHED");
               // check the current node is the proposer
-              if (this.blockchain.getProposer() == this.wallet.getPublicKey()) {
+              if (this.blockchain.getCurrentProposer() == this.wallet.getPublicKey()) {
                 console.log("PROPOSING BLOCK");
                 // if the node is the proposer, create a block and broadcast it
                 let block = this.blockchain.createBlock(
