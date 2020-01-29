@@ -1,5 +1,5 @@
 // Maximum number of transactions that can be present in a block and transaction pool
-const PENDING_TRANSACTION_THRESHOLD = 3;
+const PENDING_TRANSACTION_THRESHOLD = 100000;
 
 // Total number of nodes in the network
 const NUMBER_OF_NODES = 3;
