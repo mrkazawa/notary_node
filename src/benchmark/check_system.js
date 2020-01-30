@@ -50,7 +50,7 @@ async function netUsage() {
     try {
         const netInt = await si.networkInterfaces();
         // make sure to use the correct network interface here
-        const netStat = await si.networkStats(netInt[3].iface);
+        const netStat = await si.networkStats(netInt[2].iface);
         console.log('Network Interface: ' + netStat[0].iface);
         console.log('Rx bytes: ' + netStat[0].rx_bytes);
         console.log('Tx bytes: ' + netStat[0].tx_bytes);
