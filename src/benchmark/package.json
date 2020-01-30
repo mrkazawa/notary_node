@@ -10,7 +10,13 @@
   "license": "ISC",
   "dependencies": {
     "autocannon": "^4.4.1",
+    "body-parser": "^1.19.0",
+    "crypto-js": "^3.1.9-1",
+    "elliptic": "^6.5.2",
+    "express": "^4.17.1",
+    "hashmap": "^2.4.0",
     "systeminformation": "^4.21.0",
-    "uuid": "^3.4.0"
+    "uuid": "^3.4.0",
+    "ws": "^7.2.1"
   }
 }
