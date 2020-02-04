@@ -3,11 +3,13 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "author": "",
   "license": "ISC",
+  "gypfile": true,
+  "scripts": {
+    "build": "node-gyp rebuild",
+    "clean": "node-gyp clean"
+  },
   "dependencies": {
     "autocannon": "^4.4.1",
     "body-parser": "^1.19.0",
@@ -15,8 +17,12 @@
     "elliptic": "^6.5.2",
     "express": "^4.17.1",
     "hashmap": "^2.4.0",
+    "node-addon-api": "^0.6.3",
     "systeminformation": "^4.21.0",
     "uuid": "^3.4.0",
     "ws": "^7.2.1"
+  },
+  "devDependencies": {
+    "node-gyp": "^6.1.0"
   }
 }
