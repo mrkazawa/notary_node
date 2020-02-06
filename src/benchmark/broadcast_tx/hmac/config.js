@@ -3,10 +3,10 @@ const PENDING_TRANSACTION_THRESHOLD = 100000;
 
 // Maximum number of request before the node send a bundle them in a transaction
 // and then broadcast it to peers
-const PENDING_REQUEST_THRESHOLD = 10;
+const PENDING_REQUEST_THRESHOLD = 100;
 
 // Total number of nodes in the network
-const NUMBER_OF_NODES = 3;
+const NUMBER_OF_NODES = 4;
 
 // Total number of tolerable faulty nodes in the network
 const NUMBER_OF_FAULTY_NODES = 1;
