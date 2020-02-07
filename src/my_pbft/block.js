@@ -1,6 +1,4 @@
-// Import SHA256 used for hashing and ChainUtil for verifying signature
-const SHA256 = require("crypto-js/sha256");
-const ChainUtil = require("./chain-util");
+const CryptoUtil = require("./crypto_util");
 
 class Block {
   constructor(
@@ -22,7 +20,7 @@ class Block {
   }
 
   // A function to print the block
-  toString() {
+  static toString() {
     return `Block - 
         Timestamp   : ${this.timestamp}
         Last Hash   : ${this.lastHash}
@@ -37,13 +35,13 @@ class Block {
   // this function generates the genesis block with random values
   static genesis() {
     return new this(
-      `genesis time`,
-      "----",
-      "genesis-hash",
-      [],
-      "P4@P@53R",
-      "SIGN",
-      0
+      `genesis time`, // timestamp
+      "----", // lastHash
+      "genesis-hash", // hash
+      [], // data
+      "P4@P@53R", // proposer
+      "SIGN", // signature
+      0 // sequenceNo
     );
   }
 
@@ -65,7 +63,7 @@ class Block {
   }
 
   static calculateBlockHash(timestamp, lastHash, data) {
-    return ChainUtil.hash(`${timestamp}${lastHash}${data}`);
+    return CryptoUtil.hash(`${timestamp}${lastHash}${data}`);
   }
 
   static verifyBlockHash(block, hash) {
@@ -74,7 +72,7 @@ class Block {
   }
 
   static verifyBlockSignature(block) {
-    return ChainUtil.verifySignature(
+    return CryptoUtil.verifySignature(
       block.proposer,
       block.signature,
       this.calculateBlockHash(block.timestamp, block.lastHash, block.data)

@@ -1,7 +1,4 @@
-// Import total number of nodes used to create validators list
 const { NUMBER_OF_NODES } = require("./config");
-
-// Used to verify block
 const Block = require("./block");
 
 class Blockchain {

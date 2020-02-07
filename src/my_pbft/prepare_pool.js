@@ -1,6 +1,6 @@
 const HashMap = require('hashmap');
 
-const ChainUtil = require("./chain-util");
+const CryptoUtil = require("./crypto_util");
 
 class PreparePool {
   // list object is mapping that holds a list of prepare messages for a hash of a block
@@ -44,7 +44,7 @@ class PreparePool {
 
   // checks if the prepare message is valid or not
   isValidPrepare(prepare) {
-    return ChainUtil.verifySignature(
+    return CryptoUtil.verifySignature(
       prepare.publicKey,
       prepare.signature,
       prepare.blockHash

@@ -1,15 +1,18 @@
-// Import all required modeles
 const express = require("express");
-const Wallet = require("./wallet");
 const bodyParser = require("body-parser");
-const TransactionPool = require("./transaction-pool");
-const P2pserver = require("./p2p-server");
+
+const P2pServer = require("./p2p_server");
 const Validators = require("./validators");
 const Blockchain = require("./blockchain");
-const BlockPool = require("./block-pool");
-const CommitPool = require("./commit-pool");
-const PreparePool = require("./prepare-pool");
-const MessagePool = require("./message-pool");
+const Wallet = require("./wallet");
+
+const RequestPool = require("./request_pool");
+const TransactionPool = require("./transaction_pool");
+const BlockPool = require("./block_pool"); // pre-prepare pool
+const PreparePool = require("./prepare_pool");
+const CommitPool = require("./commit_pool");
+const MessagePool = require("./message_pool"); // reply or change round pool
+
 const { NUMBER_OF_NODES } = require("./config");
 const HTTP_PORT = process.env.HTTP_PORT || 3001;
 
@@ -19,15 +22,18 @@ app.use(bodyParser.json());
 
 // FIXME: Using other SECRET will not work only use NODE0, NODE1, and so on..
 const wallet = new Wallet(process.env.SECRET);
-const transactionPool = new TransactionPool();
 // TODO: add proposer validator registraion procedure
 const validators = new Validators(NUMBER_OF_NODES);
 const blockchain = new Blockchain(validators);
+
+const requestPool = new RequestPool();
+const transactionPool = new TransactionPool();
 const blockPool = new BlockPool();
 const preparePool = new PreparePool();
 const commitPool = new CommitPool();
 const messagePool = new MessagePool();
-const p2pserver = new P2pserver(
+
+const p2pServer = new P2pServer(
   blockchain,
   transactionPool,
   wallet,
@@ -37,6 +43,11 @@ const p2pserver = new P2pserver(
   messagePool,
   validators
 );
+
+// sends all requests in the request pool to the user
+app.get("/requests", (req, res) => {
+  res.json(requestPool.getAllPendingRequests());
+});
 
 // sends all transactions in the transaction pool to the user
 app.get("/transactions", (req, res) => {
@@ -50,11 +61,14 @@ app.get("/blocks", (req, res) => {
 
 // creates transactions for the sent data
 app.post("/transact", (req, res) => {
-  //console.log(req.body);
   const { data } = req.body;
-  const transaction = wallet.createTransaction(data);
-  p2pserver.broadcastTransaction(transaction);
-  //res.redirect("/transactions");
+  const result = requestPool.add(data);
+  if (result) {
+    const tx_data = requestPool.getAllPendingRequests();
+    const transaction = wallet.createTransaction(tx_data);
+    p2pServer.broadcastTransaction(transaction);
+    requestPool.clear();
+  }
   res.status(200).send('transaction_received');
 });
 
@@ -64,4 +78,4 @@ app.listen(HTTP_PORT, () => {
 });
 
 // starts the p2p server
-p2pserver.listen();
+p2pServer.listen();

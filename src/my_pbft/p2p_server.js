@@ -1,15 +1,8 @@
-// import the ws module
 const WebSocket = require("ws");
 
-// import the min approval constant which will be used to compare the count the messages
 const { MIN_APPROVALS } = require("./config");
 
-// decalre a p2p server port on which it would listen for messages
-// we will pass the port through command line
 const P2P_PORT = process.env.P2P_PORT || 5001;
-
-// the neighbouring nodes socket addresses will be passed in command line
-// this statemet splits them into an array
 const peers = process.env.PEERS ? process.env.PEERS.split(",") : [];
 
 // message types used to avoid typing messages
@@ -22,7 +15,7 @@ const MESSAGE_TYPE = {
   round_change: "ROUND_CHANGE"
 };
 
-class P2pserver {
+class P2pServer {
   constructor(
     blockchain,
     transactionPool,
@@ -309,4 +302,4 @@ class P2pserver {
   }
 }
 
-module.exports = P2pserver;
+module.exports = P2pServer;
