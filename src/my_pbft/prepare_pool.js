@@ -1,24 +1,27 @@
 const HashMap = require('hashmap');
 
 const CryptoUtil = require("./crypto_util");
+const { MIN_APPROVALS } = require("./config");
 
 class PreparePool {
-  // list object is mapping that holds a list of prepare messages for a hash of a block
   constructor() {
-    this.list = {};
+    this.pendingPrepareMessages = new HashMap();
   }
 
-  // prepare function initialize a list of prepare message for a block
-  // and adds the prepare message for the current node and
-  // returns it
-  prepare(block, wallet) {
+  initPrepare(block, wallet) {
+    if (this.pendingPrepareMessages.has(block.hash)) {
+      console.log("ERROR! Prepare Pool should be empty");
+      process.exitCode = 1;
+    }
+
     let prepare = this.createPrepare(block, wallet);
-    this.list[block.hash] = [];
-    this.list[block.hash].push(prepare);
+    let prepareMap = new HashMap();
+    prepareMap.set(prepare.publicKey, prepare.signature);
+    this.pendingPrepareMessages.set(prepare.blockHash, prepareMap);
+
     return prepare;
   }
 
-  // creates a prepare message for the given block
   createPrepare(block, wallet) {
     let prepare = {
       blockHash: block.hash,
@@ -29,20 +32,35 @@ class PreparePool {
     return prepare;
   }
 
-  // pushes the prepare message for a block hash into the list
   addPrepare(prepare) {
-    this.list[prepare.blockHash].push(prepare);
+    if (!this.pendingPrepareMessages.has(prepare.blockHash)) {
+      return false;
+    }
+
+    let prepareMap = this.pendingPrepareMessages.get(prepare.blockHash);
+    prepareMap.set(prepare.publicKey, prepare.signature);
+    this.pendingPrepareMessages.set(prepare.blockHash, prepareMap);
+
+    if (prepareMap.size >= MIN_APPROVALS) {
+      return true;
+    } else {
+      return false;
+    }
   }
 
-  // checks if the prepare message already exists
+  get(hash) {
+    return this.pendingPrepareMessages.get(hash).entries();
+  }
+
   existingPrepare(prepare) {
-    let exists = this.list[prepare.blockHash].find(
-      p => p.publicKey === prepare.publicKey
-    );
-    return exists;
+    if (!this.pendingPrepareMessages.has(prepare.blockHash)) {
+      return false;
+    }
+
+    let prepareMap = this.pendingPrepareMessages.get(prepare.blockHash);
+    return prepareMap.has(prepare.publicKey);
   }
 
-  // checks if the prepare message is valid or not
   isValidPrepare(prepare) {
     return CryptoUtil.verifySignature(
       prepare.publicKey,

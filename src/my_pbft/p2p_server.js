@@ -167,16 +167,14 @@ class P2pServer {
             this.transactionPool.isValidTransaction(data.transaction) &&
             this.validators.isValidValidator(data.transaction.from)
           ) {
-            let thresholdReached = this.transactionPool.add(
-              data.transaction
-            );
             // send transactions to other nodes
             this.broadcastTransaction(data.transaction);
 
+            let thresholdReached = this.transactionPool.add(data.transaction);
             // check if limit reached
             if (thresholdReached) {
               console.log("THRESHOLD REACHED");
-              // check the current node is the proposer
+              // check if the current node is the proposer
               if (this.blockchain.getCurrentProposer() == this.wallet.getPublicKey()) {
                 console.log("PROPOSING BLOCK");
                 // if the node is the proposer, create a block and broadcast it
@@ -198,14 +196,16 @@ class P2pServer {
             !this.blockPool.exist(data.block) &&
             this.blockchain.isValidBlock(data.block)
           ) {
-            // add block to pool
-            this.blockPool.add(data.block);
-
             // send to other nodes
             this.broadcastPrePrepare(data.block);
 
+            console.log("Block Received");
+
+            // add block to pool
+            this.blockPool.add(data.block);
+
             // create and broadcast a prepare message
-            let prepare = this.preparePool.prepare(data.block, this.wallet);
+            let prepare = this.preparePool.initPrepare(data.block, this.wallet);
             this.broadcastPrepare(prepare);
           }
           break;
@@ -217,20 +217,16 @@ class P2pServer {
             this.preparePool.isValidPrepare(data.prepare, this.wallet) &&
             this.validators.isValidValidator(data.prepare.publicKey)
           ) {
-            // add prepare message to the pool
-            this.preparePool.addPrepare(data.prepare);
-
             // send to other nodes
             this.broadcastPrepare(data.prepare);
 
-            // if no of prepare messages reaches minimum required
-            // send commit message
-            if (
-              this.preparePool.list[data.prepare.blockHash].length >=
-              MIN_APPROVALS
-            ) {
+            // add prepare message to the pool
+            let thresholdReached =  this.preparePool.addPrepare(data.prepare);
+            if (thresholdReached) {
               let commit = this.commitPool.commit(data.prepare, this.wallet);
               this.broadcastCommit(commit);
+            } else {
+              console.log("Pre-prepare Added");
             }
           }
           break;

@@ -55,7 +55,7 @@ class Blockchain {
   // updates the block by appending the prepare and commit messages to the block
   addUpdatedBlock(hash, blockPool, preparePool, commitPool) {
     let block = blockPool.getBlock(hash);
-    block.prepareMessages = preparePool.list[hash];
+    block.prepareMessages = preparePool.get(hash);
     block.commitMessages = commitPool.list[hash];
     this.addBlock(block);
   }
