@@ -2,6 +2,11 @@ const HashMap = require('hashmap');
 
 class BlockPool {
   constructor() {
+    if (BlockPool._instance) {
+      throw new Error('BlockPool already has an instance!!!');
+    }
+    BlockPool._instance = this;
+
     this.pendingBlocks = new HashMap();
   }
 

@@ -5,6 +5,11 @@ const { PENDING_TRANSACTION_THRESHOLD } = require("./config");
 
 class TransactionPool {
   constructor() {
+    if (TransactionPool._instance) {
+      throw new Error('TransactionPool already has an instance!!!');
+    }
+    TransactionPool._instance = this;
+
     this.pendingTransactions = new HashMap();
   }
 
@@ -31,7 +36,6 @@ class TransactionPool {
 
   clear() {
     this.pendingTransactions.clear();
-    //console.log("TRANSACTION POOL CLEARED");
   }
 }
 

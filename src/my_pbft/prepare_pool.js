@@ -5,6 +5,11 @@ const { MIN_APPROVALS } = require("./config");
 
 class PreparePool {
   constructor() {
+    if (PreparePool._instance) {
+      throw new Error('PreparePool already has an instance!!!');
+    }
+    PreparePool._instance = this;
+
     this.pendingPrepareMessages = new HashMap();
   }
 

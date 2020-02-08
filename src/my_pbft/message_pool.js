@@ -3,6 +3,11 @@ const CryptoUtil = require("./crypto_util");
 class MessagePool {
   // list object is mapping that holds a list messages for a hash of a block
   constructor() {
+    if (MessagePool._instance) {
+      throw new Error('MessagePool already has an instance!!!');
+    }
+    MessagePool._instance = this;
+
     this.list = {};
     this.message = "INITIATE NEW ROUND";
   }

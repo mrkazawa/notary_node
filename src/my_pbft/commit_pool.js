@@ -3,6 +3,11 @@ const CryptoUtil = require("./crypto_util");
 class CommitPool {
   // list object is mapping that holds a list commit messages for a hash of a block
   constructor() {
+    if (CommitPool._instance) {
+      throw new Error('CommitPool already has an instance!!!');
+    }
+    CommitPool._instance = this;
+
     this.list = {};
   }
 

@@ -59,6 +59,11 @@ app.get("/blocks", (req, res) => {
   res.json(blockchain.getAllBlocks());
 });
 
+// sends the current block height
+app.get("/height", (req, res) => {
+  res.json(blockchain.getBlockHeight());
+});
+
 // creates transactions for the sent data
 app.post("/transact", (req, res) => {
   const { data } = req.body;

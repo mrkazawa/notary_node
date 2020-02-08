@@ -1,7 +1,12 @@
-const Wallet = require("./wallet");
+const CryptoUtil = require("./crypto_util");
 
 class Validators {
   constructor(numberOfValidators) {
+    if (Validators._instance) {
+      throw new Error('Validators already has an instance!!!');
+    }
+    Validators._instance = this;
+
     this.list = this.generateAddresses(numberOfValidators);
   }
 
@@ -14,7 +19,7 @@ class Validators {
     for (let i = 0; i < numberOfValidators; i++) {
       // TODO: Still using static SECRET for NODE+i
       // still construct the list of validators manually here
-      list.push(new Wallet("NODE" + i).getPublicKey());
+      list.push(CryptoUtil.generateKeyPair("NODE" + i).getPublic("hex"));
     }
     return list;
   }

@@ -5,6 +5,11 @@ class Blockchain {
   // the constructor takes an argument validators class object
   // this is used to create a list of validators
   constructor(validators) {
+    if (Blockchain._instance) {
+      throw new Error('Blockchain already has an instance!!!');
+    }
+    Blockchain._instance = this;
+
     this.validatorList = validators.list;
     this.chain = [Block.genesis()];
   }
@@ -66,6 +71,10 @@ class Blockchain {
 
   getLatestBlock() {
     return this.chain[this.chain.length - 1];
+  }
+
+  getBlockHeight() {
+    return this.chain.length;
   }
 }
 module.exports = Blockchain;

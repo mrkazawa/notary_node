@@ -5,8 +5,6 @@ const { MIN_APPROVALS } = require("./config");
 const P2P_PORT = process.env.P2P_PORT || 5001;
 const peers = process.env.PEERS ? process.env.PEERS.split(",") : [];
 
-// message types used to avoid typing messages
-// also used in swtich statement in message handlers
 const MESSAGE_TYPE = {
   transaction: "TRANSACTION",
   prepare: "PREPARE",
@@ -26,6 +24,11 @@ class P2pServer {
     messagePool,
     validators
   ) {
+    if (P2pServer._instance) {
+      throw new Error('P2pServer already has an instance!!!');
+    }
+    P2pServer._instance = this;
+
     this.blockchain = blockchain;
     this.transactionPool = transactionPool;
     this.wallet = wallet;
@@ -63,14 +66,14 @@ class P2pServer {
     });
   }
 
-  // broadcasts transactions
+  //-------------------------- Send Broadcasts --------------------------//
+
   broadcastTransaction(transaction) {
     this.sockets.forEach(socket => {
       this.sendTransaction(socket, transaction);
     });
   }
 
-  // sends transactions to a perticular socket
   sendTransaction(socket, transaction) {
     socket.send(
       JSON.stringify({
@@ -80,14 +83,12 @@ class P2pServer {
     );
   }
 
-  // broadcasts preprepare
   broadcastPrePrepare(block) {
     this.sockets.forEach(socket => {
       this.sendPrePrepare(socket, block);
     });
   }
 
-  // sends preprepare to a particular socket
   sendPrePrepare(socket, block) {
     socket.send(
       JSON.stringify({
@@ -97,14 +98,12 @@ class P2pServer {
     );
   }
 
-  // broadcast prepare
   broadcastPrepare(prepare) {
     this.sockets.forEach(socket => {
       this.sendPrepare(socket, prepare);
     });
   }
 
-  // sends prepare to a particular socket
   sendPrepare(socket, prepare) {
     socket.send(
       JSON.stringify({
@@ -114,14 +113,12 @@ class P2pServer {
     );
   }
 
-  // broadcasts commit
   broadcastCommit(commit) {
     this.sockets.forEach(socket => {
       this.sendCommit(socket, commit);
     });
   }
 
-  // sends commit to a particular socket
   sendCommit(socket, commit) {
     socket.send(
       JSON.stringify({
@@ -131,14 +128,12 @@ class P2pServer {
     );
   }
 
-  // broacasts round change
   broadcastRoundChange(message) {
     this.sockets.forEach(socket => {
       this.sendRoundChange(socket, message);
     });
   }
 
-  // sends round change message to a particular socket
   sendRoundChange(socket, message) {
     socket.send(
       JSON.stringify({
@@ -150,28 +145,20 @@ class P2pServer {
 
   //-------------------------- Receive Handlers --------------------------//
 
-  // handles any message sent to the current node
   messageHandler(socket) {
-    // registers message handler
     socket.on("message", message => {
       const data = JSON.parse(message);
 
-      //console.log("RECEIVED", data.type);
-
-      // select a perticular message handler
       switch (data.type) {
         case MESSAGE_TYPE.transaction:
-          // check if transactions is valid
           if (
             !this.transactionPool.exist(data.transaction) &&
             this.transactionPool.isValidTransaction(data.transaction) &&
             this.validators.isValidValidator(data.transaction.from)
           ) {
-            // send transactions to other nodes
             this.broadcastTransaction(data.transaction);
 
             let thresholdReached = this.transactionPool.add(data.transaction);
-            // check if limit reached
             if (thresholdReached) {
               console.log("THRESHOLD REACHED");
               // check if the current node is the proposer
@@ -196,7 +183,6 @@ class P2pServer {
             !this.blockPool.exist(data.block) &&
             this.blockchain.isValidBlock(data.block)
           ) {
-            // send to other nodes
             this.broadcastPrePrepare(data.block);
 
             console.log("Block Received");
@@ -217,7 +203,6 @@ class P2pServer {
             this.preparePool.isValidPrepare(data.prepare, this.wallet) &&
             this.validators.isValidValidator(data.prepare.publicKey)
           ) {
-            // send to other nodes
             this.broadcastPrepare(data.prepare);
 
             // add prepare message to the pool
@@ -238,7 +223,6 @@ class P2pServer {
             this.commitPool.isValidCommit(data.commit) &&
             this.validators.isValidValidator(data.commit.publicKey)
           ) {
-            // add to pool
             this.commitPool.addCommit(data.commit);
 
             // send to other nodes
@@ -277,11 +261,9 @@ class P2pServer {
             !this.messagePool.existingMessage(data.message) &&
             this.validators.isValidValidator(data.message.publicKey)
           ) {
+            this.broadcastRoundChange(message);
             // add to pool
             this.messagePool.addMessage(data.message);
-
-            // send to other nodes
-            this.broadcastRoundChange(message);
 
             // if enough messages are received, clear the pools
             if (

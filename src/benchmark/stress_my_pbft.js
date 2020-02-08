@@ -2,7 +2,7 @@
 
 const autocannon = require('autocannon');
 
-const payload_350_bytes = {
+const payload_400_bytes = {
   data: {
     app_id: "car_rental_2020",
     task_id: 45637,
@@ -10,7 +10,8 @@ const payload_350_bytes = {
     storage_address: "QmWWQSuPMS6aXCbZKpEjPHPUZN2NjB3YrhJTHsV4X3vb2t",
     compute_address: "0x0472ec0185ebb8202f3d4ddb0226998889663cf2",
     compute_network_id: 2020,
-    payment_proof: "MYPAYMENTPROOF99999999999999999999999999999999999999999999999999999999"
+    payment_proof: "MYPAYMENTPROOF99999999999999999999999999999999999999999999999999999999",
+    timestamp: Date.now()
   }
 }
 
@@ -20,7 +21,7 @@ const instance = autocannon({
   headers: {
     "content-type": "application/json"
   },
-  body: JSON.stringify(payload_350_bytes),
+  body: JSON.stringify(payload_400_bytes),
   connections: 10, // concurrent connection
   pipelining: 1, // default
   bailout: 10, // tolerable number of errors

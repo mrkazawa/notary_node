@@ -5,6 +5,11 @@ const { PENDING_REQUEST_THRESHOLD, BENCHMARK_FLAG } = require("./config");
 
 class RequestPool {
   constructor() {
+    if (RequestPool._instance) {
+      throw new Error('RequestPool already has an instance!!!');
+    }
+    RequestPool._instance = this;
+
     this.pendingRequests = new HashMap();
   }
 
@@ -17,6 +22,7 @@ class RequestPool {
       if (this.pendingRequests.has(hash)) {
         return false;
       }
+      this.pendingRequests.set(hash, request);
     }
 
     if (this.pendingRequests.size >= PENDING_REQUEST_THRESHOLD) {
@@ -32,7 +38,6 @@ class RequestPool {
 
   clear() {
     this.pendingRequests.clear();
-    //console.log("REQUEST POOL CLEARED");
   }
 }
 
