@@ -12,7 +12,6 @@ class BlockPool {
 
   add(block) {
     this.pendingBlocks.set(block.hash, block);
-    //console.log("added block to pool");
   }
 
   getBlock(hash) {

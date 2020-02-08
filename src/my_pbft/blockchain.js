@@ -2,23 +2,14 @@ const { NUMBER_OF_NODES } = require("./config");
 const Block = require("./block");
 
 class Blockchain {
-  // the constructor takes an argument validators class object
-  // this is used to create a list of validators
   constructor(validators) {
     if (Blockchain._instance) {
       throw new Error('Blockchain already has an instance!!!');
     }
     Blockchain._instance = this;
 
-    this.validatorList = validators.list;
+    this.validatorsList = validators.list;
     this.chain = [Block.genesis()];
-  }
-
-  // pushes confirmed blocks into the chain
-  addBlock(block) {
-    this.chain.push(block);
-    console.log("NEW BLOCK ADDED TO CHAIN");
-    return block;
   }
 
   // wrapper function to create blocks
@@ -36,7 +27,7 @@ class Blockchain {
   // TODO: need to investigate what happen to this when one node fails
   getCurrentProposer() {
     let index = this.getLatestBlock().hash[0].charCodeAt(0) % NUMBER_OF_NODES;
-    return this.validatorList[index];
+    return this.validatorsList[index];
   }
 
   // checks if the received block is valid
@@ -57,12 +48,13 @@ class Blockchain {
     }
   }
 
-  // updates the block by appending the prepare and commit messages to the block
-  addUpdatedBlock(hash, blockPool, preparePool, commitPool) {
+  addBlockToBlockhain(hash, blockPool, preparePool, commitPool) {
     let block = blockPool.getBlock(hash);
     block.prepareMessages = preparePool.get(hash);
-    block.commitMessages = commitPool.list[hash];
-    this.addBlock(block);
+    block.commitMessages = commitPool.get(hash);
+
+    this.chain.push(block);
+    console.log("NEW BLOCK ADDED TO CHAIN");
   }
 
   getAllBlocks() {

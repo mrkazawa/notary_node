@@ -1,44 +1,69 @@
+const HashMap = require('hashmap');
+
 const CryptoUtil = require("./crypto_util");
+const { MIN_APPROVALS } = require("./config");
 
 class CommitPool {
-  // list object is mapping that holds a list commit messages for a hash of a block
   constructor() {
     if (CommitPool._instance) {
       throw new Error('CommitPool already has an instance!!!');
     }
     CommitPool._instance = this;
 
-    this.list = {};
+    this.pendingCommitMessages = new HashMap();
   }
 
-  // commit function initialize a list of commit message for a prepare message
-  // and adds the commit message for the current node and
-  // returns it
-  commit(prepare, wallet) {
+  initCommit(prepare, wallet) {
+    if (this.pendingCommitMessages.has(prepare.blockHash)) {
+      console.log("ERROR! Commit Pool should be empty");
+      process.exitCode = 1;
+    }
+
     let commit = this.createCommit(prepare, wallet);
-    this.list[prepare.blockHash] = [];
-    this.list[prepare.blockHash].push(commit);
+    let commitMap = new HashMap();
+    commitMap.set(commit.publicKey, commit.signature);
+    this.pendingCommitMessages.set(commit.blockHash, commitMap);
+
     return commit;
   }
 
-  // creates a commit message for the given prepare message
   createCommit(prepare, wallet) {
-    let commit = {};
-    commit.blockHash = prepare.blockHash;
-    commit.publicKey = wallet.getPublicKey();
-    commit.signature = wallet.sign(prepare.blockHash);
-    return commit;
+    return {
+      blockHash: prepare.blockHash,
+      publicKey: wallet.getPublicKey(),
+      signature: wallet.sign(prepare.blockHash)
+    };
   }
 
-  // checks if the commit message already exists
+  addCommit(commit) {
+    if (!this.pendingCommitMessages.has(commit.blockHash)) {
+      return false;
+    }
+
+    let commitMap = this.pendingCommitMessages.get(commit.blockHash);
+    commitMap.set(commit.publicKey, commit.signature);
+    this.pendingCommitMessages.set(commit.blockHash, commitMap);
+
+    if (commitMap.size >= MIN_APPROVALS) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  get(hash) {
+    return this.pendingCommitMessages.get(hash).entries();
+  }
+
   existingCommit(commit) {
-    let exists = this.list[commit.blockHash].find(
-      p => p.publicKey === commit.publicKey
-    );
-    return exists;
+    if (!this.pendingCommitMessages.has(commit.blockHash)) {
+      return false;
+    }
+
+    let commitMap = this.pendingCommitMessages.get(commit.blockHash);
+    return commitMap.has(commit.publicKey);
   }
 
-  // checks if the commit message is valid or not
   isValidCommit(commit) {
     return CryptoUtil.verifySignature(
       commit.publicKey,
@@ -47,9 +72,8 @@ class CommitPool {
     );
   }
 
-  // pushes the commit message for a block hash into the list
-  addCommit(commit) {
-    this.list[commit.blockHash].push(commit);
+  clear() {
+    this.pendingCommitMessages.clear();
   }
 }
 

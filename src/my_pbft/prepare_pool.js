@@ -28,13 +28,11 @@ class PreparePool {
   }
 
   createPrepare(block, wallet) {
-    let prepare = {
+    return {
       blockHash: block.hash,
       publicKey: wallet.getPublicKey(),
       signature: wallet.sign(block.hash)
     };
-
-    return prepare;
   }
 
   addPrepare(prepare) {
@@ -72,6 +70,10 @@ class PreparePool {
       prepare.signature,
       prepare.blockHash
     );
+  }
+
+  clear() {
+    this.pendingPrepareMessages.clear();
   }
 }
 

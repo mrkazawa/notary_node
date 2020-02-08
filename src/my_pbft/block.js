@@ -46,11 +46,11 @@ class Block {
   }
 
   static createBlock(lastBlock, data, wallet) {
-    let timestamp = Date.now();
     const lastHash = lastBlock.hash;
-    let hash = this.calculateBlockHash(timestamp, lastHash, data);
+    let hash = this.calculateBlockHash(lastHash, data);
     let proposer = wallet.getPublicKey();
     let signature = wallet.sign(hash);
+    let timestamp = Date.now();
     return new this(
       timestamp,
       lastHash,
@@ -62,20 +62,20 @@ class Block {
     );
   }
 
-  static calculateBlockHash(timestamp, lastHash, data) {
-    return CryptoUtil.hash(`${timestamp}${lastHash}${data}`);
+  static calculateBlockHash(lastHash, data) {
+    return CryptoUtil.hash(`${lastHash}${data}`);
   }
 
   static verifyBlockHash(block, hash) {
-    const { timestamp, lastHash, data } = block;
-    return (hash === this.calculateBlockHash(timestamp, lastHash, data));
+    const { lastHash, data } = block;
+    return (hash === this.calculateBlockHash(lastHash, data));
   }
 
   static verifyBlockSignature(block) {
     return CryptoUtil.verifySignature(
       block.proposer,
       block.signature,
-      this.calculateBlockHash(block.timestamp, block.lastHash, block.data)
+      this.calculateBlockHash(block.lastHash, block.data)
     );
   }
 

@@ -24,6 +24,10 @@ class Validators {
     return list;
   }
 
+  getValidator(index) {
+    return this.list[index];
+  }
+
   isValidValidator(validator) {
     return this.list.includes(validator);
   }

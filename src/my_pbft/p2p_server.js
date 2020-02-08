@@ -178,7 +178,6 @@ class P2pServer {
           break;
 
         case MESSAGE_TYPE.pre_prepare:
-          // check if block is valid
           if (
             !this.blockPool.exist(data.block) &&
             this.blockchain.isValidBlock(data.block)
@@ -197,18 +196,16 @@ class P2pServer {
           break;
 
         case MESSAGE_TYPE.prepare:
-          // check if the prepare message is valid
           if (
             !this.preparePool.existingPrepare(data.prepare) &&
-            this.preparePool.isValidPrepare(data.prepare, this.wallet) &&
+            this.preparePool.isValidPrepare(data.prepare) &&
             this.validators.isValidValidator(data.prepare.publicKey)
           ) {
             this.broadcastPrepare(data.prepare);
 
-            // add prepare message to the pool
             let thresholdReached =  this.preparePool.addPrepare(data.prepare);
             if (thresholdReached) {
-              let commit = this.commitPool.commit(data.prepare, this.wallet);
+              let commit = this.commitPool.initCommit(data.prepare, this.wallet);
               this.broadcastCommit(commit);
             } else {
               console.log("Pre-prepare Added");
@@ -217,36 +214,30 @@ class P2pServer {
           break;
 
         case MESSAGE_TYPE.commit:
-          // check the validity commit messages
           if (
             !this.commitPool.existingCommit(data.commit) &&
             this.commitPool.isValidCommit(data.commit) &&
             this.validators.isValidValidator(data.commit.publicKey)
           ) {
-            this.commitPool.addCommit(data.commit);
-
-            // send to other nodes
             this.broadcastCommit(data.commit);
 
-            // if no of commit messages reaches minimum required
-            // add updated block to chain
-            if (
-              this.commitPool.list[data.commit.blockHash].length >=
-              MIN_APPROVALS
-            ) {
-              this.blockchain.addUpdatedBlock(
+            let thresholdReached = this.commitPool.addCommit(data.commit);
+            if (thresholdReached) {
+              this.blockchain.addBlockToBlockhain(
                 data.commit.blockHash,
                 this.blockPool,
                 this.preparePool,
                 this.commitPool
               );
-            }
-            // Send a round change message to nodes
-            let message = this.messagePool.createMessage(
-              this.blockchain.chain[this.blockchain.chain.length - 1].hash,
-              this.wallet
-            );
-            this.broadcastRoundChange(message);
+
+              let message = this.messagePool.createMessage(
+                this.blockchain.chain[this.blockchain.chain.length - 1].hash,
+                this.wallet
+              );
+              this.broadcastRoundChange(message);
+            } else {
+              console.log("Commit Added");
+            }            
           }
           break;
 
@@ -271,6 +262,9 @@ class P2pServer {
               MIN_APPROVALS
             ) {
               this.transactionPool.clear();
+              this.blockPool.clear();
+              this.preparePool.clear();
+              this.commitPool.clear();
               // TODO: Add clear for blockPool, preparePool, commitPool, and messagePool
             }
           }
