@@ -11,7 +11,7 @@ const TransactionPool = require("./transaction_pool");
 const BlockPool = require("./block_pool"); // pre-prepare pool
 const PreparePool = require("./prepare_pool");
 const CommitPool = require("./commit_pool");
-const MessagePool = require("./message_pool"); // reply or change round pool
+const RoundChangePool = require("./round_change_pool");
 
 const { NUMBER_OF_NODES } = require("./config");
 const HTTP_PORT = process.env.HTTP_PORT || 3001;
@@ -31,7 +31,7 @@ const transactionPool = new TransactionPool();
 const blockPool = new BlockPool();
 const preparePool = new PreparePool();
 const commitPool = new CommitPool();
-const messagePool = new MessagePool();
+const roundChangePool = new RoundChangePool();
 
 const p2pServer = new P2pServer(
   blockchain,
@@ -40,7 +40,7 @@ const p2pServer = new P2pServer(
   blockPool,
   preparePool,
   commitPool,
-  messagePool,
+  roundChangePool,
   validators
 );
 
@@ -67,12 +67,11 @@ app.get("/height", (req, res) => {
 // creates transactions for the sent data
 app.post("/transact", (req, res) => {
   const { data } = req.body;
-  const result = requestPool.add(data);
-  if (result) {
+  const thresholdReached = requestPool.add(data);
+  if (thresholdReached) {
     const tx_data = requestPool.getAllPendingRequests();
     const transaction = wallet.createTransaction(tx_data);
     p2pServer.broadcastTransaction(transaction);
-    requestPool.clear();
   }
   res.status(200).send('transaction_received');
 });

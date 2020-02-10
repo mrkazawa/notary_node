@@ -1,14 +1,12 @@
 const WebSocket = require("ws");
 
-const { MIN_APPROVALS } = require("./config");
-
 const P2P_PORT = process.env.P2P_PORT || 5001;
 const peers = process.env.PEERS ? process.env.PEERS.split(",") : [];
 
 const MESSAGE_TYPE = {
   transaction: "TRANSACTION",
   prepare: "PREPARE",
-  pre_prepare: "PRE-PREPARE",
+  pre_prepare: "PRE_PREPARE",
   commit: "COMMIT",
   round_change: "ROUND_CHANGE"
 };
@@ -21,7 +19,7 @@ class P2pServer {
     blockPool,
     preparePool,
     commitPool,
-    messagePool,
+    roundChangePool,
     validators
   ) {
     if (P2pServer._instance) {
@@ -35,14 +33,16 @@ class P2pServer {
     this.blockPool = blockPool;
     this.preparePool = preparePool;
     this.commitPool = commitPool;
-    this.messagePool = messagePool;
+    this.roundChangePool = roundChangePool;
     this.validators = validators;
     this.sockets = [];
   }
 
   // Creates a server on a given port
   listen() {
-    const server = new WebSocket.Server({ port: P2P_PORT });
+    const server = new WebSocket.Server({
+      port: P2P_PORT
+    });
     server.on("connection", socket => {
       console.log("new connection");
       this.connectSocket(socket);
@@ -128,17 +128,17 @@ class P2pServer {
     );
   }
 
-  broadcastRoundChange(message) {
+  broadcastRoundChange(roundChange) {
     this.sockets.forEach(socket => {
-      this.sendRoundChange(socket, message);
+      this.sendRoundChange(socket, roundChange);
     });
   }
 
-  sendRoundChange(socket, message) {
+  sendRoundChange(socket, roundChange) {
     socket.send(
       JSON.stringify({
         type: MESSAGE_TYPE.round_change,
-        message: message
+        roundChange: roundChange
       })
     );
   }
@@ -203,7 +203,7 @@ class P2pServer {
           ) {
             this.broadcastPrepare(data.prepare);
 
-            let thresholdReached =  this.preparePool.addPrepare(data.prepare);
+            let thresholdReached = this.preparePool.addPrepare(data.prepare);
             if (thresholdReached) {
               let commit = this.commitPool.initCommit(data.prepare, this.wallet);
               this.broadcastCommit(commit);
@@ -230,41 +230,30 @@ class P2pServer {
                 this.commitPool
               );
 
-              let message = this.messagePool.createMessage(
-                this.blockchain.chain[this.blockchain.chain.length - 1].hash,
-                this.wallet
-              );
-              this.broadcastRoundChange(message);
+              let roundChange = this.roundChangePool.initRoundChange(data.commit, this.wallet);
+              this.broadcastRoundChange(roundChange);
             } else {
               console.log("Commit Added");
-            }            
+            }
           }
           break;
 
         case MESSAGE_TYPE.round_change:
-          // check the validity of the round change message
-          /* if (
-            !this.messagePool.existingMessage(data.message) &&
-            this.messagePool.isValidMessage(data.message) &&
-            this.validators.isValidValidator(data.message.publicKey)
-          ) { */
           if (
-            !this.messagePool.existingMessage(data.message) &&
-            this.validators.isValidValidator(data.message.publicKey)
+            this.validators.isValidValidator(data.roundChange.publicKey) &&
+            this.roundChangePool.isInitiated(data.roundChange) &&
+            !this.roundChangePool.isExist(data.roundChange) &&
+            this.roundChangePool.isValidRoundChange(data.roundChange)
           ) {
-            this.broadcastRoundChange(message);
-            // add to pool
-            this.messagePool.addMessage(data.message);
+            this.broadcastRoundChange(data.roundChange);
 
-            // if enough messages are received, clear the pools
-            if (
-              this.messagePool.list[data.message.blockHash].length >=
-              MIN_APPROVALS
-            ) {
+            let thresholdReached = this.roundChangePool.add(data.roundChange);
+            if (thresholdReached) {
+              this.roundChangePool.delete(data.roundChange);
               this.transactionPool.clear();
-              this.blockPool.clear();
-              this.preparePool.clear();
-              this.commitPool.clear();
+              //this.blockPool.clear();
+              //this.preparePool.clear();
+              //this.commitPool.clear();
               // TODO: Add clear for blockPool, preparePool, commitPool, and messagePool
             }
           }

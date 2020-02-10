@@ -17,6 +17,7 @@ class RequestPool {
     if (BENCHMARK_FLAG) {
       let id = CryptoUtil.generateId();
       this.pendingRequests.set(id, request);
+
     } else {
       let hash = CryptoUtil.hash(request);
       if (this.pendingRequests.has(hash)) {
@@ -25,19 +26,13 @@ class RequestPool {
       this.pendingRequests.set(hash, request);
     }
 
-    if (this.pendingRequests.size >= PENDING_REQUEST_THRESHOLD) {
-      return true;
-    } else {
-      return false;
-    }
+    return (this.pendingRequests.size >= PENDING_REQUEST_THRESHOLD);
   }
 
   getAllPendingRequests() {
-    return this.pendingRequests.entries();
-  }
-
-  clear() {
+    let requests =  this.pendingRequests.entries();
     this.pendingRequests.clear();
+    return requests;
   }
 }
 
