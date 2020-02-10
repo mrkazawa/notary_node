@@ -1,5 +1,7 @@
 const HashMap = require('hashmap');
 
+const Block = require("./block");
+
 class BlockPool {
   constructor() {
     if (BlockPool._instance) {
@@ -16,6 +18,10 @@ class BlockPool {
 
   isExist(block) {
     return this.pendingBlocks.has(block.hash);
+  }
+
+  isValidBlock(block) {
+    return Block.verifyBlockSignature(block);
   }
 
   get(blockHash) {

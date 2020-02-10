@@ -151,7 +151,6 @@ class P2pServer {
 
       switch (data.type) {
         case MESSAGE_TYPE.transaction:
-          console.log("Transacton " + data.transaction.id);
           if (
             this.validators.isValidValidator(data.transaction.from) &&
             !this.transactionPool.isExist(data.transaction) &&
@@ -168,16 +167,15 @@ class P2pServer {
                 let block = this.blockchain.createBlock(transactions, this.wallet);
                 this.broadcastPrePrepare(block);
               }
-            } else {
-              console.log("Transaction Added");
             }
           }
           break;
 
         case MESSAGE_TYPE.pre_prepare:
           if (
+            this.validators.isValidValidator(data.block.proposer) &&
             !this.blockPool.isExist(data.block) &&
-            this.blockchain.isValidBlock(data.block)
+            this.blockPool.isValidBlock(data.block)
           ) {
             this.broadcastPrePrepare(data.block);
 
@@ -216,12 +214,18 @@ class P2pServer {
 
             let thresholdReached = this.commitPool.add(data.commit);
             if (thresholdReached) {
-              this.blockchain.addBlockToBlockhain(
-                data.commit.blockHash,
-                this.blockPool,
-                this.preparePool,
-                this.commitPool
-              );
+              let blockHash = data.commit.blockHash;
+              let blockObj = this.blockPool.get(blockHash);
+              let prepareObj = this.preparePool.get(blockHash);
+              let commitObj = this.commitPool.get(blockHash);
+
+              this.blockchain.addBlockToBlockhain(blockObj, prepareObj, commitObj);
+
+              // delete transactions that have been included in the blockchain
+              let i;
+              for (i = 0; i < blockObj.data.length; i++) {
+                this.transactionPool.delete(blockObj.data[i][0]);
+              }
 
               let roundChange = this.roundChangePool.initRoundChange(data.commit, this.wallet);
               this.broadcastRoundChange(roundChange);
@@ -244,7 +248,6 @@ class P2pServer {
               this.preparePool.delete(data.roundChange.blockHash);
               this.commitPool.delete(data.roundChange.blockHash);
               this.roundChangePool.delete(data.roundChange.blockHash);
-              this.transactionPool.clear();
             }
           }
           break;

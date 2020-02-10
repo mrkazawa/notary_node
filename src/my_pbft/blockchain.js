@@ -31,28 +31,22 @@ class Blockchain {
 
   isValidBlock(block) {
     const lastBlock = this.getLatestBlock();
-    if (
+    return (
       block.sequenceNo == lastBlock.sequenceNo + 1 &&
       block.lastHash === lastBlock.hash &&
       Block.verifyBlockHash(block, block.hash) &&
       Block.verifyBlockSignature(block) &&
       Block.verifyBlockProposer(block, this.getCurrentProposer())
-    ) {
-      console.log("BLOCK VALID");
-      return true;
-    } else {
-      console.log("BLOCK INVALID");
-      return false;
-    }
+    );
   }
 
-  addBlockToBlockhain(hash, blockPool, preparePool, commitPool) {
-    let block = blockPool.get(hash);
-    block.prepareMessages = preparePool.get(hash);
-    block.commitMessages = commitPool.get(hash);
-
-    this.chain.push(block);
-    console.log("NEW BLOCK ADDED TO CHAIN");
+  addBlockToBlockhain(blockObj, prepareObj, commitObj) {
+    if (this.isValidBlock(blockObj)) {
+      blockObj.prepareMessages = prepareObj;
+      blockObj.commitMessages = commitObj;
+      this.chain.push(blockObj);
+      console.log("NEW BLOCK ADDED TO CHAIN " + blockObj.hash);
+    }
   }
 
   getAllBlocks() {
