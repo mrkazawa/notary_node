@@ -181,15 +181,17 @@ class P2pServer {
 
             this.blockPool.add(data.block);
 
-            let prepare = this.preparePool.initPrepare(data.block, this.wallet);
-            this.broadcastPrepare(prepare);
+            if (!this.preparePool.isInitiated(data.block.hash)) {
+              let prepare = this.preparePool.initPrepare(data.block, this.wallet);
+              this.broadcastPrepare(prepare);
+            }
           }
           break;
 
         case MESSAGE_TYPE.prepare:
           if (
             this.validators.isValidValidator(data.prepare.publicKey) &&
-            this.preparePool.isInitiated(data.prepare) &&
+            this.preparePool.isInitiated(data.prepare.blockHash) &&
             !this.preparePool.isExist(data.prepare) &&
             this.preparePool.isValidPrepare(data.prepare)
           ) {
@@ -197,8 +199,10 @@ class P2pServer {
 
             let thresholdReached = this.preparePool.add(data.prepare);
             if (thresholdReached) {
-              let commit = this.commitPool.initCommit(data.prepare, this.wallet);
-              this.broadcastCommit(commit);
+              if (!this.commitPool.isInitiated(data.prepare.blockHash)) {
+                let commit = this.commitPool.initCommit(data.prepare, this.wallet);
+                this.broadcastCommit(commit);
+              }
             }
           }
           break;
@@ -206,7 +210,7 @@ class P2pServer {
         case MESSAGE_TYPE.commit:
           if (
             this.validators.isValidValidator(data.commit.publicKey) &&
-            this.commitPool.isInitiated(data.commit) &&
+            this.commitPool.isInitiated(data.commit.blockHash) &&
             !this.commitPool.isExist(data.commit) &&
             this.commitPool.isValidCommit(data.commit)
           ) {
@@ -227,8 +231,10 @@ class P2pServer {
                 this.transactionPool.delete(blockObj.data[i][0]);
               }
 
-              let roundChange = this.roundChangePool.initRoundChange(data.commit, this.wallet);
-              this.broadcastRoundChange(roundChange);
+              if (!this.roundChangePool.isInitiated(data.commit.blockHash)) {
+                let roundChange = this.roundChangePool.initRoundChange(data.commit, this.wallet);
+                this.broadcastRoundChange(roundChange);
+              }
             }
           }
           break;
@@ -236,7 +242,7 @@ class P2pServer {
         case MESSAGE_TYPE.round_change:
           if (
             this.validators.isValidValidator(data.roundChange.publicKey) &&
-            this.roundChangePool.isInitiated(data.roundChange) &&
+            this.roundChangePool.isInitiated(data.roundChange.blockHash) &&
             !this.roundChangePool.isExist(data.roundChange) &&
             this.roundChangePool.isValidRoundChange(data.roundChange)
           ) {

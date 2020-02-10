@@ -43,8 +43,8 @@ class PreparePool {
     return (prepareMap.size >= MIN_APPROVALS);
   }
 
-  isInitiated(prepare) {
-    return this.pendingPrepareMessages.has(prepare.blockHash);
+  isInitiated(blockHash) {
+    return this.pendingPrepareMessages.has(blockHash);
   }
 
   isExist(prepare) {

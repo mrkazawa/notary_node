@@ -43,8 +43,8 @@ class RoundChangePool {
     return (roundChangeMap.size >= MIN_APPROVALS);
   }
 
-  isInitiated(roundChange) {
-    return this.pendingRoundChangeMessages.has(roundChange.blockHash);
+  isInitiated(blockHash) {
+    return this.pendingRoundChangeMessages.has(blockHash);
   }
 
   isExist(roundChange) {

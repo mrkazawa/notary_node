@@ -43,8 +43,8 @@ class CommitPool {
     return (commitMap.size >= MIN_APPROVALS);
   }
 
-  isInitiated(commit) {
-    return this.pendingCommitMessages.has(commit.blockHash);
+  isInitiated(blockHash) {
+    return this.pendingCommitMessages.has(blockHash);
   }
 
   isExist(commit) {

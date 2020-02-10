@@ -1,9 +1,9 @@
 // Maximum number of transactions that can be present in a block and transaction pool
-const PENDING_TRANSACTION_THRESHOLD = 50;
+const PENDING_TRANSACTION_THRESHOLD = 10;
 
 // Maximum number of request before the node bundles them in a transaction
 // and then broadcast it to peers
-const PENDING_REQUEST_THRESHOLD = 10;
+const PENDING_REQUEST_THRESHOLD = 50;
 
 // Total number of nodes in the network
 const NUMBER_OF_NODES = 3;
