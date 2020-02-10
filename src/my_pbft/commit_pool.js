@@ -35,31 +35,19 @@ class CommitPool {
     };
   }
 
-  addCommit(commit) {
-    if (!this.pendingCommitMessages.has(commit.blockHash)) {
-      return false;
-    }
-
+  add(commit) {
     let commitMap = this.pendingCommitMessages.get(commit.blockHash);
     commitMap.set(commit.publicKey, commit.signature);
     this.pendingCommitMessages.set(commit.blockHash, commitMap);
 
-    if (commitMap.size >= MIN_APPROVALS) {
-      return true;
-    } else {
-      return false;
-    }
+    return (commitMap.size >= MIN_APPROVALS);
   }
 
-  get(hash) {
-    return this.pendingCommitMessages.get(hash).entries();
+  isInitiated(commit) {
+    return this.pendingCommitMessages.has(commit.blockHash);
   }
 
-  existingCommit(commit) {
-    if (!this.pendingCommitMessages.has(commit.blockHash)) {
-      return false;
-    }
-
+  isExist(commit) {
     let commitMap = this.pendingCommitMessages.get(commit.blockHash);
     return commitMap.has(commit.publicKey);
   }
@@ -72,8 +60,12 @@ class CommitPool {
     );
   }
 
-  clear() {
-    this.pendingCommitMessages.clear();
+  get(blockHash) {
+    return this.pendingCommitMessages.get(blockHash).entries();
+  }
+
+  delete(blockHash) {
+    this.pendingCommitMessages.delete(blockHash);
   }
 }
 

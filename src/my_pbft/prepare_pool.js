@@ -35,31 +35,19 @@ class PreparePool {
     };
   }
 
-  addPrepare(prepare) {
-    if (!this.pendingPrepareMessages.has(prepare.blockHash)) {
-      return false;
-    }
-
+  add(prepare) {
     let prepareMap = this.pendingPrepareMessages.get(prepare.blockHash);
     prepareMap.set(prepare.publicKey, prepare.signature);
     this.pendingPrepareMessages.set(prepare.blockHash, prepareMap);
 
-    if (prepareMap.size >= MIN_APPROVALS) {
-      return true;
-    } else {
-      return false;
-    }
+    return (prepareMap.size >= MIN_APPROVALS);
   }
 
-  get(hash) {
-    return this.pendingPrepareMessages.get(hash).entries();
+  isInitiated(prepare) {
+    return this.pendingPrepareMessages.has(prepare.blockHash);
   }
 
-  existingPrepare(prepare) {
-    if (!this.pendingPrepareMessages.has(prepare.blockHash)) {
-      return false;
-    }
-
+  isExist(prepare) {
     let prepareMap = this.pendingPrepareMessages.get(prepare.blockHash);
     return prepareMap.has(prepare.publicKey);
   }
@@ -72,8 +60,12 @@ class PreparePool {
     );
   }
 
-  clear() {
-    this.pendingPrepareMessages.clear();
+  get(blockHash) {
+    return this.pendingPrepareMessages.get(blockHash).entries();
+  }
+
+  delete(blockHash) {
+    this.pendingPrepareMessages.delete(blockHash);
   }
 }
 

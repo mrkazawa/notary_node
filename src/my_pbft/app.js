@@ -69,7 +69,7 @@ app.post("/transact", (req, res) => {
   const { data } = req.body;
   const thresholdReached = requestPool.add(data);
   if (thresholdReached) {
-    const tx_data = requestPool.getAllPendingRequests();
+    const tx_data = requestPool.getAllAndDelete();
     const transaction = wallet.createTransaction(tx_data);
     p2pServer.broadcastTransaction(transaction);
   }

@@ -15,23 +15,23 @@ class TransactionPool {
 
   add(transaction) {
     this.pendingTransactions.set(transaction.id, transaction);
-    if (this.pendingTransactions.size >= PENDING_TRANSACTION_THRESHOLD) {
-      return true;
-    } else {
-      return false;
-    }
+    return (this.pendingTransactions.size >= PENDING_TRANSACTION_THRESHOLD);
   }
 
-  getAllPendingTransactions() {
-    return this.pendingTransactions.entries();
+  isExist(transaction) {
+    return this.pendingTransactions.has(transaction.id);
   }
 
   isValidTransaction(transaction) {
     return Transaction.verifyTransaction(transaction);
   }
 
-  exist(transaction) {
-    return this.pendingTransactions.has(transaction.id);
+  getAllPendingTransactions() {
+    return this.pendingTransactions.entries();
+  }
+
+  delete(transactionId) {
+    this.pendingTransactions.delete(transactionId);
   }
 
   clear() {

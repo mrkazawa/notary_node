@@ -14,17 +14,16 @@ class BlockPool {
     this.pendingBlocks.set(block.hash, block);
   }
 
-  getBlock(hash) {
-    return this.pendingBlocks.get(hash);
-  }
-
-  exist(block) {
+  isExist(block) {
     return this.pendingBlocks.has(block.hash);
   }
 
-  clear() {
-    this.pendingBlocks.clear();
-    //console.log("BLOCK POOL CLEARED");
+  get(blockHash) {
+    return this.pendingBlocks.get(blockHash);
+  }
+
+  delete(blockHash) {
+    this.pendingBlocks.delete(blockHash);
   }
 }
 

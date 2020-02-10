@@ -12,7 +12,6 @@ class Blockchain {
     this.chain = [Block.genesis()];
   }
 
-  // wrapper function to create blocks
   createBlock(transactions, wallet) {
     const block = Block.createBlock(
       this.chain[this.chain.length - 1],
@@ -30,7 +29,6 @@ class Blockchain {
     return this.validatorsList[index];
   }
 
-  // checks if the received block is valid
   isValidBlock(block) {
     const lastBlock = this.getLatestBlock();
     if (
@@ -49,7 +47,7 @@ class Blockchain {
   }
 
   addBlockToBlockhain(hash, blockPool, preparePool, commitPool) {
-    let block = blockPool.getBlock(hash);
+    let block = blockPool.get(hash);
     block.prepareMessages = preparePool.get(hash);
     block.commitMessages = commitPool.get(hash);
 

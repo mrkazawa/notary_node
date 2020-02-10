@@ -30,6 +30,10 @@ class RequestPool {
   }
 
   getAllPendingRequests() {
+    return this.pendingRequests.entries();
+  }
+
+  getAllAndDelete() {
     let requests =  this.pendingRequests.entries();
     this.pendingRequests.clear();
     return requests;

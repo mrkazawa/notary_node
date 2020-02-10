@@ -19,7 +19,6 @@ class Block {
     this.sequenceNo = sequenceNo;
   }
 
-  // A function to print the block
   static toString() {
     return `Block - 
         Timestamp   : ${this.timestamp}

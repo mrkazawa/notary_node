@@ -60,8 +60,8 @@ class RoundChangePool {
     );
   }
 
-  delete(roundChange) {
-    this.pendingRoundChangeMessages.delete(roundChange.blockHash);
+  delete(blockHash) {
+    this.pendingRoundChangeMessages.delete(blockHash);
   }
 }
 

@@ -151,24 +151,21 @@ class P2pServer {
 
       switch (data.type) {
         case MESSAGE_TYPE.transaction:
+          console.log("Transacton " + data.transaction.id);
           if (
-            !this.transactionPool.exist(data.transaction) &&
-            this.transactionPool.isValidTransaction(data.transaction) &&
-            this.validators.isValidValidator(data.transaction.from)
+            this.validators.isValidValidator(data.transaction.from) &&
+            !this.transactionPool.isExist(data.transaction) &&
+            this.transactionPool.isValidTransaction(data.transaction)
           ) {
             this.broadcastTransaction(data.transaction);
 
             let thresholdReached = this.transactionPool.add(data.transaction);
             if (thresholdReached) {
-              console.log("THRESHOLD REACHED");
               // check if the current node is the proposer
+              // WARNING!!! Below if code only happen in one node
               if (this.blockchain.getCurrentProposer() == this.wallet.getPublicKey()) {
-                console.log("PROPOSING BLOCK");
-                // if the node is the proposer, create a block and broadcast it
-                let block = this.blockchain.createBlock(
-                  this.transactionPool.getAllPendingTransactions(),
-                  this.wallet
-                );
+                let transactions = this.transactionPool.getAllPendingTransactions();
+                let block = this.blockchain.createBlock(transactions, this.wallet);
                 this.broadcastPrePrepare(block);
               }
             } else {
@@ -179,17 +176,13 @@ class P2pServer {
 
         case MESSAGE_TYPE.pre_prepare:
           if (
-            !this.blockPool.exist(data.block) &&
+            !this.blockPool.isExist(data.block) &&
             this.blockchain.isValidBlock(data.block)
           ) {
             this.broadcastPrePrepare(data.block);
 
-            console.log("Block Received");
-
-            // add block to pool
             this.blockPool.add(data.block);
 
-            // create and broadcast a prepare message
             let prepare = this.preparePool.initPrepare(data.block, this.wallet);
             this.broadcastPrepare(prepare);
           }
@@ -197,31 +190,31 @@ class P2pServer {
 
         case MESSAGE_TYPE.prepare:
           if (
-            !this.preparePool.existingPrepare(data.prepare) &&
-            this.preparePool.isValidPrepare(data.prepare) &&
-            this.validators.isValidValidator(data.prepare.publicKey)
+            this.validators.isValidValidator(data.prepare.publicKey) &&
+            this.preparePool.isInitiated(data.prepare) &&
+            !this.preparePool.isExist(data.prepare) &&
+            this.preparePool.isValidPrepare(data.prepare)
           ) {
             this.broadcastPrepare(data.prepare);
 
-            let thresholdReached = this.preparePool.addPrepare(data.prepare);
+            let thresholdReached = this.preparePool.add(data.prepare);
             if (thresholdReached) {
               let commit = this.commitPool.initCommit(data.prepare, this.wallet);
               this.broadcastCommit(commit);
-            } else {
-              console.log("Pre-prepare Added");
             }
           }
           break;
 
         case MESSAGE_TYPE.commit:
           if (
-            !this.commitPool.existingCommit(data.commit) &&
-            this.commitPool.isValidCommit(data.commit) &&
-            this.validators.isValidValidator(data.commit.publicKey)
+            this.validators.isValidValidator(data.commit.publicKey) &&
+            this.commitPool.isInitiated(data.commit) &&
+            !this.commitPool.isExist(data.commit) &&
+            this.commitPool.isValidCommit(data.commit)
           ) {
             this.broadcastCommit(data.commit);
 
-            let thresholdReached = this.commitPool.addCommit(data.commit);
+            let thresholdReached = this.commitPool.add(data.commit);
             if (thresholdReached) {
               this.blockchain.addBlockToBlockhain(
                 data.commit.blockHash,
@@ -232,8 +225,6 @@ class P2pServer {
 
               let roundChange = this.roundChangePool.initRoundChange(data.commit, this.wallet);
               this.broadcastRoundChange(roundChange);
-            } else {
-              console.log("Commit Added");
             }
           }
           break;
@@ -249,12 +240,11 @@ class P2pServer {
 
             let thresholdReached = this.roundChangePool.add(data.roundChange);
             if (thresholdReached) {
-              this.roundChangePool.delete(data.roundChange);
+              this.blockPool.delete(data.roundChange.blockHash);
+              this.preparePool.delete(data.roundChange.blockHash);
+              this.commitPool.delete(data.roundChange.blockHash);
+              this.roundChangePool.delete(data.roundChange.blockHash);
               this.transactionPool.clear();
-              //this.blockPool.clear();
-              //this.preparePool.clear();
-              //this.commitPool.clear();
-              // TODO: Add clear for blockPool, preparePool, commitPool, and messagePool
             }
           }
           break;
