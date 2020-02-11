@@ -33,10 +33,6 @@ class TransactionPool {
   delete(transactionId) {
     this.pendingTransactions.delete(transactionId);
   }
-
-  clear() {
-    this.pendingTransactions.clear();
-  }
 }
 
 module.exports = TransactionPool;

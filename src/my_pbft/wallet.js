@@ -1,7 +1,7 @@
 const CryptoUtil = require("./crypto_util");
 const Transaction = require("./transaction");
 
-const { EDDSA_FLAG, HMAC_FLAG } = require("./config");
+const { EDDSA_FLAG, HMAC_FLAG, NO_SIG_FLAG } = require("./config");
 
 class Wallet {
   // The secret phase is passed an argument when creating a wallet
@@ -21,6 +21,8 @@ class Wallet {
       return this.keyPair.sign(dataHash).toHex();
     } else if (HMAC_FLAG) {
       return CryptoUtil.generateDigest("secret", dataHash);
+    } else if (NO_SIG_FLAG) {
+      return "no-signature";
     }
   }
 

@@ -1,7 +1,7 @@
 const HashMap = require('hashmap');
 
 const CryptoUtil = require("./crypto_util");
-const { MIN_APPROVALS, EDDSA_FLAG, HMAC_FLAG } = require("./config");
+const { MIN_APPROVALS, EDDSA_FLAG, HMAC_FLAG, NO_SIG_FLAG } = require("./config");
 
 class RoundChangePool {
   constructor() {
@@ -74,6 +74,8 @@ class RoundChangePool {
         roundChange.signature,
         roundChange.blockHash
       );
+    } else if (NO_SIG_FLAG) {
+      return true;
     }
   }
 

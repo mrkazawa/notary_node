@@ -1,6 +1,6 @@
 const CryptoUtil = require("./crypto_util");
 
-const { EDDSA_FLAG, HMAC_FLAG } = require("./config");
+const { EDDSA_FLAG, HMAC_FLAG, NO_SIG_FLAG } = require("./config");
 
 class Block {
   constructor(
@@ -85,6 +85,8 @@ class Block {
         block.signature,
         this.calculateBlockHash(block.lastHash, block.data)
       );
+    } else if (NO_SIG_FLAG) {
+      return true;
     }
   }
 
