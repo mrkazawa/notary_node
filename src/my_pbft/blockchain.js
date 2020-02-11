@@ -1,4 +1,7 @@
-const { NUMBER_OF_NODES } = require("./config");
+const chalk = require('chalk');
+const log = console.log;
+
+const { NUMBER_OF_NODES, DEBUGGING_FLAG } = require("./config");
 const Block = require("./block");
 
 class Blockchain {
@@ -45,7 +48,9 @@ class Blockchain {
       blockObj.prepareMessages = prepareObj;
       blockObj.commitMessages = commitObj;
       this.chain.push(blockObj);
-      console.log("NEW BLOCK ADDED TO CHAIN " + blockObj.hash);
+      if (DEBUGGING_FLAG) {
+        log(chalk.bgWhite.black(`Added Block to Blockchain ${blockObj.hash}`));
+      }
     }
   }
 

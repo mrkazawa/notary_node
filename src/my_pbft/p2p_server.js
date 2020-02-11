@@ -1,4 +1,8 @@
 const WebSocket = require("ws");
+const chalk = require('chalk');
+const log = console.log;
+
+const { DEBUGGING_FLAG } = require("./config");
 
 const P2P_PORT = process.env.P2P_PORT || 5001;
 const peers = process.env.PEERS ? process.env.PEERS.split(",") : [];
@@ -151,6 +155,10 @@ class P2pServer {
 
       switch (data.type) {
         case MESSAGE_TYPE.transaction:
+          if (DEBUGGING_FLAG) {
+            log(chalk.cyan(`Receiving Transaction ${data.transaction.id}`));
+          }
+
           if (
             this.validators.isValidValidator(data.transaction.from) &&
             !this.transactionPool.isExist(data.transaction) &&
@@ -172,6 +180,10 @@ class P2pServer {
           break;
 
         case MESSAGE_TYPE.pre_prepare:
+          if (DEBUGGING_FLAG) {
+            log(chalk.yellow(`Receiving Block ${data.block.hash}`));
+          }
+
           if (
             this.validators.isValidValidator(data.block.proposer) &&
             !this.blockPool.isExist(data.block) &&
@@ -189,6 +201,10 @@ class P2pServer {
           break;
 
         case MESSAGE_TYPE.prepare:
+          if (DEBUGGING_FLAG) {
+            log(chalk.yellow(`Receiving Prepare ${data.prepare.blockHash}`));
+          }
+
           if (
             this.validators.isValidValidator(data.prepare.publicKey) &&
             this.preparePool.isInitiated(data.prepare.blockHash) &&
@@ -208,6 +224,10 @@ class P2pServer {
           break;
 
         case MESSAGE_TYPE.commit:
+          if (DEBUGGING_FLAG) {
+            log(chalk.yellow(`Receiving Commit ${data.commit.blockHash}`));
+          }
+
           if (
             this.validators.isValidValidator(data.commit.publicKey) &&
             this.commitPool.isInitiated(data.commit.blockHash) &&
@@ -240,6 +260,10 @@ class P2pServer {
           break;
 
         case MESSAGE_TYPE.round_change:
+          if (DEBUGGING_FLAG) {
+            log(chalk.green(`Receiving Round Change ${data.roundChange.blockHash}`));
+          }
+
           if (
             this.validators.isValidValidator(data.roundChange.publicKey) &&
             this.roundChangePool.isInitiated(data.roundChange.blockHash) &&
