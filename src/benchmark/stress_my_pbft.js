@@ -25,6 +25,7 @@ const instance = autocannon({
   connections: 10, // concurrent connection
   pipelining: 1, // default
   bailout: 10, // tolerable number of errors
+  //overallRate: 100, // rate of requests to make per second from all connections
   duration: 10
 }, console.log)
 

@@ -11,6 +11,7 @@ class CommitPool {
     CommitPool._instance = this;
 
     this.pendingCommitMessages = new HashMap();
+    this.finalCommitMessages = new Set();
   }
 
   initCommit(prepare, wallet) {
@@ -50,6 +51,14 @@ class CommitPool {
   isExist(commit) {
     let commitMap = this.pendingCommitMessages.get(commit.blockHash);
     return commitMap.has(commit.publicKey);
+  }
+
+  finalize(blockHash) {
+    this.finalCommitMessages.add(blockHash);
+  }
+
+  isFinalized(blockHash) {
+    return this.finalCommitMessages.has(blockHash);
   }
 
   isValidCommit(commit) {

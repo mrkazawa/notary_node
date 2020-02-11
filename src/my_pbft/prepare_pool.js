@@ -11,6 +11,7 @@ class PreparePool {
     PreparePool._instance = this;
 
     this.pendingPrepareMessages = new HashMap();
+    this.finalPrepareMessages = new Set();
   }
 
   initPrepare(block, wallet) {
@@ -50,6 +51,14 @@ class PreparePool {
   isExist(prepare) {
     let prepareMap = this.pendingPrepareMessages.get(prepare.blockHash);
     return prepareMap.has(prepare.publicKey);
+  }
+
+  finalize(blockHash) {
+    this.finalPrepareMessages.add(blockHash);
+  }
+
+  isFinalized(blockHash) {
+    return this.finalPrepareMessages.has(blockHash);
   }
 
   isValidPrepare(prepare) {

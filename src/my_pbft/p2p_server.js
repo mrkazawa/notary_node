@@ -192,7 +192,10 @@ class P2pServer {
 
             this.blockPool.add(data.block);
 
-            if (!this.preparePool.isInitiated(data.block.hash)) {
+            if (
+              !this.preparePool.isInitiated(data.block.hash) &&
+              !this.preparePool.isFinalized(data.block.hash)
+            ) {
               let prepare = this.preparePool.initPrepare(data.block, this.wallet);
               this.broadcastPrepare(prepare);
             }
@@ -207,6 +210,7 @@ class P2pServer {
           if (
             this.validators.isValidValidator(data.prepare.publicKey) &&
             this.preparePool.isInitiated(data.prepare.blockHash) &&
+            !this.preparePool.isFinalized(data.prepare.blockHash) &&
             !this.preparePool.isExist(data.prepare) &&
             this.preparePool.isValidPrepare(data.prepare)
           ) {
@@ -214,7 +218,12 @@ class P2pServer {
 
             let thresholdReached = this.preparePool.add(data.prepare);
             if (thresholdReached) {
-              if (!this.commitPool.isInitiated(data.prepare.blockHash)) {
+              this.preparePool.finalize(data.prepare.blockHash);
+
+              if (
+                !this.commitPool.isInitiated(data.prepare.blockHash) &&
+                !this.commitPool.isFinalized(data.prepare.blockHash)
+              ) {
                 let commit = this.commitPool.initCommit(data.prepare, this.wallet);
                 this.broadcastCommit(commit);
               }
@@ -230,6 +239,7 @@ class P2pServer {
           if (
             this.validators.isValidValidator(data.commit.publicKey) &&
             this.commitPool.isInitiated(data.commit.blockHash) &&
+            !this.commitPool.isFinalized(data.commit.blockHash) &&
             !this.commitPool.isExist(data.commit) &&
             this.commitPool.isValidCommit(data.commit)
           ) {
@@ -237,10 +247,11 @@ class P2pServer {
 
             let thresholdReached = this.commitPool.add(data.commit);
             if (thresholdReached) {
-              let blockHash = data.commit.blockHash;
-              let blockObj = this.blockPool.get(blockHash);
-              let prepareObj = this.preparePool.get(blockHash);
-              let commitObj = this.commitPool.get(blockHash);
+              this.commitPool.finalize(data.commit.blockHash);
+
+              let blockObj = this.blockPool.get(data.commit.blockHash);
+              let prepareObj = this.preparePool.get(data.commit.blockHash);
+              let commitObj = this.commitPool.get(data.commit.blockHash);
 
               this.blockchain.addBlockToBlockhain(blockObj, prepareObj, commitObj);
 
@@ -250,7 +261,10 @@ class P2pServer {
                 this.transactionPool.delete(blockObj.data[i][0]);
               }
 
-              if (!this.roundChangePool.isInitiated(data.commit.blockHash)) {
+              if (
+                !this.roundChangePool.isInitiated(data.commit.blockHash) &&
+                !this.roundChangePool.isFinalized(data.commit.blockHash)
+              ) {
                 let roundChange = this.roundChangePool.initRoundChange(data.commit, this.wallet);
                 this.broadcastRoundChange(roundChange);
               }
@@ -266,6 +280,7 @@ class P2pServer {
           if (
             this.validators.isValidValidator(data.roundChange.publicKey) &&
             this.roundChangePool.isInitiated(data.roundChange.blockHash) &&
+            !this.roundChangePool.isFinalized(data.roundChange.blockHash) &&
             !this.roundChangePool.isExist(data.roundChange) &&
             this.roundChangePool.isValidRoundChange(data.roundChange)
           ) {
@@ -273,6 +288,8 @@ class P2pServer {
 
             let thresholdReached = this.roundChangePool.add(data.roundChange);
             if (thresholdReached) {
+              this.roundChangePool.finalize(data.roundChange.blockHash);
+
               this.blockPool.delete(data.roundChange.blockHash);
               this.preparePool.delete(data.roundChange.blockHash);
               this.commitPool.delete(data.roundChange.blockHash);

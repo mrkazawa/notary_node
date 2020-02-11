@@ -11,6 +11,7 @@ class RoundChangePool {
     RoundChangePool._instance = this;
 
     this.pendingRoundChangeMessages = new HashMap();
+    this.finalRoundChangeMessages = new Set();
   }
 
   initRoundChange(commit, wallet) {
@@ -50,6 +51,14 @@ class RoundChangePool {
   isExist(roundChange) {
     let roundChangeMap = this.pendingRoundChangeMessages.get(roundChange.blockHash);
     return roundChangeMap.has(roundChange.publicKey);
+  }
+
+  finalize(blockHash) {
+    this.finalRoundChangeMessages.add(blockHash);
+  }
+
+  isFinalized(blockHash) {
+    return this.finalRoundChangeMessages.has(blockHash);
   }
 
   isValidRoundChange(roundChange) {
