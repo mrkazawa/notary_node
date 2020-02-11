@@ -1,5 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
+const chalk = require('chalk');
+const log = console.log;
 
 const P2pServer = require("./p2p_server");
 const Validators = require("./validators");
@@ -78,7 +80,7 @@ app.post("/transact", (req, res) => {
 
 // starts the app server
 app.listen(HTTP_PORT, () => {
-  console.log(`Listening on port ${HTTP_PORT}`);
+  log(chalk.blue(`Listening on requests on port : ${HTTP_PORT}`));
 });
 
 // starts the p2p server

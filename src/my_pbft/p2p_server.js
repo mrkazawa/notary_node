@@ -5,7 +5,7 @@ const log = console.log;
 const { DEBUGGING_FLAG } = require("./config");
 
 const P2P_PORT = process.env.P2P_PORT || 5001;
-const peers = process.env.PEERS ? process.env.PEERS.split(",") : [];
+const PEERS = process.env.PEERS ? process.env.PEERS.split(",") : [];
 
 const MESSAGE_TYPE = {
   transaction: "TRANSACTION",
@@ -48,23 +48,22 @@ class P2pServer {
       port: P2P_PORT
     });
     server.on("connection", socket => {
-      console.log("new connection");
       this.connectSocket(socket);
     });
     this.connectToPeers();
-    console.log(`Listening for peer to peer connection on port : ${P2P_PORT}`);
+    log(chalk.blue(`Listening for peer to peer connection on port : ${P2P_PORT}`));
   }
 
   // connects to a given socket and registers the message handler on it
   connectSocket(socket) {
     this.sockets.push(socket);
-    console.log("Socket connected");
+    log(chalk.blue("Socket connected"));
     this.messageHandler(socket);
   }
 
   // connects to the peers passed in command line
   connectToPeers() {
-    peers.forEach(peer => {
+    PEERS.forEach(peer => {
       const socket = new WebSocket(peer);
       socket.on("open", () => this.connectSocket(socket));
     });
