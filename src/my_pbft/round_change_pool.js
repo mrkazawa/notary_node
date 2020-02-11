@@ -1,7 +1,7 @@
 const HashMap = require('hashmap');
 
 const CryptoUtil = require("./crypto_util");
-const { MIN_APPROVALS } = require("./config");
+const { MIN_APPROVALS, EDDSA_FLAG, HMAC_FLAG } = require("./config");
 
 class RoundChangePool {
   constructor() {
@@ -53,11 +53,19 @@ class RoundChangePool {
   }
 
   isValidRoundChange(roundChange) {
-    return CryptoUtil.verifySignature(
-      roundChange.publicKey,
-      roundChange.signature,
-      roundChange.blockHash
-    );
+    if (EDDSA_FLAG) {
+      return CryptoUtil.verifySignature(
+        roundChange.publicKey,
+        roundChange.signature,
+        roundChange.blockHash
+      );
+    } else if (HMAC_FLAG) {
+      return CryptoUtil.verifyDigest(
+        "secret",
+        roundChange.signature,
+        roundChange.blockHash
+      );
+    }
   }
 
   delete(blockHash) {

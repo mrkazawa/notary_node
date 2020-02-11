@@ -17,7 +17,6 @@ const MIN_APPROVALS = 2 * NUMBER_OF_FAULTY_NODES + 1;
 // Choose only one TRUE option below:
 const EDDSA_FLAG = true;
 const HMAC_FLAG = false;
-const NO_SIG_FLAG = false;
 
 // Set to TRUE during benchmarking
 const BENCHMARK_FLAG = true;
@@ -32,7 +31,6 @@ module.exports = {
   MIN_APPROVALS,
   EDDSA_FLAG,
   HMAC_FLAG,
-  NO_SIG_FLAG,
   BENCHMARK_FLAG,
   DEBUGGING_FLAG
 };

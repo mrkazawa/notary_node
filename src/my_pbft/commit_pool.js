@@ -1,7 +1,7 @@
 const HashMap = require('hashmap');
 
 const CryptoUtil = require("./crypto_util");
-const { MIN_APPROVALS } = require("./config");
+const { MIN_APPROVALS, EDDSA_FLAG, HMAC_FLAG } = require("./config");
 
 class CommitPool {
   constructor() {
@@ -53,11 +53,19 @@ class CommitPool {
   }
 
   isValidCommit(commit) {
-    return CryptoUtil.verifySignature(
-      commit.publicKey,
-      commit.signature,
-      commit.blockHash
-    );
+    if (EDDSA_FLAG) {
+      return CryptoUtil.verifySignature(
+        commit.publicKey,
+        commit.signature,
+        commit.blockHash
+      );
+    } else if (HMAC_FLAG) {
+      return CryptoUtil.verifyDigest(
+        "secret",
+        commit.signature,
+        commit.blockHash
+      );
+    }
   }
 
   get(blockHash) {

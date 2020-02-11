@@ -1,5 +1,7 @@
 const CryptoUtil = require("./crypto_util");
 
+const { EDDSA_FLAG, HMAC_FLAG } = require("./config");
+
 class Block {
   constructor(
     timestamp,
@@ -71,11 +73,19 @@ class Block {
   }
 
   static verifyBlockSignature(block) {
-    return CryptoUtil.verifySignature(
-      block.proposer,
-      block.signature,
-      this.calculateBlockHash(block.lastHash, block.data)
-    );
+    if (EDDSA_FLAG) {
+      return CryptoUtil.verifySignature(
+        block.proposer,
+        block.signature,
+        this.calculateBlockHash(block.lastHash, block.data)
+      );
+    } else if (HMAC_FLAG) {
+      return CryptoUtil.verifyDigest(
+        "secret",
+        block.signature,
+        this.calculateBlockHash(block.lastHash, block.data)
+      );
+    }
   }
 
   static verifyBlockProposer(block, proposer) {

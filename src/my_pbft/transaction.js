@@ -1,5 +1,7 @@
 const CryptoUtil = require("./crypto_util");
 
+const { EDDSA_FLAG, HMAC_FLAG } = require("./config");
+
 class Transaction {
   constructor(data, wallet) {
     this.id = CryptoUtil.generateId();
@@ -10,11 +12,20 @@ class Transaction {
   }
 
   static verifyTransaction(transaction) {
-    return CryptoUtil.verifySignature(
-      transaction.from,
-      transaction.signature,
-      CryptoUtil.hash(transaction.input)
-    );
+    if (EDDSA_FLAG) {
+      return CryptoUtil.verifySignature(
+        transaction.from,
+        transaction.signature,
+        CryptoUtil.hash(transaction.input)
+      );
+    } else if (HMAC_FLAG) {
+      return CryptoUtil.verifyDigest(
+        "secret",
+        transaction.signature,
+        CryptoUtil.hash(transaction.input)
+      );
+    }
+   
   }
 }
 
