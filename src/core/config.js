@@ -11,12 +11,8 @@ class Config {
     }
     Config._instance = this;
 
-    // Maximum number of transactions that can be present in a block and transaction pool
-    this.PENDING_TRANSACTION_THRESHOLD = 50;
     // Maximum number of GENERAL request before the node bundles them in a transaction and then broadcast it to peers
     this.PENDING_REQUEST_THRESHOLD = 1;
-    // Maximum number of PRIORITY request before the node bundles them in a transaction and then broadcast it to peers
-    this.PENDING_PRIORITY_THRESHOLD = 3;
 
     // Total number of nodes in the network
     this.NUMBER_OF_NODES = 4;
@@ -34,28 +30,12 @@ class Config {
     this.DEBUGGING_FLAG = false; // set true to display log
   }
 
-  setTransactionThreshold(newThreshold) {
-    this.PENDING_TRANSACTION_THRESHOLD = newThreshold;
-  }
-
   setRequestThreshold(newThreshold) {
     this.PENDING_REQUEST_THRESHOLD = newThreshold;
   }
 
-  setPriorityThreshold(newThreshold) {
-    this.PENDING_PRIORITY_THRESHOLD = newThreshold;
-  }
-
-  getTransactionThreshold() {
-    return this.PENDING_TRANSACTION_THRESHOLD;
-  }
-
   getRequestThreshold() {
     return this.PENDING_REQUEST_THRESHOLD;
-  }
-
-  getPriorityThreshold() {
-    return this.PENDING_PRIORITY_THRESHOLD;
   }
 
   getNumberOfNodes() {

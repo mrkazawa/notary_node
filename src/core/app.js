@@ -47,8 +47,7 @@ const p2pServer = new P2pServer(
   validators
 );
 
-var generalRequestsCount = 0;
-var priorityRequestsCount = 0;
+var requestCount = 0;
 
 // sends all requests in the request pool to the user
 app.get("/requests", (req, res) => {
@@ -99,12 +98,7 @@ app.get("/tx_count_per_block", (req, res) => {
 // creates transactions for the sent data
 app.post("/transact", (req, res) => {
   const { data } = req.body;
-  if (data.priority) {
-    priorityRequestsCount++;
-  } else {
-    generalRequestsCount++;
-  }
-  
+  requestCount++;
   const thresholdReached = requestPool.add(data);
 
   if (thresholdReached) {
@@ -116,24 +110,24 @@ app.post("/transact", (req, res) => {
   res.status(200).send('transaction_received');
 });
 
-function adjustGeneralReqeustThreshold() {
-  if (generalRequestsCount > 500) {
+function adjustReqeustThreshold() {
+  if (requestCount > 500) {
     config.setRequestThreshold(500);
-  } else if (generalRequestsCount > 250 && generalRequestsCount <= 500) {
+  } else if (requestCount > 250 && requestCount <= 500) {
     config.setRequestThreshold(250);
-  } else if (generalRequestsCount > 100 && generalRequestsCount <= 250) {
+  } else if (requestCount > 100 && requestCount <= 250) {
     config.setRequestThreshold(100);
-  } else if (generalRequestsCount > 50 && generalRequestsCount <= 100) {
+  } else if (requestCount > 50 && requestCount <= 100) {
     config.setRequestThreshold(50);
-  } else if (generalRequestsCount <= 50) {
+  } else if (requestCount <= 50) {
     config.setRequestThreshold(1);
   }
 
-  generalRequestsCount = 0;
+  requestCount = 0;
 }
 
 // starts request rate detection timers
-setInterval(adjustGeneralReqeustThreshold, 1000);
+setInterval(adjustReqeustThreshold, 1000);
 
 // starts the app server
 app.listen(HTTP_PORT, () => {

@@ -11,7 +11,6 @@ const payload_400_bytes = {
     compute_address: "0x0472ec0185ebb8202f3d4ddb0226998889663cf2",
     compute_network_id: 2020,
     payment_proof: "MYPAYMENTPROOF99999999999999999999999999999999999999999999999999999999",
-    priority: false,
     timestamp: Date.now()
   }
 };

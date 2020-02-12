@@ -174,19 +174,7 @@ class P2pServer {
             this.transactionPool.isValidTransaction(data.transaction)
           ) {
             this.broadcastTransaction(data.transaction);
-
             this.transactionPool.add(data.transaction);
-
-            /*let thresholdReached = this.transactionPool.add(data.transaction);
-            if (thresholdReached) {
-              // check if the current node is the proposer
-              // WARNING!!! Below if code only happen in one node
-              if (this.blockchain.getCurrentProposer() == this.wallet.getPublicKey()) {
-                let transactions = this.transactionPool.getAllPendingTransactions();
-                let block = this.blockchain.createBlock(transactions, this.wallet);
-                this.broadcastPrePrepare(block);
-              }
-            }*/
           }
           break;
 
