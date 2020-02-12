@@ -53,6 +53,15 @@ class P2pServer {
     });
     this.connectToPeers();
     log(chalk.blue(`Listening for peer to peer connection on port : ${P2P_PORT}`));
+
+    // timer for proposing a block
+    setInterval(function() {
+      if (this.blockchain.getCurrentProposer() == this.wallet.getPublicKey()) {
+        let transactions = this.transactionPool.getAllPendingTransactions();
+        let block = this.blockchain.createBlock(transactions, this.wallet);
+        this.broadcastPrePrepare(block);
+      }
+    }.bind(this), 1000);
   }
 
   // connects to a given socket and registers the message handler on it
@@ -166,7 +175,9 @@ class P2pServer {
           ) {
             this.broadcastTransaction(data.transaction);
 
-            let thresholdReached = this.transactionPool.add(data.transaction);
+            this.transactionPool.add(data.transaction);
+
+            /*let thresholdReached = this.transactionPool.add(data.transaction);
             if (thresholdReached) {
               // check if the current node is the proposer
               // WARNING!!! Below if code only happen in one node
@@ -175,7 +186,7 @@ class P2pServer {
                 let block = this.blockchain.createBlock(transactions, this.wallet);
                 this.broadcastPrePrepare(block);
               }
-            }
+            }*/
           }
           break;
 

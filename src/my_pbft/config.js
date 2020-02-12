@@ -12,11 +12,11 @@ class Config {
     Config._instance = this;
 
     // Maximum number of transactions that can be present in a block and transaction pool
-    this.PENDING_TRANSACTION_THRESHOLD = 2;
+    this.PENDING_TRANSACTION_THRESHOLD = 50;
     // Maximum number of GENERAL request before the node bundles them in a transaction and then broadcast it to peers
-    this.PENDING_REQUEST_THRESHOLD = 2;
+    this.PENDING_REQUEST_THRESHOLD = 1;
     // Maximum number of PRIORITY request before the node bundles them in a transaction and then broadcast it to peers
-    this.PENDING_PRIORITY_THRESHOLD = 1;
+    this.PENDING_PRIORITY_THRESHOLD = 3;
 
     // Total number of nodes in the network
     this.NUMBER_OF_NODES = 4;
@@ -26,12 +26,12 @@ class Config {
     this.MIN_APPROVALS = 2 * this.NUMBER_OF_FAULTY_NODES + 1;
 
     // Choose only one TRUE option below
-    this.EDDSA_FLAG = false;
+    this.EDDSA_FLAG = true;
     this.HMAC_FLAG = false;
-    this.NO_SIG_FLAG = true;
+    this.NO_SIG_FLAG = false;
 
     this.BENCHMARK_FLAG = true; // set true during benchmarking
-    this.DEBUGGING_FLAG = true; // set true to display log
+    this.DEBUGGING_FLAG = false; // set true to display log
   }
 
   setTransactionThreshold(newThreshold) {
