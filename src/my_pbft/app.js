@@ -15,7 +15,9 @@ const PreparePool = require("./prepare_pool");
 const CommitPool = require("./commit_pool");
 const RoundChangePool = require("./round_change_pool");
 
-const { NUMBER_OF_NODES } = require("./config");
+const {
+  NUMBER_OF_NODES
+} = require("./config");
 const HTTP_PORT = process.env.HTTP_PORT || 3001;
 
 // Instantiate all objects
@@ -46,6 +48,8 @@ const p2pServer = new P2pServer(
   validators
 );
 
+var requestsCount = 0;
+
 // sends all requests in the request pool to the user
 app.get("/requests", (req, res) => {
   res.json(requestPool.getAllPendingRequests());
@@ -66,15 +70,46 @@ app.get("/height", (req, res) => {
   res.json(blockchain.getBlockHeight());
 });
 
+app.get("/tx_count_per_block", (req, res) => {
+  let results = [];
+  let totalTx = 0;
+  let storedBlocks = blockchain.getAllBlocks();
+  let i;
+
+  for (i = 1; i < storedBlocks.length; i++) {
+    let storedBlock = storedBlocks[i];
+    let txs = storedBlock.data;
+    let number_of_tx = 0;
+    let j;
+
+    for (j = 0; j < txs.length; j++) {
+      let tx = txs[j][1];
+      let requests = tx.input.data;
+      number_of_tx += requests.length;
+      totalTx += number_of_tx;
+    }
+
+    results.push(number_of_tx);
+  }
+  results.push(totalTx);
+
+  res.json(results);
+});
+
 // creates transactions for the sent data
 app.post("/transact", (req, res) => {
-  const { data } = req.body;
+  const {
+    data
+  } = req.body;
+  requestsCount++;
   const thresholdReached = requestPool.add(data);
+
   if (thresholdReached) {
     const tx_data = requestPool.getAllAndDelete();
     const transaction = wallet.createTransaction(tx_data);
     p2pServer.broadcastTransaction(transaction);
   }
+  
   res.status(200).send('transaction_received');
 });
 
@@ -85,3 +120,10 @@ app.listen(HTTP_PORT, () => {
 
 // starts the p2p server
 p2pServer.listen();
+
+function displayReqeustPerSecond() {
+  console.log(`Request Per Second: ${requestsCount}`);
+  requestsCount = 0;
+}
+
+setInterval(displayReqeustPerSecond, 1000);

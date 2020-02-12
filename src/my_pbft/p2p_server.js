@@ -253,20 +253,21 @@ class P2pServer {
               let prepareObj = this.preparePool.get(data.commit.blockHash);
               let commitObj = this.commitPool.get(data.commit.blockHash);
 
-              this.blockchain.addBlockToBlockhain(blockObj, prepareObj, commitObj);
+              let isAdded = this.blockchain.addBlockToBlockhain(blockObj, prepareObj, commitObj);
+              if (isAdded) {
+                // delete transactions that have been included in the blockchain
+                let i;
+                for (i = 0; i < blockObj.data.length; i++) {
+                  this.transactionPool.delete(blockObj.data[i][0]);
+                }
 
-              // delete transactions that have been included in the blockchain
-              let i;
-              for (i = 0; i < blockObj.data.length; i++) {
-                this.transactionPool.delete(blockObj.data[i][0]);
-              }
-
-              if (
-                !this.roundChangePool.isInitiated(data.commit.blockHash) &&
-                !this.roundChangePool.isFinalized(data.commit.blockHash)
-              ) {
-                let roundChange = this.roundChangePool.initRoundChange(data.commit, this.wallet);
-                this.broadcastRoundChange(roundChange);
+                if (
+                  !this.roundChangePool.isInitiated(data.commit.blockHash) &&
+                  !this.roundChangePool.isFinalized(data.commit.blockHash)
+                ) {
+                  let roundChange = this.roundChangePool.initRoundChange(data.commit, this.wallet);
+                  this.broadcastRoundChange(roundChange);
+                }
               }
             }
           }

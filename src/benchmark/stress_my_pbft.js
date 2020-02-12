@@ -13,30 +13,36 @@ const payload_400_bytes = {
     payment_proof: "MYPAYMENTPROOF99999999999999999999999999999999999999999999999999999999",
     timestamp: Date.now()
   }
-}
+};
 
 const instance = autocannon({
+  title: 'Stress My PBFT',
   url: 'http://notary1.local:3000/transact',
   method: 'POST',
   headers: {
     "content-type": "application/json"
   },
   body: JSON.stringify(payload_400_bytes),
-  connections: 10, // concurrent connection
+  connections: 1, // concurrent connection
   pipelining: 1, // default
   bailout: 10, // tolerable number of errors
-  //overallRate: 100, // rate of requests to make per second from all connections
-  duration: 10
-}, console.log)
+  overallRate: 100, // rate of requests to make per second from all connections
+  amount: 5000,
+  duration: 1
+}, console.log);
 
 // this is used to kill the instance on CTRL-C
 process.once('SIGINT', () => {
-  instance.stop()
-})
+  instance.stop();
+});
 
 // just render results
 autocannon.track(instance, {
   renderProgressBar: true,
   renderResultsTable: true,
   renderLatencyTable: false
-})
+});
+
+instance.on('tick', (counter) => {
+  console.log(counter);
+});

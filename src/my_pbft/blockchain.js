@@ -49,6 +49,10 @@ class Blockchain {
       blockObj.commitMessages = commitObj;
       this.chain.push(blockObj);
       log(chalk.bgWhite.black(`Added Block to Blockchain ${blockObj.hash}`));
+
+      return true;
+    } else {
+      return false;
     }
   }
 
