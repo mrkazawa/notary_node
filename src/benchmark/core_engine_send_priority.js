@@ -11,12 +11,13 @@ const payload_400_bytes = {
     compute_address: "0x0472ec0185ebb8202f3d4ddb0226998889663cf2",
     compute_network_id: 2020,
     payment_proof: "MYPAYMENTPROOF99999999999999999999999999999999999999999999999999999999",
+    priority: true,
     timestamp: Date.now()
   }
 };
 
 const instance = autocannon({
-  title: 'Stress My PBFT',
+  title: 'Send Request To Core Engine Using Priority Request',
   url: 'http://notary1.local:3000/transact',
   method: 'POST',
   headers: {
@@ -27,7 +28,7 @@ const instance = autocannon({
   pipelining: 1, // default
   bailout: 10, // tolerable number of errors
   overallRate: 100, // rate of requests to make per second from all connections
-  amount: 5000,
+  amount: 1250,
   duration: 1
 }, console.log);
 

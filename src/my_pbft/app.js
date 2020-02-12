@@ -15,9 +15,8 @@ const PreparePool = require("./prepare_pool");
 const CommitPool = require("./commit_pool");
 const RoundChangePool = require("./round_change_pool");
 
-const {
-  NUMBER_OF_NODES
-} = require("./config");
+const Config = require("./config");
+const config = new Config();
 const HTTP_PORT = process.env.HTTP_PORT || 3001;
 
 // Instantiate all objects
@@ -27,7 +26,7 @@ app.use(bodyParser.json());
 // FIXME: Using other SECRET will not work only use NODE0, NODE1, and so on..
 const wallet = new Wallet(process.env.SECRET);
 // TODO: add proposer validator registraion procedure
-const validators = new Validators(NUMBER_OF_NODES);
+const validators = new Validators(config.getNumberOfNodes());
 const blockchain = new Blockchain(validators);
 
 const requestPool = new RequestPool();
@@ -86,9 +85,9 @@ app.get("/tx_count_per_block", (req, res) => {
       let tx = txs[j][1];
       let requests = tx.input.data;
       number_of_tx += requests.length;
-      totalTx += number_of_tx;
     }
 
+    totalTx += number_of_tx;
     results.push(number_of_tx);
   }
   results.push(totalTx);
@@ -101,6 +100,9 @@ app.post("/transact", (req, res) => {
   const {
     data
   } = req.body;
+  if (data.priority) {
+
+  }
   requestsCount++;
   const thresholdReached = requestPool.add(data);
 
@@ -109,7 +111,7 @@ app.post("/transact", (req, res) => {
     const transaction = wallet.createTransaction(tx_data);
     p2pServer.broadcastTransaction(transaction);
   }
-  
+
   res.status(200).send('transaction_received');
 });
 

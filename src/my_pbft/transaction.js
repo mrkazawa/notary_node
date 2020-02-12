@@ -1,6 +1,7 @@
 const CryptoUtil = require("./crypto_util");
 
-const { EDDSA_FLAG, HMAC_FLAG, NO_SIG_FLAG } = require("./config");
+const Config = require("./config");
+const config = new Config();
 
 class Transaction {
   constructor(data, wallet) {
@@ -12,19 +13,19 @@ class Transaction {
   }
 
   static verifyTransaction(transaction) {
-    if (EDDSA_FLAG) {
+    if (config.isEDDSA()) {
       return CryptoUtil.verifySignature(
         transaction.from,
         transaction.signature,
         CryptoUtil.hash(transaction.input)
       );
-    } else if (HMAC_FLAG) {
+    } else if (config.isHMAC()) {
       return CryptoUtil.verifyDigest(
         "secret",
         transaction.signature,
         CryptoUtil.hash(transaction.input)
       );
-    } else if (NO_SIG_FLAG) {
+    } else if (config.isNOSIG()) {
       return true;
     }
   }

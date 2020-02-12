@@ -2,7 +2,8 @@ const WebSocket = require("ws");
 const chalk = require('chalk');
 const log = console.log;
 
-const { DEBUGGING_FLAG } = require("./config");
+const Config = require("./config");
+const config = new Config();
 
 const P2P_PORT = process.env.P2P_PORT || 5001;
 const PEERS = process.env.PEERS ? process.env.PEERS.split(",") : [];
@@ -154,7 +155,7 @@ class P2pServer {
 
       switch (data.type) {
         case MESSAGE_TYPE.transaction:
-          if (DEBUGGING_FLAG) {
+          if (config.isDebugging()) {
             log(chalk.cyan(`Receiving Transaction ${data.transaction.id}`));
           }
 
@@ -179,7 +180,7 @@ class P2pServer {
           break;
 
         case MESSAGE_TYPE.pre_prepare:
-          if (DEBUGGING_FLAG) {
+          if (config.isDebugging()) {
             log(chalk.yellow(`Receiving Block ${data.block.hash}`));
           }
 
@@ -203,7 +204,7 @@ class P2pServer {
           break;
 
         case MESSAGE_TYPE.prepare:
-          if (DEBUGGING_FLAG) {
+          if (config.isDebugging()) {
             log(chalk.yellow(`Receiving Prepare ${data.prepare.blockHash}`));
           }
 
@@ -232,7 +233,7 @@ class P2pServer {
           break;
 
         case MESSAGE_TYPE.commit:
-          if (DEBUGGING_FLAG) {
+          if (config.isDebugging()) {
             log(chalk.yellow(`Receiving Commit ${data.commit.blockHash}`));
           }
 
@@ -274,7 +275,7 @@ class P2pServer {
           break;
 
         case MESSAGE_TYPE.round_change:
-          if (DEBUGGING_FLAG) {
+          if (config.isDebugging()) {
             log(chalk.green(`Receiving Round Change ${data.roundChange.blockHash}`));
           }
 

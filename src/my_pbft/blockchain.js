@@ -1,7 +1,8 @@
 const chalk = require('chalk');
 const log = console.log;
 
-const { NUMBER_OF_NODES } = require("./config");
+const Config = require("./config");
+const config = new Config();
 const Block = require("./block");
 
 class Blockchain {
@@ -28,7 +29,7 @@ class Blockchain {
   // index is calculated using the hash of the latest block
   // TODO: need to investigate what happen to this when one node fails
   getCurrentProposer() {
-    let index = this.getLatestBlock().hash[0].charCodeAt(0) % NUMBER_OF_NODES;
+    let index = this.getLatestBlock().hash[0].charCodeAt(0) % config.getNumberOfNodes();
     return this.validatorsList[index];
   }
 

@@ -1,38 +1,90 @@
-// Maximum number of transactions that can be present in a block and transaction pool
-const PENDING_TRANSACTION_THRESHOLD = 2;
+/***
+ * This is a SINGLETON object
+ */
+class Config {
+  constructor() {
+    if (Config._instance) {
+      // this allows the constructor to be called multiple times
+      // and refer to the same instance. Another option is to
+      // throw an error.
+      return Config._instance;
+    }
+    Config._instance = this;
 
-// Maximum number of request before the node bundles them in a transaction
-// and then broadcast it to peers
-const PENDING_REQUEST_THRESHOLD = 2;
+    // Maximum number of transactions that can be present in a block and transaction pool
+    this.PENDING_TRANSACTION_THRESHOLD = 2;
+    // Maximum number of GENERAL request before the node bundles them in a transaction and then broadcast it to peers
+    this.PENDING_REQUEST_THRESHOLD = 2;
+    // Maximum number of PRIORITY request before the node bundles them in a transaction and then broadcast it to peers
+    this.PENDING_PRIORITY_THRESHOLD = 1;
 
-// Total number of nodes in the network
-const NUMBER_OF_NODES = 4;
+    // Total number of nodes in the network
+    this.NUMBER_OF_NODES = 4;
+    // Total number of tolerable faulty nodes in the network
+    this.NUMBER_OF_FAULTY_NODES = 1;
+    // Mininum number of positive votes required for the message/block to be valid
+    this.MIN_APPROVALS = 2 * this.NUMBER_OF_FAULTY_NODES + 1;
 
-// Total number of tolerable faulty nodes in the network
-const NUMBER_OF_FAULTY_NODES = 1;
+    // Choose only one TRUE option below
+    this.EDDSA_FLAG = false;
+    this.HMAC_FLAG = false;
+    this.NO_SIG_FLAG = true;
 
-// Mininum number of positive votes required for the message/block to be valid
-const MIN_APPROVALS = 2 * NUMBER_OF_FAULTY_NODES + 1;
+    this.BENCHMARK_FLAG = true; // set true during benchmarking
+    this.DEBUGGING_FLAG = true; // set true to display log
+  }
 
-// Choose only one TRUE option below:
-const EDDSA_FLAG = true;
-const HMAC_FLAG = false;
-const NO_SIG_FLAG = false;
+  setTransactionThreshold(newThreshold) {
+    this.PENDING_TRANSACTION_THRESHOLD = newThreshold;
+  }
 
-// Set to TRUE during benchmarking
-const BENCHMARK_FLAG = true;
+  setRequestThreshold(newThreshold) {
+    this.PENDING_REQUEST_THRESHOLD = newThreshold;
+  }
 
-// Set to TRUE when debugging
-const DEBUGGING_FLAG = false;
+  setPriorityThreshold(newThreshold) {
+    this.PENDING_PRIORITY_THRESHOLD = newThreshold;
+  }
 
-module.exports = {
-  PENDING_TRANSACTION_THRESHOLD,
-  PENDING_REQUEST_THRESHOLD,
-  NUMBER_OF_NODES,
-  MIN_APPROVALS,
-  EDDSA_FLAG,
-  HMAC_FLAG,
-  NO_SIG_FLAG,
-  BENCHMARK_FLAG,
-  DEBUGGING_FLAG
-};
+  getTransactionThreshold() {
+    return this.PENDING_TRANSACTION_THRESHOLD;
+  }
+
+  getRequestThreshold() {
+    return this.PENDING_REQUEST_THRESHOLD;
+  }
+
+  getPriorityThreshold() {
+    return this.PENDING_PRIORITY_THRESHOLD;
+  }
+
+  getNumberOfNodes() {
+    return this.NUMBER_OF_NODES;
+  }
+
+  getMinApprovals() {
+    return this.MIN_APPROVALS;
+  }
+
+  isEDDSA() {
+    return this.EDDSA_FLAG;
+  }
+
+  isHMAC() {
+    return this.HMAC_FLAG;
+  }
+
+  isNOSIG() {
+    return this.NO_SIG_FLAG;
+  }
+
+  isBenchmarking() {
+    return this.BENCHMARK_FLAG;
+  }
+
+  isDebugging() {
+    return this.DEBUGGING_FLAG;
+  }
+}
+
+module.exports = Config;

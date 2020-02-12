@@ -1,7 +1,8 @@
 const HashMap = require('hashmap');
 
 const CryptoUtil = require("./crypto_util");
-const { MIN_APPROVALS, EDDSA_FLAG, HMAC_FLAG, NO_SIG_FLAG } = require("./config");
+const Config = require("./config");
+const config = new Config();
 
 class PreparePool {
   constructor() {
@@ -41,7 +42,7 @@ class PreparePool {
     prepareMap.set(prepare.publicKey, prepare.signature);
     this.pendingPrepareMessages.set(prepare.blockHash, prepareMap);
 
-    return (prepareMap.size >= MIN_APPROVALS);
+    return (prepareMap.size >= config.getMinApprovals());
   }
 
   isInitiated(blockHash) {
@@ -62,19 +63,19 @@ class PreparePool {
   }
 
   isValidPrepare(prepare) {
-    if (EDDSA_FLAG) {
+    if (config.isEDDSA()) {
       return CryptoUtil.verifySignature(
         prepare.publicKey,
         prepare.signature,
         prepare.blockHash
       );
-    } else if (HMAC_FLAG) {
+    } else if (config.isHMAC()) {
       return CryptoUtil.verifyDigest(
         "secret",
         prepare.signature,
         prepare.blockHash
       );
-    } else if (NO_SIG_FLAG) {
+    } else if (config.isNOSIG()) {
       return true;
     }
   }

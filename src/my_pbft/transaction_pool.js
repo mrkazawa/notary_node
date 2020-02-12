@@ -1,7 +1,8 @@
 const HashMap = require('hashmap');
 
 const Transaction = require("./transaction");
-const { PENDING_TRANSACTION_THRESHOLD } = require("./config");
+const Config = require("./config");
+const config = new Config();
 
 class TransactionPool {
   constructor() {
@@ -15,7 +16,7 @@ class TransactionPool {
 
   add(transaction) {
     this.pendingTransactions.set(transaction.id, transaction);
-    return (this.pendingTransactions.size >= PENDING_TRANSACTION_THRESHOLD);
+    return (this.pendingTransactions.size >= config.getTransactionThreshold());
   }
 
   isExist(transaction) {

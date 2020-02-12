@@ -1,7 +1,8 @@
 const HashMap = require('hashmap');
 
 const CryptoUtil = require("./crypto_util");
-const { PENDING_REQUEST_THRESHOLD, BENCHMARK_FLAG } = require("./config");
+const Config = require("./config");
+const config = new Config();
 
 class RequestPool {
   constructor() {
@@ -14,7 +15,7 @@ class RequestPool {
   }
 
   add(request) {
-    if (BENCHMARK_FLAG) {
+    if (config.isBenchmarking()) {
       let id = CryptoUtil.generateId();
       this.pendingRequests.set(id, request);
 
@@ -26,7 +27,7 @@ class RequestPool {
       this.pendingRequests.set(hash, request);
     }
 
-    return (this.pendingRequests.size >= PENDING_REQUEST_THRESHOLD);
+    return (this.pendingRequests.size >= config.getRequestThreshold());
   }
 
   getAllPendingRequests() {
