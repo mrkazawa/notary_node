@@ -28,6 +28,10 @@ class TransactionPool {
     return this.pendingTransactions.entries();
   }
 
+  getCurrentSize() {
+    return this.pendingTransactions.size;
+  }
+
   delete(transactionId) {
     this.pendingTransactions.delete(transactionId);
   }

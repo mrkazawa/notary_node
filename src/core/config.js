@@ -28,6 +28,7 @@ class Config {
 
     this.BENCHMARK_FLAG = true; // set true during benchmarking
     this.DEBUGGING_FLAG = false; // set true to display log
+    this.DYNAMIC_REQUEST_POOL_FLAG = false; // set true to enable dynamic request pool size
   }
 
   setRequestThreshold(newThreshold) {
@@ -64,6 +65,10 @@ class Config {
 
   isDebugging() {
     return this.DEBUGGING_FLAG;
+  }
+
+  isUsingDynamicRequestPool() {
+    return this.DYNAMIC_REQUEST_POOL_FLAG;
   }
 }
 

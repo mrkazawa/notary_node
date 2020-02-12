@@ -127,7 +127,15 @@ function adjustReqeustThreshold() {
 }
 
 // starts request rate detection timers
-setInterval(adjustReqeustThreshold, 1000);
+if (config.isUsingDynamicRequestPool()) {
+  setInterval(adjustReqeustThreshold, 1000);
+}
+
+if (config.isDebugging()) {
+  setInterval(() => {
+    console.log(`Tx Pool Size: ${transactionPool.getCurrentSize()}`);
+  }, 1000);
+}
 
 // starts the app server
 app.listen(HTTP_PORT, () => {
