@@ -55,8 +55,8 @@ class P2pServer {
     log(chalk.blue(`Listening for peer to peer connection on port : ${P2P_PORT}`));
 
     // timer for proposing a block
-    setInterval(function() {
-      if (this.blockchain.getCurrentProposer() == this.wallet.getPublicKey()) {
+    setInterval(async function() {
+      if (await this.blockchain.getCurrentProposer() == this.wallet.getPublicKey()) {
         let transactions = this.transactionPool.getAllPendingTransactions();
         let block = this.blockchain.createBlock(transactions, this.wallet);
         this.broadcastPrePrepare(block);

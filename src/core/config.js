@@ -22,12 +22,12 @@ class Config {
     this.MIN_APPROVALS = 2 * this.NUMBER_OF_FAULTY_NODES + 1;
 
     // Choose only one TRUE option below
-    this.EDDSA_FLAG = true;
+    this.EDDSA_FLAG = false;
     this.HMAC_FLAG = false;
-    this.NO_SIG_FLAG = false;
+    this.NO_SIG_FLAG = true;
 
     this.BENCHMARK_FLAG = true; // set true during benchmarking
-    this.DEBUGGING_FLAG = false; // set true to display log
+    this.DEBUGGING_FLAG = true; // set true to display log
     this.DYNAMIC_REQUEST_POOL_FLAG = false; // set true to enable dynamic request pool size
   }
 

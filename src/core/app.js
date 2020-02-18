@@ -5,7 +5,8 @@ const log = console.log;
 
 const P2pServer = require("./p2p_server");
 const Validators = require("./validators");
-const Blockchain = require("./blockchain");
+//const Blockchain = require("./blockchain");
+const Blockchain = require("./blockchain_db");
 const Wallet = require("./wallet");
 
 const RequestPool = require("./request_pool");
@@ -27,6 +28,8 @@ app.use(bodyParser.json());
 const wallet = new Wallet(process.env.SECRET);
 // TODO: add proposer validator registraion procedure
 const validators = new Validators(config.getNumberOfNodes());
+
+// TODO: Use level up to store blockchain
 const blockchain = new Blockchain(validators);
 
 const requestPool = new RequestPool();
@@ -49,23 +52,19 @@ const p2pServer = new P2pServer(
 
 var requestCount = 0;
 
-// sends all requests in the request pool to the user
-app.get("/requests", (req, res) => {
+app.get("/pending_requests", (req, res) => {
   res.json(requestPool.getAllPendingRequests());
 });
 
-// sends all transactions in the transaction pool to the user
-app.get("/transactions", (req, res) => {
+app.get("/pending_transactions", (req, res) => {
   res.json(transactionPool.getAllPendingTransactions());
 });
 
-// sends the entire chain to the user
-app.get("/blocks", (req, res) => {
-  res.json(blockchain.getAllBlocks());
+app.get("/latest_block", (req, res) => {
+  res.json(blockchain.getLatestBlock());
 });
 
-// sends the current block height
-app.get("/height", (req, res) => {
+app.get("/block_height", (req, res) => {
   res.json(blockchain.getBlockHeight());
 });
 
@@ -131,11 +130,13 @@ if (config.isUsingDynamicRequestPool()) {
   setInterval(adjustReqeustThreshold, 1000);
 }
 
+/*
 if (config.isDebugging()) {
   setInterval(() => {
     console.log(`Tx Pool Size: ${transactionPool.getCurrentSize()}`);
   }, 1000);
 }
+*/
 
 // starts the app server
 app.listen(HTTP_PORT, () => {

@@ -23,11 +23,11 @@ const instance = autocannon({
     "content-type": "application/json"
   },
   body: JSON.stringify(payload_400_bytes),
-  connections: 1, // concurrent connection
+  connections: 8, // concurrent connection
   pipelining: 1, // default
   bailout: 10, // tolerable number of errors
-  overallRate: 500, // rate of requests to make per second from all connections
-  amount: 100000,
+  //overallRate: 100, // rate of requests to make per second from all connections
+  amount: 15000000,
   duration: 1
 }, console.log);
 
