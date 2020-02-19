@@ -27,7 +27,7 @@ class Config {
     this.NO_SIG_FLAG = true;
 
     this.BENCHMARK_FLAG = true; // set true during benchmarking
-    this.DEBUGGING_FLAG = true; // set true to display log
+    this.DEBUGGING_FLAG = false; // set true to display log
     this.DYNAMIC_REQUEST_POOL_FLAG = false; // set true to enable dynamic request pool size
   }
 

@@ -1,4 +1,5 @@
 const WebSocket = require("ws");
+const HashMap = require('hashmap');
 const chalk = require('chalk');
 const log = console.log;
 
@@ -12,8 +13,7 @@ const MESSAGE_TYPE = {
   transaction: "TRANSACTION",
   prepare: "PREPARE",
   pre_prepare: "PRE_PREPARE",
-  commit: "COMMIT",
-  round_change: "ROUND_CHANGE"
+  commit: "COMMIT"
 };
 
 class P2pServer {
@@ -24,7 +24,6 @@ class P2pServer {
     blockPool,
     preparePool,
     commitPool,
-    roundChangePool,
     validators
   ) {
     if (P2pServer._instance) {
@@ -38,9 +37,11 @@ class P2pServer {
     this.blockPool = blockPool;
     this.preparePool = preparePool;
     this.commitPool = commitPool;
-    this.roundChangePool = roundChangePool;
     this.validators = validators;
+
     this.sockets = [];
+    this.pendingCommitedBlocks = new HashMap();
+    this.timeoutCommitedBlocks = new HashMap();
   }
 
   // Creates a server on a given port
@@ -55,12 +56,56 @@ class P2pServer {
     log(chalk.blue(`Listening for peer to peer connection on port : ${P2P_PORT}`));
 
     // timer for proposing a block
-    setInterval(async function() {
-      if (await this.blockchain.getCurrentProposer() == this.wallet.getPublicKey()) {
+    setInterval(function () {
+      if (this.pendingCommitedBlocks.size > 0) {
+        console.log('there are pending blocks');
+        const keys = this.pendingCommitedBlocks.keys();
+        keys.sort();
+
+        let i;
+        for (i = 0; i < keys.length; i++) {
+          let sequenceId = keys[i];
+          let blockHash = this.pendingCommitedBlocks.get(sequenceId);
+          let blockObj = this.blockPool.get(blockHash);
+
+          this.blockchain.addBlockToBlockhain(blockObj).then(isAdded => {
+            if (isAdded) {
+              this.blockPool.delete(blockHash);
+              this.preparePool.delete(blockHash);
+              this.commitPool.delete(blockHash);
+              this.pendingCommitedBlocks.delete(sequenceId);
+
+              // delete transactions that have been included in the blockchain
+              let i;
+              for (i = 0; i < blockObj.data.length; i++) {
+                this.transactionPool.delete(blockObj.data[i][0]);
+              }
+
+            } else {
+              if (!this.timeoutCommitedBlocks.has(sequenceId)) {
+                this.timeoutCommitedBlocks.set(sequenceId, 0);
+                console.log(`cannot insert leeh.. count = ${0}`);
+
+              } else {
+                let count = this.timeoutCommitedBlocks.get(sequenceId);
+                count += 1;
+                this.timeoutCommitedBlocks.set(sequenceId, count);
+                console.log(`cannot insert again leeh.. count = ${count}`);
+                if (count > 7) {
+                  this.pendingCommitedBlocks.delete(sequenceId);
+                }
+              }
+            }
+          });
+        }
+      }
+
+      if (this.blockchain.getCurrentProposer() == this.wallet.getPublicKey()) {
         let transactions = this.transactionPool.getAllPendingTransactions();
         let block = this.blockchain.createBlock(transactions, this.wallet);
         this.broadcastPrePrepare(block);
       }
+
     }.bind(this), 1000);
   }
 
@@ -141,21 +186,6 @@ class P2pServer {
     );
   }
 
-  broadcastRoundChange(roundChange) {
-    this.sockets.forEach(socket => {
-      this.sendRoundChange(socket, roundChange);
-    });
-  }
-
-  sendRoundChange(socket, roundChange) {
-    socket.send(
-      JSON.stringify({
-        type: MESSAGE_TYPE.round_change,
-        roundChange: roundChange
-      })
-    );
-  }
-
   //-------------------------- Receive Handlers --------------------------//
 
   messageHandler(socket) {
@@ -163,7 +193,9 @@ class P2pServer {
       const data = JSON.parse(message);
 
       switch (data.type) {
-        case MESSAGE_TYPE.transaction:
+        //------------------ Transaction Process ------------------//
+
+        case MESSAGE_TYPE.transaction: {
           if (config.isDebugging()) {
             log(chalk.cyan(`Receiving Transaction ${data.transaction.id}`));
           }
@@ -177,127 +209,113 @@ class P2pServer {
             this.transactionPool.add(data.transaction);
           }
           break;
+        }
 
-        case MESSAGE_TYPE.pre_prepare:
+        //------------------ PBFT Process (Pre-Prepare) ------------------//
+
+        case MESSAGE_TYPE.pre_prepare: {
           if (config.isDebugging()) {
             log(chalk.yellow(`Receiving Block ${data.block.hash}`));
           }
 
+          if (!this.validators.isValidValidator(data.block.proposer)) break;
+          if (this.blockPool.isExist(data.block)) break;
+          if (!this.blockPool.isValidBlock(data.block)) break;
+
+          this.broadcastPrePrepare(data.block);
+          this.blockPool.add(data.block);
+
           if (
-            this.validators.isValidValidator(data.block.proposer) &&
-            !this.blockPool.isExist(data.block) &&
-            this.blockPool.isValidBlock(data.block)
+            !this.preparePool.isInitiated(data.block.hash) &&
+            !this.preparePool.isCompleted(data.block.hash)
           ) {
-            this.broadcastPrePrepare(data.block);
-
-            this.blockPool.add(data.block);
-
-            if (
-              !this.preparePool.isInitiated(data.block.hash) &&
-              !this.preparePool.isFinalized(data.block.hash)
-            ) {
-              let prepare = this.preparePool.initPrepare(data.block, this.wallet);
-              this.broadcastPrepare(prepare);
-            }
+            let prepare = this.preparePool.init(
+              data.block.hash,
+              data.block.sequenceId,
+              this.wallet
+            );
+            this.broadcastPrepare(prepare);
           }
-          break;
 
-        case MESSAGE_TYPE.prepare:
+          break;
+        }
+
+        //------------------ PBFT Process (Prepare) ------------------//
+
+        case MESSAGE_TYPE.prepare: {
           if (config.isDebugging()) {
             log(chalk.yellow(`Receiving Prepare ${data.prepare.blockHash}`));
           }
 
-          if (
-            this.validators.isValidValidator(data.prepare.publicKey) &&
-            this.preparePool.isInitiated(data.prepare.blockHash) &&
-            !this.preparePool.isFinalized(data.prepare.blockHash) &&
-            !this.preparePool.isExist(data.prepare) &&
-            this.preparePool.isValidPrepare(data.prepare)
-          ) {
-            this.broadcastPrepare(data.prepare);
+          if (!this.validators.isValidValidator(data.prepare.from)) break;
+          if (!this.preparePool.isInitiated(data.prepare.blockHash)) break;
+          if (this.preparePool.isCompleted(data.prepare.blockHash)) break;
+          if (this.preparePool.isExistFrom(data.prepare.blockHash, data.prepare.from)) break;
+          if (!this.preparePool.isValid(data.prepare)) break;
 
-            let thresholdReached = this.preparePool.add(data.prepare);
-            if (thresholdReached) {
-              this.preparePool.finalize(data.prepare.blockHash);
+          this.broadcastPrepare(data.prepare);
 
-              if (
-                !this.commitPool.isInitiated(data.prepare.blockHash) &&
-                !this.commitPool.isFinalized(data.prepare.blockHash)
-              ) {
-                let commit = this.commitPool.initCommit(data.prepare, this.wallet);
-                this.broadcastCommit(commit);
-              }
+          let thresholdReached = this.preparePool.add(data.prepare);
+          if (thresholdReached) {
+            this.preparePool.finalize(data.prepare.blockHash);
+
+            if (
+              !this.commitPool.isInitiated(data.prepare.blockHash) &&
+              !this.commitPool.isCompleted(data.prepare.blockHash)
+            ) {
+              let commit = this.commitPool.init(
+                data.prepare.blockHash,
+                data.prepare.sequenceId,
+                this.wallet
+              );
+              this.broadcastCommit(commit);
             }
           }
-          break;
 
-        case MESSAGE_TYPE.commit:
+          break;
+        }
+
+        //------------------ PBFT Process (Commit) ------------------//
+
+        case MESSAGE_TYPE.commit: {
           if (config.isDebugging()) {
             log(chalk.yellow(`Receiving Commit ${data.commit.blockHash}`));
           }
 
-          if (
-            this.validators.isValidValidator(data.commit.publicKey) &&
-            this.commitPool.isInitiated(data.commit.blockHash) &&
-            !this.commitPool.isFinalized(data.commit.blockHash) &&
-            !this.commitPool.isExist(data.commit) &&
-            this.commitPool.isValidCommit(data.commit)
-          ) {
-            this.broadcastCommit(data.commit);
+          if (!this.validators.isValidValidator(data.commit.from)) break;
+          if (!this.commitPool.isInitiated(data.commit.blockHash)) break;
+          if (this.commitPool.isCompleted(data.commit.blockHash)) break;
+          if (this.commitPool.isExistFrom(data.commit.blockHash, data.commit.from)) break;
+          if (!this.commitPool.isValid(data.commit)) break;
 
-            let thresholdReached = this.commitPool.add(data.commit);
-            if (thresholdReached) {
-              this.commitPool.finalize(data.commit.blockHash);
+          this.broadcastCommit(data.commit);
 
-              let blockObj = this.blockPool.get(data.commit.blockHash);
-              let prepareObj = this.preparePool.get(data.commit.blockHash);
-              let commitObj = this.commitPool.get(data.commit.blockHash);
+          let thresholdReached = this.commitPool.add(data.commit);
+          if (thresholdReached) {
+            this.commitPool.finalize(data.commit.blockHash);
+            let blockObj = this.blockPool.get(data.commit.blockHash);
 
-              let isAdded = this.blockchain.addBlockToBlockhain(blockObj, prepareObj, commitObj);
+            this.blockchain.addBlockToBlockhain(blockObj).then(isAdded => {
               if (isAdded) {
+                this.blockPool.delete(data.commit.blockHash);
+                this.preparePool.delete(data.commit.blockHash);
+                this.commitPool.delete(data.commit.blockHash);
+
                 // delete transactions that have been included in the blockchain
                 let i;
                 for (i = 0; i < blockObj.data.length; i++) {
                   this.transactionPool.delete(blockObj.data[i][0]);
                 }
 
-                if (
-                  !this.roundChangePool.isInitiated(data.commit.blockHash) &&
-                  !this.roundChangePool.isFinalized(data.commit.blockHash)
-                ) {
-                  let roundChange = this.roundChangePool.initRoundChange(data.commit, this.wallet);
-                  this.broadcastRoundChange(roundChange);
-                }
+              } else {
+                console.log('add to pending pool');
+                this.pendingCommitedBlocks.set(data.commit.sequenceId, data.commit.blockHash);
               }
-            }
+            });
           }
+
           break;
-
-        case MESSAGE_TYPE.round_change:
-          if (config.isDebugging()) {
-            log(chalk.green(`Receiving Round Change ${data.roundChange.blockHash}`));
-          }
-
-          if (
-            this.validators.isValidValidator(data.roundChange.publicKey) &&
-            this.roundChangePool.isInitiated(data.roundChange.blockHash) &&
-            !this.roundChangePool.isFinalized(data.roundChange.blockHash) &&
-            !this.roundChangePool.isExist(data.roundChange) &&
-            this.roundChangePool.isValidRoundChange(data.roundChange)
-          ) {
-            this.broadcastRoundChange(data.roundChange);
-
-            let thresholdReached = this.roundChangePool.add(data.roundChange);
-            if (thresholdReached) {
-              this.roundChangePool.finalize(data.roundChange.blockHash);
-
-              this.blockPool.delete(data.roundChange.blockHash);
-              this.preparePool.delete(data.roundChange.blockHash);
-              this.commitPool.delete(data.roundChange.blockHash);
-              this.roundChangePool.delete(data.roundChange.blockHash);
-            }
-          }
-          break;
+        }
       }
     });
   }

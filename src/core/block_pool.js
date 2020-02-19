@@ -28,6 +28,10 @@ class BlockPool {
     return this.pendingBlocks.get(blockHash);
   }
 
+  getAllPendingBlocks() {
+    return this.pendingBlocks;
+  }
+
   delete(blockHash) {
     this.pendingBlocks.delete(blockHash);
   }

@@ -36,7 +36,7 @@ class Blockchain {
   isValidBlock(block) {
     const lastBlock = this.getLatestBlock();
     return (
-      block.sequenceNo == lastBlock.sequenceNo + 1 &&
+      block.sequenceNo == lastBlock.sequenceId + 1 &&
       block.lastHash === lastBlock.hash &&
       Block.verifyBlockHash(block, block.hash) &&
       Block.verifyBlockSignature(block) &&

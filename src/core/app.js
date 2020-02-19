@@ -12,9 +12,7 @@ const Wallet = require("./wallet");
 const RequestPool = require("./request_pool");
 const TransactionPool = require("./transaction_pool");
 const BlockPool = require("./block_pool"); // pre-prepare pool
-const PreparePool = require("./prepare_pool");
-const CommitPool = require("./commit_pool");
-const RoundChangePool = require("./round_change_pool");
+const PBFTPool = require("./pbft_pool");
 
 const Config = require("./config");
 const config = new Config();
@@ -35,9 +33,8 @@ const blockchain = new Blockchain(validators);
 const requestPool = new RequestPool();
 const transactionPool = new TransactionPool();
 const blockPool = new BlockPool();
-const preparePool = new PreparePool();
-const commitPool = new CommitPool();
-const roundChangePool = new RoundChangePool();
+const preparePool = new PBFTPool();
+const commitPool = new PBFTPool();
 
 const p2pServer = new P2pServer(
   blockchain,
@@ -46,7 +43,6 @@ const p2pServer = new P2pServer(
   blockPool,
   preparePool,
   commitPool,
-  roundChangePool,
   validators
 );
 
@@ -69,29 +65,7 @@ app.get("/block_height", (req, res) => {
 });
 
 app.get("/tx_count_per_block", (req, res) => {
-  let results = [];
-  let totalTx = 0;
-  let storedBlocks = blockchain.getAllBlocks();
-  let i;
-
-  for (i = 1; i < storedBlocks.length; i++) {
-    let storedBlock = storedBlocks[i];
-    let txs = storedBlock.data;
-    let number_of_tx = 0;
-    let j;
-
-    for (j = 0; j < txs.length; j++) {
-      let tx = txs[j][1];
-      let requests = tx.input.data;
-      number_of_tx += requests.length;
-    }
-
-    totalTx += number_of_tx;
-    results.push(number_of_tx);
-  }
-  results.push(totalTx);
-
-  res.json(results);
+  res.json(blockchain.getListNumberOfTxs());
 });
 
 // creates transactions for the sent data
@@ -130,6 +104,15 @@ if (config.isUsingDynamicRequestPool()) {
   setInterval(adjustReqeustThreshold, 1000);
 }
 
+// starts the app server
+app.listen(HTTP_PORT, () => {
+  log(chalk.blue(`Listening on requests on port : ${HTTP_PORT}`));
+});
+
+// starts the p2p server
+p2pServer.listen();
+
+
 /*
 if (config.isDebugging()) {
   setInterval(() => {
@@ -138,10 +121,30 @@ if (config.isDebugging()) {
 }
 */
 
-// starts the app server
-app.listen(HTTP_PORT, () => {
-  log(chalk.blue(`Listening on requests on port : ${HTTP_PORT}`));
-});
+/*
+app.get("/tx_count_per_block", (req, res) => {
+  let results = [];
+  let totalTx = 0;
+  let storedBlocks = blockchain.getAllBlocks();
+  let i;
 
-// starts the p2p server
-p2pServer.listen();
+  for (i = 1; i < storedBlocks.length; i++) {
+    let storedBlock = storedBlocks[i];
+    let txs = storedBlock.data;
+    let number_of_tx = 0;
+    let j;
+
+    for (j = 0; j < txs.length; j++) {
+      let tx = txs[j][1];
+      let requests = tx.input.data;
+      number_of_tx += requests.length;
+    }
+
+    totalTx += number_of_tx;
+    results.push(number_of_tx);
+  }
+  results.push(totalTx);
+
+  res.json(results);
+});
+*/

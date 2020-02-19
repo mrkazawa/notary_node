@@ -17,8 +17,11 @@ class Blockchain {
     this.validatorsList = validators.list;
     // TODO: Open exisitng blockchain data scenario
     this.blockchainDB = levelup(leveldown('./blockchain_data'));
-    this.includedBlockHash = new Set();
-    this.addGenesisBlock();
+    this.includedBlockHash = new Set(); // list of block hash in the blockchain
+    this.latestBlock = {} // temporary object to store the latest block
+    this.numberOfTxs = [];
+
+    this.addGenesisBlock(); // will be called in the main app.js so no need await
   }
   
   async addToStore(key, value) {
@@ -37,16 +40,11 @@ class Blockchain {
   }
 
   async getFromStore(key) {
-    if (!this.includedBlockHash.has(key)) {
-      return false;
-    }
-
     try {
       return JSON.parse(await this.blockchainDB.get(key));
       
     } catch (err) {
       log(chalk.red(`ERROR ${err}`));
-      return false;
     }
   }
 
@@ -54,33 +52,38 @@ class Blockchain {
     const genesisBlock = Block.genesis();
     const result = await this.addToStore(genesisBlock.hash, genesisBlock);
     if (result) {
+      this.latestBlock = genesisBlock;
+      this.numberOfTxs.push(this.countNumberOfTxInBlock(this.getLatestBlock()));
       this.includedBlockHash.add(genesisBlock.hash);
-      log(chalk.bgWhite.black(`Added Block to Blockchain ${genesisBlock.hash}`));
+      this.printLog(genesisBlock.hash);
+    } else {
+      log(chalk.red(`ERROR! Genesis block cannot be created!`));
     }
   }
 
-  async addBlockToBlockhain(blockObj, prepareObj, commitObj) {
+  async addBlockToBlockhain(blockObj) {
     if (this.isValidBlock(blockObj)) {
-      blockObj.prepareMessages = prepareObj;
-      blockObj.commitMessages = commitObj;
-
-      const result = await this.chainthis.addToStore(blockObj.hash, blockObj);
+      const result = await this.addToStore(blockObj.hash, blockObj);
       if (result) {
-        this.includedBlockHash.add(genesisBlock.hash);
-        log(chalk.bgWhite.black(`Added Block to Blockchain ${blockObj.hash}`));
+        this.latestBlock = blockObj;
+        this.numberOfTxs.push(this.countNumberOfTxInBlock(this.getLatestBlock()));
+        this.includedBlockHash.add(blockObj.hash);
+        this.printLog(blockObj.hash);
 
         return true;
       } else {
+        log(chalk.red(`ERROR! Block ${blockObj.hash} cannot be inserted!`));
         return false;
       }      
     } else {
+      log(chalk.red(`ERROR! Block ${blockObj.hash} invalid!`));
       return false;
     }
   }
 
-  async createBlock(transactions, wallet) {
+  createBlock(transactions, wallet) {
     const block = Block.createBlock(
-      await this.getLatestBlock(),
+      this.getLatestBlock(),
       transactions,
       wallet
     );
@@ -90,16 +93,16 @@ class Blockchain {
   // calculates the next proposers by calculating a random index of the validators list
   // index is calculated using the hash of the latest block
   // TODO: need to investigate what happen to this when one node fails
-  async getCurrentProposer() {
-    const latestBlock = await this.getLatestBlock();
-    let index = latestBlock.hash[0].charCodeAt(0) % config.getNumberOfNodes();
+  getCurrentProposer() {
+    const lastBlock = this.getLatestBlock();
+    let index = lastBlock.hash[0].charCodeAt(0) % config.getNumberOfNodes();
     return this.validatorsList[index];
   }
 
-  async isValidBlock(block) {
-    const lastBlock = await this.getLatestBlock();
+  isValidBlock(block) {
+    const lastBlock = this.getLatestBlock();
     return (
-      block.sequenceNo == lastBlock.sequenceNo + 1 &&
+      block.sequenceId == lastBlock.sequenceId + 1 &&
       block.lastHash === lastBlock.hash &&
       Block.verifyBlockHash(block, block.hash) &&
       Block.verifyBlockSignature(block) &&
@@ -107,13 +110,16 @@ class Blockchain {
     );
   }
 
-  async getLatestBlock() {
-    const latestHash = this.getLastValueFromSet(this.includedBlockHash);
-    return await this.getFromStore(latestHash);
+  getLatestBlock() {
+    return this.latestBlock;
   }
 
   getBlockHeight() {
-    return this.includedBlockHash.length;
+    return this.includedBlockHash.size;
+  }
+
+  getListNumberOfTxs() {
+    return this.numberOfTxs;
   }
 
   getLastValueFromSet(set){
@@ -122,17 +128,22 @@ class Blockchain {
     return value;
   }
 
-  countNumberOfTx(txData) {
+  countNumberOfTxInBlock(block) {
+    let txs = block.data;
     let number_of_tx = 0;
     let j;
 
-    for (j = 0; j < txData.length; j++) {
-      let tx = txData[j][1];
+    for (j = 0; j < txs.length; j++) {
+      let tx = txs[j][1];
       let requests = tx.input.data;
       number_of_tx += requests.length;
     }
 
     return number_of_tx;
+  }
+
+  printLog(blockHash) {
+    log(chalk.bgWhite.black(`Added Block to Blockchain: ${blockHash}`));
   }
 }
 

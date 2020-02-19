@@ -11,7 +11,7 @@ class Block {
     data,
     proposer,
     signature,
-    sequenceNo
+    sequenceId
   ) {
     this.timestamp = timestamp;
     this.lastHash = lastHash;
@@ -19,7 +19,7 @@ class Block {
     this.data = data;
     this.proposer = proposer;
     this.signature = signature;
-    this.sequenceNo = sequenceNo;
+    this.sequenceId = sequenceId;
   }
 
   static toString() {
@@ -30,7 +30,7 @@ class Block {
         Data        : ${this.data}
         Proposer    : ${this.proposer}
         Signature   : ${this.signature}
-        Sequence No : ${this.sequenceNo}`;
+        Sequence ID : ${this.sequenceId}`;
   }
 
   // The first block by default will the genesis block
@@ -60,7 +60,7 @@ class Block {
       data,
       proposer,
       signature,
-      1 + lastBlock.sequenceNo
+      1 + lastBlock.sequenceId
     );
   }
 
