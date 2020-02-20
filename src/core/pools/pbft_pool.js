@@ -81,6 +81,14 @@ class PBFTMessagePool {
   delete(blockHash) {
     this.pendingPBFTMessages.delete(blockHash);
   }
+
+  getAllCompleted() {
+    return this.completedPBFTMessages;
+  }
+
+  deleteCompleted(blockHash) {
+    this.completedPBFTMessages.delete(blockHash);
+  }
 }
 
 module.exports = PBFTMessagePool;

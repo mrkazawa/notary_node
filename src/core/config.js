@@ -19,7 +19,9 @@ class Config {
     // How long the system has to wait before it starts to delete old messages
     this.OLD_MESSAGES_TIMEOUT = 10;
     // How long the period of block generation (in milliseconds)
-    this.BLOCK_INTERVAL = 1000;
+    this.BLOCK_INTERVAL = 1000; // every 1 second
+    // How long the period of garbage collector process (in milliseconds)
+    this.GARBAGE_INTERVAL = 20 * this.BLOCK_INTERVAL; // every 20 seconds
 
     // Total number of nodes in the network
     this.NUMBER_OF_NODES = 4;
@@ -29,9 +31,9 @@ class Config {
     this.MIN_APPROVALS = 2 * this.NUMBER_OF_FAULTY_NODES + 1;
 
     // Choose only one TRUE option below
-    this.EDDSA_FLAG = true;
+    this.EDDSA_FLAG = false;
     this.HMAC_FLAG = false;
-    this.NO_SIG_FLAG = false;
+    this.NO_SIG_FLAG = true;
 
     this.BENCHMARK_FLAG = true; // set true during benchmarking
     this.DEBUGGING_FLAG = false; // set true to display log
@@ -56,6 +58,10 @@ class Config {
 
   getBlockInterval() {
     return this.BLOCK_INTERVAL;
+  }
+
+  getGarbageInterval() {
+    return this.GARBAGE_INTERVAL;
   }
 
   getNumberOfNodes() {

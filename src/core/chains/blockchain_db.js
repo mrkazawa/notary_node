@@ -15,9 +15,14 @@ class Blockchain {
     Blockchain._instance = this;
 
     this.validatorsList = validators.list;
+    
     // TODO: Open exisitng blockchain data scenario
     this.blockchainDB = levelup(leveldown('./blockchain_data'));
     this.blockchainDB.clear();
+    if (!this.blockchainDB.supports.permanence) {
+      throw new Error('Persistent storage is required');
+    }
+
     this.includedBlockHash = new Set(); // list of block hash in the blockchain
     this.latestBlock = {} // temporary object to store the latest block
     this.numberOfTxs = [];

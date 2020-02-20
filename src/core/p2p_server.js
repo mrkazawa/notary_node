@@ -61,6 +61,8 @@ class P2pServer {
 
     // timer for proposing a block
     setInterval(this.proposeBlock.bind(this), config.getBlockInterval());
+    // timer for garbage process
+    setInterval(this.doGarbageProcessing.bind(this), config.getGarbageInterval());
   }
 
   // connects to a given socket and registers the message handler on it
@@ -325,6 +327,22 @@ class P2pServer {
         let transactions = this.transactionPool.getAllPendingTransactions();
         let block = this.blockchain.createBlock(transactions, this.wallet);
         this.broadcastPrePrepare(block);
+      }
+    }
+  }
+
+  doGarbageProcessing() {
+    const completeCommits = this.commitPool.getAllCompleted();
+    const completeSize = completeCommits.size;
+    const toDelete = completeSize - config.getNumberOfTempMessages();
+
+    var deleted = 0;
+    for (let item of completeCommits) {
+      this.preparePool.deleteCompleted(item);
+      this.commitPool.deleteCompleted(item);
+      deleted += 1;
+      if (deleted == toDelete) {
+        break;
       }
     }
   }

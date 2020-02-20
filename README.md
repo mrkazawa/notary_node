@@ -11,25 +11,25 @@ All of the required softwares and tools has been included in the `Vagrantfile` a
 In `notary1`
 
 ```bash
-SECRET="NODE0" P2P_PORT=5100 HTTP_PORT=3000 node app --max-old-space-size=4096
+SECRET="NODE0" P2P_PORT=5100 HTTP_PORT=3000 node app --max-old-space-size=2048
 ```
 
 In `notary2`
 
 ```bash
-SECRET="NODE1" P2P_PORT=5100 HTTP_PORT=3000 PEERS=ws://notary1.local:5100 node app --max-old-space-size=4096
+SECRET="NODE1" P2P_PORT=5100 HTTP_PORT=3000 PEERS=ws://notary1.local:5100 node app --max-old-space-size=2048
 ```
 
 In `notary3`
 
 ```bash
-SECRET="NODE2" P2P_PORT=5100 HTTP_PORT=3000 PEERS=ws://notary2.local:5100,ws://notary1.local:5100 node app --max-old-space-size=4096
+SECRET="NODE2" P2P_PORT=5100 HTTP_PORT=3000 PEERS=ws://notary2.local:5100,ws://notary1.local:5100 node app --max-old-space-size=2048
 ```
 
 In `notary4`
 
 ```bash
-SECRET="NODE3" P2P_PORT=5100 HTTP_PORT=3000 PEERS=ws://notary3.local:5100,ws://notary2.local:5100,ws://notary1.local:5100 node app --max-old-space-size=4096
+SECRET="NODE3" P2P_PORT=5100 HTTP_PORT=3000 PEERS=ws://notary3.local:5100,ws://notary2.local:5100,ws://notary1.local:5100 node app --max-old-space-size=2048
 ```
 
 - - - -

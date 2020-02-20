@@ -118,31 +118,3 @@ if (config.isDebugging()) {
   }, 1000);
 }
 */
-
-/*
-app.get('/tx_count_per_block', (req, res) => {
-  let results = [];
-  let totalTx = 0;
-  let storedBlocks = blockchain.getAllBlocks();
-  let i;
-
-  for (i = 1; i < storedBlocks.length; i++) {
-    let storedBlock = storedBlocks[i];
-    let txs = storedBlock.data;
-    let number_of_tx = 0;
-    let j;
-
-    for (j = 0; j < txs.length; j++) {
-      let tx = txs[j][1];
-      let requests = tx.input.data;
-      number_of_tx += requests.length;
-    }
-
-    totalTx += number_of_tx;
-    results.push(number_of_tx);
-  }
-  results.push(totalTx);
-
-  res.json(results);
-});
-*/
