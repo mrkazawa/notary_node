@@ -1,9 +1,9 @@
-const EDDSA = require("elliptic").eddsa;
-const eddsa = new EDDSA("ed25519");
-const uuidV1 = require("uuid/v1");
-const SHA256 = require("crypto-js/sha256");
-const hmacSHA256 = require("crypto-js/hmac-sha256");
-const Base64 = require("crypto-js/enc-base64");
+const EDDSA = require('elliptic').eddsa;
+const eddsa = new EDDSA('ed25519');
+const uuidV1 = require('uuid/v1');
+const SHA256 = require('crypto-js/sha256');
+const hmacSHA256 = require('crypto-js/hmac-sha256');
+const Base64 = require('crypto-js/enc-base64');
 
 class CryptoUtil {
   static generateKeyPair(secret) {

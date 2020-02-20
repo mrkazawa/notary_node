@@ -1,19 +1,19 @@
-const WebSocket = require("ws");
+const WebSocket = require('ws');
 const HashMap = require('hashmap');
 const chalk = require('chalk');
 const log = console.log;
 
-const Config = require("./config");
+const Config = require('./config');
 const config = new Config();
 
 const P2P_PORT = process.env.P2P_PORT || 5001;
-const PEERS = process.env.PEERS ? process.env.PEERS.split(",") : [];
+const PEERS = process.env.PEERS ? process.env.PEERS.split(',') : [];
 
 const MESSAGE_TYPE = {
-  transaction: "TRANSACTION",
-  prepare: "PREPARE",
-  pre_prepare: "PRE_PREPARE",
-  commit: "COMMIT"
+  transaction: 'TRANSACTION',
+  prepare: 'PREPARE',
+  pre_prepare: 'PRE_PREPARE',
+  commit: 'COMMIT'
 };
 
 class P2pServer {
@@ -40,87 +40,43 @@ class P2pServer {
     this.validators = validators;
 
     this.sockets = [];
-    this.pendingCommitedBlocks = new HashMap();
-    this.timeoutCommitedBlocks = new HashMap();
+    this.pendingCommitedBlocks = new HashMap(); // store pending out of order commits
+    this.timeoutCommitedBlocks = new HashMap(); // store commits that cannot be inserted after multiple trials
   }
 
   // Creates a server on a given port
+  // TODO: detect and restore broken connection scenario
+  // TODO: try to use uWebSocket
+  // https://github.com/uNetworking/uWebSockets.js
   listen() {
     const server = new WebSocket.Server({
-      port: P2P_PORT
+      port: P2P_PORT,
+      perMessageDeflate: false
     });
-    server.on("connection", socket => {
+    server.on('connection', socket => {
       this.connectSocket(socket);
     });
     this.connectToPeers();
     log(chalk.blue(`Listening for peer to peer connection on port : ${P2P_PORT}`));
 
     // timer for proposing a block
-    setInterval(function () {
-      if (this.pendingCommitedBlocks.size > 0) {
-        console.log('there are pending blocks');
-        const keys = this.pendingCommitedBlocks.keys();
-        keys.sort();
-
-        let i;
-        for (i = 0; i < keys.length; i++) {
-          let sequenceId = keys[i];
-          let blockHash = this.pendingCommitedBlocks.get(sequenceId);
-          let blockObj = this.blockPool.get(blockHash);
-
-          this.blockchain.addBlockToBlockhain(blockObj).then(isAdded => {
-            if (isAdded) {
-              this.blockPool.delete(blockHash);
-              this.preparePool.delete(blockHash);
-              this.commitPool.delete(blockHash);
-              this.pendingCommitedBlocks.delete(sequenceId);
-
-              // delete transactions that have been included in the blockchain
-              let i;
-              for (i = 0; i < blockObj.data.length; i++) {
-                this.transactionPool.delete(blockObj.data[i][0]);
-              }
-
-            } else {
-              if (!this.timeoutCommitedBlocks.has(sequenceId)) {
-                this.timeoutCommitedBlocks.set(sequenceId, 0);
-                console.log(`cannot insert leeh.. count = ${0}`);
-
-              } else {
-                let count = this.timeoutCommitedBlocks.get(sequenceId);
-                count += 1;
-                this.timeoutCommitedBlocks.set(sequenceId, count);
-                console.log(`cannot insert again leeh.. count = ${count}`);
-                if (count > 7) {
-                  this.pendingCommitedBlocks.delete(sequenceId);
-                }
-              }
-            }
-          });
-        }
-      }
-
-      if (this.blockchain.getCurrentProposer() == this.wallet.getPublicKey()) {
-        let transactions = this.transactionPool.getAllPendingTransactions();
-        let block = this.blockchain.createBlock(transactions, this.wallet);
-        this.broadcastPrePrepare(block);
-      }
-
-    }.bind(this), 1000);
+    setInterval(this.proposeBlock.bind(this), config.getBlockInterval());
   }
 
   // connects to a given socket and registers the message handler on it
   connectSocket(socket) {
     this.sockets.push(socket);
-    log(chalk.blue("Socket connected"));
+    log(chalk.blue('Socket connected'));
     this.messageHandler(socket);
   }
 
   // connects to the peers passed in command line
   connectToPeers() {
     PEERS.forEach(peer => {
-      const socket = new WebSocket(peer);
-      socket.on("open", () => this.connectSocket(socket));
+      const socket = new WebSocket(peer, {
+        perMessageDeflate: false
+      });
+      socket.on('open', () => this.connectSocket(socket));
     });
   }
 
@@ -189,7 +145,7 @@ class P2pServer {
   //-------------------------- Receive Handlers --------------------------//
 
   messageHandler(socket) {
-    socket.on("message", message => {
+    socket.on('message', message => {
       const data = JSON.parse(message);
 
       switch (data.type) {
@@ -300,15 +256,9 @@ class P2pServer {
                 this.blockPool.delete(data.commit.blockHash);
                 this.preparePool.delete(data.commit.blockHash);
                 this.commitPool.delete(data.commit.blockHash);
-
-                // delete transactions that have been included in the blockchain
-                let i;
-                for (i = 0; i < blockObj.data.length; i++) {
-                  this.transactionPool.delete(blockObj.data[i][0]);
-                }
+                this.deleteAlreadyIncludedTransactions(blockObj);
 
               } else {
-                console.log('add to pending pool');
                 this.pendingCommitedBlocks.set(data.commit.sequenceId, data.commit.blockHash);
               }
             });
@@ -318,6 +268,65 @@ class P2pServer {
         }
       }
     });
+  }
+
+  deleteAlreadyIncludedTransactions(block) {
+    let i;
+    for (i = 0; i < block.data.length; i++) {
+      this.transactionPool.delete(block.data[i][0]);
+    }
+  }
+
+  proposeBlock() {
+    // if first time, create the genesis
+    if (this.blockchain.getBlockHeight() == 0) {
+      this.blockchain.addGenesisBlock();
+
+    } else {
+      // check if we have pending commits because of out of order delivery
+      if (this.pendingCommitedBlocks.size > 0) {
+        const keys = this.pendingCommitedBlocks.keys();
+        keys.sort(); // begin inserting from the lowest sequence id
+
+        let i;
+        for (i = 0; i < keys.length; i++) {
+          let sequenceId = keys[i];
+          let blockHash = this.pendingCommitedBlocks.get(sequenceId);
+          let blockObj = this.blockPool.get(blockHash);
+
+          this.blockchain.addBlockToBlockhain(blockObj).then(isAdded => {
+            if (isAdded) {
+              this.blockPool.delete(blockHash);
+              this.preparePool.delete(blockHash);
+              this.commitPool.delete(blockHash);
+              this.deleteAlreadyIncludedTransactions(blockObj);
+              this.pendingCommitedBlocks.delete(sequenceId);
+
+            } else {
+              if (!this.timeoutCommitedBlocks.has(sequenceId)) {
+                this.timeoutCommitedBlocks.set(sequenceId, 0);
+
+              } else {
+                let count = this.timeoutCommitedBlocks.get(sequenceId);
+                count += 1;
+                this.timeoutCommitedBlocks.set(sequenceId, count);
+
+                if (count > config.getOldMessagesTimeout()) {
+                  this.pendingCommitedBlocks.delete(sequenceId);
+                }
+              }
+            }
+          });
+        }
+      }
+
+      // if it is our turn to create a block, we propose it
+      if (this.blockchain.getCurrentProposer() == this.wallet.getPublicKey()) {
+        let transactions = this.transactionPool.getAllPendingTransactions();
+        let block = this.blockchain.createBlock(transactions, this.wallet);
+        this.broadcastPrePrepare(block);
+      }
+    }
   }
 }
 

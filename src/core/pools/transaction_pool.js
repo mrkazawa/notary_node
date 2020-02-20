@@ -1,6 +1,6 @@
 const HashMap = require('hashmap');
 
-const Transaction = require("./transaction");
+const Transaction = require('../chains/transaction');
 
 class TransactionPool {
   constructor() {

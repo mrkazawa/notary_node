@@ -1,6 +1,5 @@
-const CryptoUtil = require("./crypto_util");
-
-const Config = require("./config");
+const CryptoUtil = require('../utils/crypto_util');
+const Config = require('../config');
 const config = new Config();
 
 class Transaction {
@@ -21,7 +20,7 @@ class Transaction {
       );
     } else if (config.isHMAC()) {
       return CryptoUtil.verifyDigest(
-        "secret",
+        'secret',
         transaction.signature,
         CryptoUtil.hash(transaction.input)
       );

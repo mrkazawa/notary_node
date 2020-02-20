@@ -18,8 +18,11 @@
     "hashmap": "^2.4.0",
     "leveldown": "^5.4.1",
     "levelup": "^4.3.2",
-    "sorted-array": "^2.0.4",
     "uuid": "^3.3.2",
     "ws": "^7.1.1"
+  },
+  "optionalDependencies": {
+    "bufferutil": "^4.0.1",
+    "utf-8-validate": "^5.0.2"
   }
 }

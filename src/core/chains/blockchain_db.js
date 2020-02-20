@@ -3,9 +3,9 @@ const leveldown = require('leveldown');
 const chalk = require('chalk');
 const log = console.log;
 
-const Config = require('./config');
-const config = new Config();
 const Block = require('./block');
+const Config = require('../config');
+const config = new Config();
 
 class Blockchain {
   constructor(validators) {
@@ -17,11 +17,10 @@ class Blockchain {
     this.validatorsList = validators.list;
     // TODO: Open exisitng blockchain data scenario
     this.blockchainDB = levelup(leveldown('./blockchain_data'));
+    this.blockchainDB.clear();
     this.includedBlockHash = new Set(); // list of block hash in the blockchain
     this.latestBlock = {} // temporary object to store the latest block
     this.numberOfTxs = [];
-
-    this.addGenesisBlock(); // will be called in the main app.js so no need await
   }
   
   async addToStore(key, value) {
@@ -35,7 +34,7 @@ class Blockchain {
 
     } catch (err) {
       log(chalk.red(`ERROR ${err}`));
-      return false;
+      process.exitCode = 1;
     }
   }
 
@@ -45,6 +44,7 @@ class Blockchain {
       
     } catch (err) {
       log(chalk.red(`ERROR ${err}`));
+      process.exitCode = 1;
     }
   }
 

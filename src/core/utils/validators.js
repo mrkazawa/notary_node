@@ -1,4 +1,4 @@
-const CryptoUtil = require("./crypto_util");
+const CryptoUtil = require('./crypto_util');
 
 class Validators {
   constructor(numberOfValidators) {
@@ -19,7 +19,7 @@ class Validators {
     for (let i = 0; i < numberOfValidators; i++) {
       // TODO: Still using static SECRET for NODE+i
       // still construct the list of validators manually here
-      list.push(CryptoUtil.generateKeyPair("NODE" + i).getPublic("hex"));
+      list.push(CryptoUtil.generateKeyPair('NODE' + i).getPublic('hex'));
     }
     return list;
   }

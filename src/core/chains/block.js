@@ -1,6 +1,5 @@
-const CryptoUtil = require("./crypto_util");
-
-const Config = require("./config");
+const CryptoUtil = require('../utils/crypto_util');
+const Config = require('../config');
 const config = new Config();
 
 class Block {
@@ -22,27 +21,14 @@ class Block {
     this.sequenceId = sequenceId;
   }
 
-  static toString() {
-    return `Block - 
-        Timestamp   : ${this.timestamp}
-        Last Hash   : ${this.lastHash}
-        Hash        : ${this.hash}
-        Data        : ${this.data}
-        Proposer    : ${this.proposer}
-        Signature   : ${this.signature}
-        Sequence ID : ${this.sequenceId}`;
-  }
-
-  // The first block by default will the genesis block
-  // this function generates the genesis block with random values
   static genesis() {
     return new this(
       `genesis time`, // timestamp
-      "----", // lastHash
-      "genesis-hash", // hash
+      '----', // lastHash
+      'genesis-hash', // hash
       [], // data
-      "P4@P@53R", // proposer
-      "SIGN", // signature
+      'P4@P@53R', // proposer
+      'SIGN', // signature
       0 // sequenceNo
     );
   }
@@ -82,7 +68,7 @@ class Block {
       );
     } else if (config.isHMAC()) {
       return CryptoUtil.verifyDigest(
-        "secret",
+        'secret',
         block.signature,
         this.calculateBlockHash(block.lastHash, block.data)
       );

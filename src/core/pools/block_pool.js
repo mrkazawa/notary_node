@@ -1,6 +1,6 @@
 const HashMap = require('hashmap');
 
-const Block = require("./block");
+const Block = require('../chains/block');
 
 class BlockPool {
   constructor() {
@@ -26,10 +26,6 @@ class BlockPool {
 
   get(blockHash) {
     return this.pendingBlocks.get(blockHash);
-  }
-
-  getAllPendingBlocks() {
-    return this.pendingBlocks;
   }
 
   delete(blockHash) {

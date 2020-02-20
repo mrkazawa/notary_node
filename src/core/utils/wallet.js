@@ -1,7 +1,7 @@
-const CryptoUtil = require("./crypto_util");
-const Transaction = require("./transaction");
+const CryptoUtil = require('./crypto_util');
+const Transaction = require('../chains/transaction');
 
-const Config = require("./config");
+const Config = require('../config');
 const config = new Config();
 
 class Wallet {
@@ -14,16 +14,16 @@ class Wallet {
     Wallet._instance = this;
 
     this.keyPair = CryptoUtil.generateKeyPair(secret);
-    this.publicKey = this.keyPair.getPublic("hex");
+    this.publicKey = this.keyPair.getPublic('hex');
   }
 
   sign(dataHash) {
     if (config.isEDDSA()) {
       return this.keyPair.sign(dataHash).toHex();
     } else if (config.isHMAC()) {
-      return CryptoUtil.generateDigest("secret", dataHash);
+      return CryptoUtil.generateDigest('secret', dataHash);
     } else if (config.isNOSIG()) {
-      return "no-signature";
+      return 'no-signature';
     }
   }
 

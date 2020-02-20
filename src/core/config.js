@@ -14,6 +14,13 @@ class Config {
     // Maximum number of GENERAL request before the node bundles them in a transaction and then broadcast it to peers
     this.PENDING_REQUEST_THRESHOLD = 1;
 
+    // How many temporary past PBFT messages that the system has to keep before the garbage collector deletes them
+    this.NUMBER_OF_TEMP_MESSAGES = 20;
+    // How long the system has to wait before it starts to delete old messages
+    this.OLD_MESSAGES_TIMEOUT = 10;
+    // How long the period of block generation (in milliseconds)
+    this.BLOCK_INTERVAL = 1000;
+
     // Total number of nodes in the network
     this.NUMBER_OF_NODES = 4;
     // Total number of tolerable faulty nodes in the network
@@ -22,9 +29,9 @@ class Config {
     this.MIN_APPROVALS = 2 * this.NUMBER_OF_FAULTY_NODES + 1;
 
     // Choose only one TRUE option below
-    this.EDDSA_FLAG = false;
+    this.EDDSA_FLAG = true;
     this.HMAC_FLAG = false;
-    this.NO_SIG_FLAG = true;
+    this.NO_SIG_FLAG = false;
 
     this.BENCHMARK_FLAG = true; // set true during benchmarking
     this.DEBUGGING_FLAG = false; // set true to display log
@@ -37,6 +44,18 @@ class Config {
 
   getRequestThreshold() {
     return this.PENDING_REQUEST_THRESHOLD;
+  }
+
+  getNumberOfTempMessages() {
+    return this.NUMBER_OF_TEMP_MESSAGES;
+  }
+
+  getOldMessagesTimeout() {
+    return this.OLD_MESSAGES_TIMEOUT;
+  }
+
+  getBlockInterval() {
+    return this.BLOCK_INTERVAL;
   }
 
   getNumberOfNodes() {

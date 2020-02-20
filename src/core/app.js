@@ -1,20 +1,20 @@
-const express = require("express");
-const bodyParser = require("body-parser");
+const express = require('express');
+const bodyParser = require('body-parser');
 const chalk = require('chalk');
 const log = console.log;
 
-const P2pServer = require("./p2p_server");
-const Validators = require("./validators");
-//const Blockchain = require("./blockchain");
-const Blockchain = require("./blockchain_db");
-const Wallet = require("./wallet");
+const Blockchain = require('./chains/blockchain_db');
 
-const RequestPool = require("./request_pool");
-const TransactionPool = require("./transaction_pool");
-const BlockPool = require("./block_pool"); // pre-prepare pool
-const PBFTPool = require("./pbft_pool");
+const Validators = require('./utils/validators');
+const Wallet = require('./utils/wallet');
 
-const Config = require("./config");
+const RequestPool = require('./pools/request_pool');
+const TransactionPool = require('./pools/transaction_pool');
+const BlockPool = require('./pools/block_pool'); // pre-prepare pool
+const PBFTPool = require('./pools/pbft_pool');
+
+const P2pServer = require('./p2p_server');
+const Config = require('./config');
 const config = new Config();
 const HTTP_PORT = process.env.HTTP_PORT || 3001;
 
@@ -26,8 +26,6 @@ app.use(bodyParser.json());
 const wallet = new Wallet(process.env.SECRET);
 // TODO: add proposer validator registraion procedure
 const validators = new Validators(config.getNumberOfNodes());
-
-// TODO: Use level up to store blockchain
 const blockchain = new Blockchain(validators);
 
 const requestPool = new RequestPool();
@@ -48,28 +46,28 @@ const p2pServer = new P2pServer(
 
 var requestCount = 0;
 
-app.get("/pending_requests", (req, res) => {
+app.get('/pending_requests', (req, res) => {
   res.json(requestPool.getAllPendingRequests());
 });
 
-app.get("/pending_transactions", (req, res) => {
+app.get('/pending_transactions', (req, res) => {
   res.json(transactionPool.getAllPendingTransactions());
 });
 
-app.get("/latest_block", (req, res) => {
+app.get('/latest_block', (req, res) => {
   res.json(blockchain.getLatestBlock());
 });
 
-app.get("/block_height", (req, res) => {
+app.get('/block_height', (req, res) => {
   res.json(blockchain.getBlockHeight());
 });
 
-app.get("/tx_count_per_block", (req, res) => {
+app.get('/tx_count_per_block', (req, res) => {
   res.json(blockchain.getListNumberOfTxs());
 });
 
 // creates transactions for the sent data
-app.post("/transact", (req, res) => {
+app.post('/transact', (req, res) => {
   const { data } = req.body;
   requestCount++;
   const thresholdReached = requestPool.add(data);
@@ -122,7 +120,7 @@ if (config.isDebugging()) {
 */
 
 /*
-app.get("/tx_count_per_block", (req, res) => {
+app.get('/tx_count_per_block', (req, res) => {
   let results = [];
   let totalTx = 0;
   let storedBlocks = blockchain.getAllBlocks();

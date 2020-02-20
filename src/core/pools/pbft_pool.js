@@ -2,8 +2,8 @@ const HashMap = require('hashmap');
 const chalk = require('chalk');
 const log = console.log;
 
-const CryptoUtil = require("./crypto_util");
-const Config = require("./config");
+const CryptoUtil = require('../utils/crypto_util');
+const Config = require('../config');
 const config = new Config();
 
 class PBFTMessagePool {
@@ -69,7 +69,7 @@ class PBFTMessagePool {
       );
     } else if (config.isHMAC()) {
       return CryptoUtil.verifyDigest(
-        "secret",
+        'secret',
         message.signature,
         message.blockHash
       );

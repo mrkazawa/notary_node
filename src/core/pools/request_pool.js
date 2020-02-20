@@ -1,7 +1,7 @@
 const HashMap = require('hashmap');
 
-const CryptoUtil = require("./crypto_util");
-const Config = require("./config");
+const CryptoUtil = require('../utils/crypto_util');
+const Config = require('../config');
 const config = new Config();
 
 class RequestPool {
