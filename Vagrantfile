@@ -5,10 +5,11 @@
 # https://manski.net/2016/09/vagrant-multi-machine-tutorial/
 
 BOX_IMAGE = "bento/ubuntu-16.04"
-BOX_MEMORY = "4096"
+BOX_MEMORY = "2048"
 BOX_CPU = 1
 
 NODE_COUNT = 4
+PROXY_COUNT = 1
 
 Vagrant.configure("2") do |config|
   (1..NODE_COUNT).each do |i|

@@ -69,6 +69,7 @@ app.get('/tx_count_per_block', (req, res) => {
 // creates transactions for the sent data
 app.post('/transact', (req, res) => {
   const { data } = req.body;
+  
   requestCount++;
   const thresholdReached = requestPool.add(data);
 

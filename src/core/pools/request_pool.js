@@ -4,6 +4,12 @@ const CryptoUtil = require('../utils/crypto_util');
 const Config = require('../config');
 const config = new Config();
 
+const PRIORITY_LEVEL = {
+  low: 3,
+  medium: 2,
+  high: 1
+};
+
 class RequestPool {
   constructor() {
     if (RequestPool._instance) {
@@ -12,6 +18,10 @@ class RequestPool {
     RequestPool._instance = this;
 
     this.pendingRequests = new HashMap();
+
+    this.pendingLowPriority = new Set();
+    this.pendingMediumPriority = new Set();
+    this.pendingHighPriority = new Set();
   }
 
   add(request) {
@@ -19,6 +29,17 @@ class RequestPool {
       let id = CryptoUtil.generateId();
       this.pendingRequests.set(id, request);
 
+      if (PRIORITY_LEVEL.low == request.priority) {
+        this.pendingLowPriority.add(id);
+
+      } else if (PRIORITY_LEVEL.medium == request.priority) {
+        this.pendingMediumPriority.add(id);
+
+      } else if (PRIORITY_LEVEL.high == request.priority) {
+        this.pendingHighPriority.add(id);
+        
+      }
+    
     } else {
       let hash = CryptoUtil.hash(request);
       if (this.pendingRequests.has(hash)) {
@@ -28,6 +49,10 @@ class RequestPool {
     }
 
     return (this.pendingRequests.size >= config.getRequestThreshold());
+  }
+
+  addToCorrespondingPool() {
+
   }
 
   getAllPendingRequests() {

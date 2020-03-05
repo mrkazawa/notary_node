@@ -18,7 +18,7 @@ apt-get install -y sshpass
 # -------------------------------- For IOTA -------------------------------- #
 # reguirement for Bazel
 apt-get install -y g++ unzip zip
-# for compiling java
-apt-get install -y openjdk-8-jdk
 # to run the shells
 apt-get install -y jq
+# for compiling java
+apt-get install -y openjdk-8-jdk
