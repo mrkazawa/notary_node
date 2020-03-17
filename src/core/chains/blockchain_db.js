@@ -23,23 +23,19 @@ class Blockchain {
       throw new Error('Persistent storage is required');
     }
 
-    this.includedBlockHash = new Set(); // list of block hash in the blockchain
     this.latestBlock = {} // temporary object to store the latest block
+    this.latestBlockHeight = 0; // temporary to store the latest block height
     this.numberOfTxs = [];
   }
   
   async addToStore(key, value) {
-    if (this.includedBlockHash.has(key)) {
-      return false;
-    }
-
     try {
       await this.blockchainDB.put(key, JSON.stringify(value));
       return true;
 
     } catch (err) {
       log(chalk.red(`ERROR ${err}`));
-      process.exitCode = 1;
+      return false;
     }
   }
 
@@ -49,7 +45,7 @@ class Blockchain {
       
     } catch (err) {
       log(chalk.red(`ERROR ${err}`));
-      process.exitCode = 1;
+      return false;
     }
   }
 
@@ -59,7 +55,7 @@ class Blockchain {
     if (result) {
       this.latestBlock = genesisBlock;
       this.numberOfTxs.push(this.countNumberOfTxInBlock(this.getLatestBlock()));
-      this.includedBlockHash.add(genesisBlock.hash);
+      this.latestBlockHeight += 1;
       this.printLog(genesisBlock.hash);
     } else {
       log(chalk.red(`ERROR! Genesis block cannot be created!`));
@@ -72,7 +68,7 @@ class Blockchain {
       if (result) {
         this.latestBlock = blockObj;
         this.numberOfTxs.push(this.countNumberOfTxInBlock(this.getLatestBlock()));
-        this.includedBlockHash.add(blockObj.hash);
+        this.latestBlockHeight += 1;
         this.printLog(blockObj.hash);
 
         return true;
@@ -120,7 +116,7 @@ class Blockchain {
   }
 
   getBlockHeight() {
-    return this.includedBlockHash.size;
+    return this.latestBlockHeight;
   }
 
   getListNumberOfTxs() {

@@ -31,6 +31,14 @@ class BlockPool {
   delete(blockHash) {
     this.pendingBlocks.delete(blockHash);
   }
+
+  getCurrentPendingSize() {
+    return this.pendingBlocks.size;
+  }
+
+  clear() {
+    this.pendingBlocks.clear();
+  }
 }
 
 module.exports = BlockPool;

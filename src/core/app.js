@@ -82,6 +82,15 @@ app.post('/transact', (req, res) => {
   res.status(200).send('transaction_received');
 });
 
+app.get('/clear_block_pool', (req, res) => {
+  blockPool.clear();
+  res.status(200).send('block_pool_cleared');
+});
+
+app.get('/block_pool_size', (req, res) => {
+  res.json(blockPool.getCurrentPendingSize());
+});
+
 function adjustReqeustThreshold() {
   if (requestCount > 500) {
     config.setRequestThreshold(500);
@@ -111,11 +120,6 @@ app.listen(HTTP_PORT, () => {
 // starts the p2p server
 p2pServer.listen();
 
-
-/*
-if (config.isDebugging()) {
-  setInterval(() => {
-    console.log(`Tx Pool Size: ${transactionPool.getCurrentSize()}`);
-  }, 1000);
-}
-*/
+setInterval(() => {
+  log(chalk.yellow(`Request Pool Size : ${requestPool.getCurrentPendingSize()}`));
+}, 2000);

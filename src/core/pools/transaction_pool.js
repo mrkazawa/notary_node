@@ -28,7 +28,7 @@ class TransactionPool {
     return this.pendingTransactions.entries();
   }
 
-  getCurrentSize() {
+  getCurrentPendingSize() {
     return this.pendingTransactions.size;
   }
 

@@ -255,13 +255,11 @@ class P2pServer {
 
             this.blockchain.addBlockToBlockhain(blockObj).then(isAdded => {
               if (isAdded) {
-                this.blockPool.delete(data.commit.blockHash);
-                this.preparePool.delete(data.commit.blockHash);
-                this.commitPool.delete(data.commit.blockHash);
+                this.deleteAlreadyIncludedPBFTMessages(blockObj.hash);
                 this.deleteAlreadyIncludedTransactions(blockObj);
 
               } else {
-                this.pendingCommitedBlocks.set(data.commit.sequenceId, data.commit.blockHash);
+                this.pendingCommitedBlocks.set(blockObj.sequenceId, blockObj.hash);
               }
             });
           }
@@ -270,6 +268,12 @@ class P2pServer {
         }
       }
     });
+  }
+
+  deleteAlreadyIncludedPBFTMessages(blockHash) {
+    this.blockPool.delete(blockHash);
+    this.preparePool.delete(blockHash);
+    this.commitPool.delete(blockHash);
   }
 
   deleteAlreadyIncludedTransactions(block) {
@@ -298,9 +302,7 @@ class P2pServer {
 
           this.blockchain.addBlockToBlockhain(blockObj).then(isAdded => {
             if (isAdded) {
-              this.blockPool.delete(blockHash);
-              this.preparePool.delete(blockHash);
-              this.commitPool.delete(blockHash);
+              this.deleteAlreadyIncludedPBFTMessages(blockObj.hash);
               this.deleteAlreadyIncludedTransactions(blockObj);
               this.pendingCommitedBlocks.delete(sequenceId);
 
@@ -314,7 +316,9 @@ class P2pServer {
                 this.timeoutCommitedBlocks.set(sequenceId, count);
 
                 if (count > config.getOldMessagesTimeout()) {
+                  this.deleteAlreadyIncludedPBFTMessages(blockObj.hash); // seems like out of order block
                   this.pendingCommitedBlocks.delete(sequenceId);
+                  this.timeoutCommitedBlocks.delete(sequenceId);
                 }
               }
             }
@@ -332,10 +336,12 @@ class P2pServer {
   }
 
   doGarbageProcessing() {
+    // FIXME: Should delete PBFT messages that already insert in the blockchain,
+    // Not the only that has passed APPROVAL in the COMMIT phase
     const completeCommits = this.commitPool.getAllCompleted();
     const completeSize = completeCommits.size;
     const toDelete = completeSize - config.getNumberOfTempMessages();
-
+    
     var deleted = 0;
     for (let item of completeCommits) {
       this.preparePool.deleteCompleted(item);
@@ -345,6 +351,15 @@ class P2pServer {
         break;
       }
     }
+
+    log(chalk.yellow(`Tx Pool Size: ${this.transactionPool.getCurrentPendingSize()}`));
+    log(chalk.yellow(`Block Pool Size: ${this.blockPool.getCurrentPendingSize()}`));
+    log(chalk.yellow(`Prepare Pool Size: ${this.preparePool.getCurrentPendingSize()}`));
+    log(chalk.yellow(`Commit Pool Size: ${this.commitPool.getCurrentPendingSize()}`));
+    log(chalk.yellow(`Prepare FINAL Pool Size: ${this.preparePool.getCurrentCompletedSize()}`));
+    log(chalk.yellow(`Commit FINAL Size: ${this.commitPool.getCurrentCompletedSize()}`));
+    log(chalk.yellow(`Pending Commited Block Pool Size: ${this.pendingCommitedBlocks.size}`));
+    log(chalk.yellow(`Timeout Commited Block Pool Size: ${this.timeoutCommitedBlocks.size}`));
   }
 }
 

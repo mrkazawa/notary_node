@@ -11,7 +11,7 @@ const payload_400_bytes = {
     compute_address: "0x0472ec0185ebb8202f3d4ddb0226998889663cf2",
     compute_network_id: 2020,
     payment_proof: "MYPAYMENTPROOF99999999999999999999999999999999999999999999999999999999",
-    priority: 3,
+    priority_id: 3,
     timestamp: Date.now()
   }
 };
@@ -28,7 +28,7 @@ const instance = autocannon({
   pipelining: 1, // default
   bailout: 10, // tolerable number of errors
   //overallRate: 100, // rate of requests to make per second from all connections
-  amount: 100000,
+  amount: 15000000,
   duration: 1
 }, console.log);
 

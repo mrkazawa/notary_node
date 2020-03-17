@@ -12,16 +12,18 @@ class Config {
     Config._instance = this;
 
     // Maximum number of GENERAL request before the node bundles them in a transaction and then broadcast it to peers
-    this.PENDING_REQUEST_THRESHOLD = 100;
+    this.PENDING_REQUEST_THRESHOLD = 500;
 
-    // How many temporary past PBFT messages that the system has to keep before the garbage collector deletes them
-    this.NUMBER_OF_TEMP_MESSAGES = 20;
     // How long the system has to wait before it starts to delete old messages
     this.OLD_MESSAGES_TIMEOUT = 10;
+
+    // How many temporary past PBFT messages that the system has to keep before the garbage collector deletes them
+    this.NUMBER_OF_TEMP_MESSAGES = 40;
+
     // How long the period of block generation (in milliseconds)
-    this.BLOCK_INTERVAL = 1000; // every 1 second
+    this.BLOCK_INTERVAL = 2000; // every 1 second
     // How long the period of garbage collector process (in milliseconds)
-    this.GARBAGE_INTERVAL = 20 * this.BLOCK_INTERVAL; // every 20 seconds
+    this.GARBAGE_INTERVAL = this.OLD_MESSAGES_TIMEOUT * this.BLOCK_INTERVAL;
 
     // Total number of nodes in the network
     this.NUMBER_OF_NODES = 4;

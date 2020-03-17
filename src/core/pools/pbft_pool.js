@@ -89,6 +89,14 @@ class PBFTMessagePool {
   deleteCompleted(blockHash) {
     this.completedPBFTMessages.delete(blockHash);
   }
+
+  getCurrentPendingSize() {
+    return this.pendingPBFTMessages.size;
+  }
+
+  getCurrentCompletedSize() {
+    return this.completedPBFTMessages.size;
+  }
 }
 
 module.exports = PBFTMessagePool;
