@@ -1,14 +1,8 @@
 const rp = require('request-promise-native');
 
 function main() {
-  const getUrl = 'http://notary1.local:3000/block_pool_size';
+  const getUrl = 'http://notary1.local:3000/pools_size';
   const getOption = createGetRequest(getUrl);
-  executeRequest(getOption);
-
-  const clearUrl = 'http://notary1.local:3000/clear_block_pool';
-  const clearOption = createGetRequest(clearUrl);
-  executeRequest(clearOption);
-
   executeRequest(getOption);
 }
 

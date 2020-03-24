@@ -158,19 +158,18 @@ class P2pServer {
             log(chalk.cyan(`Receiving Transaction ${data.transaction.id}`));
           }
 
-          if (
-            this.validators.isValidValidator(data.transaction.from) &&
-            !this.transactionPool.isExist(data.transaction) &&
-            this.transactionPool.isValidTransaction(data.transaction)
-          ) {
-            this.broadcastTransaction(data.transaction);
-            this.transactionPool.add(data.transaction);
-          }
+          if (!this.validators.isValidValidator(data.transaction.from)) break;
+          if (this.transactionPool.isExist(data.transaction)) break;
+          if (!this.transactionPool.isValidTransaction(data.transaction)) break;
+
+          this.broadcastTransaction(data.transaction);
+          this.transactionPool.add(data.transaction);
+          
           break;
         }
 
         //------------------ PBFT Process (Pre-Prepare) ------------------//
-
+        
         case MESSAGE_TYPE.pre_prepare: {
           if (config.isDebugging()) {
             log(chalk.yellow(`Receiving Block ${data.block.hash}`));
@@ -183,6 +182,19 @@ class P2pServer {
           this.broadcastPrePrepare(data.block);
           this.blockPool.add(data.block);
 
+          // test: direct add to blockchain
+          const blockObj = data.block;
+          this.blockchain.addBlockToBlockhain(blockObj).then(isAdded => {
+            if (isAdded) {
+              this.deleteAlreadyIncludedPBFTMessages(blockObj.hash);
+              this.deleteAlreadyIncludedTransactions(blockObj);
+
+            } else {
+              this.pendingCommitedBlocks.set(blockObj.sequenceId, blockObj.hash);
+            }
+          });
+
+          /*
           if (
             !this.preparePool.isInitiated(data.block.hash) &&
             !this.preparePool.isCompleted(data.block.hash)
@@ -193,13 +205,14 @@ class P2pServer {
               this.wallet
             );
             this.broadcastPrepare(prepare);
-          }
+          }*/
 
           break;
         }
 
         //------------------ PBFT Process (Prepare) ------------------//
 
+        /*
         case MESSAGE_TYPE.prepare: {
           if (config.isDebugging()) {
             log(chalk.yellow(`Receiving Prepare ${data.prepare.blockHash}`));
@@ -265,7 +278,10 @@ class P2pServer {
           }
 
           break;
-        }
+        }*/
+
+
+
       }
     });
   }
@@ -352,6 +368,7 @@ class P2pServer {
       }
     }
 
+    /*
     log(chalk.yellow(`Tx Pool Size: ${this.transactionPool.getCurrentPendingSize()}`));
     log(chalk.yellow(`Block Pool Size: ${this.blockPool.getCurrentPendingSize()}`));
     log(chalk.yellow(`Prepare Pool Size: ${this.preparePool.getCurrentPendingSize()}`));
@@ -360,6 +377,7 @@ class P2pServer {
     log(chalk.yellow(`Commit FINAL Size: ${this.commitPool.getCurrentCompletedSize()}`));
     log(chalk.yellow(`Pending Commited Block Pool Size: ${this.pendingCommitedBlocks.size}`));
     log(chalk.yellow(`Timeout Commited Block Pool Size: ${this.timeoutCommitedBlocks.size}`));
+    */
   }
 }
 

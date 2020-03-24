@@ -74,7 +74,9 @@ app.post('/transact', (req, res) => {
   const thresholdReached = requestPool.add(data);
 
   if (thresholdReached) {
-    const tx_data = requestPool.getAllAndDelete();
+    const tx_data = requestPool.getAllPendingRequests();
+    requestPool.clear();
+
     const transaction = wallet.createTransaction(tx_data);
     p2pServer.broadcastTransaction(transaction);
   }
@@ -82,14 +84,22 @@ app.post('/transact', (req, res) => {
   res.status(200).send('transaction_received');
 });
 
-app.get('/clear_block_pool', (req, res) => {
-  blockPool.clear();
-  res.status(200).send('block_pool_cleared');
+app.get('/pools_size', (req, res) => {
+  let poolSizes = [];
+
+  poolSizes.push(requestPool.getCurrentPendingSize());
+  poolSizes.push(transactionPool.getCurrentPendingSize());
+  poolSizes.push(blockPool.getCurrentPendingSize());
+  poolSizes.push(preparePool.getCurrentPendingSize());
+  poolSizes.push(commitPool.getCurrentPendingSize());
+  poolSizes.push(preparePool.getCurrentCompletedSize());
+  poolSizes.push(commitPool.getCurrentCompletedSize());
+
+  res.json(poolSizes);
 });
 
-app.get('/block_pool_size', (req, res) => {
-  res.json(blockPool.getCurrentPendingSize());
-});
+
+
 
 function adjustReqeustThreshold() {
   if (requestCount > 500) {

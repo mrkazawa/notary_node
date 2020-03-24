@@ -30,7 +30,7 @@ class Blockchain {
   
   async addToStore(key, value) {
     try {
-      await this.blockchainDB.put(key, JSON.stringify(value));
+      //await this.blockchainDB.put(key, JSON.stringify(value));
       return true;
 
     } catch (err) {

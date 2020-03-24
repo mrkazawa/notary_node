@@ -34,10 +34,8 @@ class RequestPool {
     return this.pendingRequests.entries();
   }
 
-  getAllAndDelete() {
-    let requests =  this.pendingRequests.entries();
+  clear() {
     this.pendingRequests.clear();
-    return requests;
   }
 
   getCurrentPendingSize() {

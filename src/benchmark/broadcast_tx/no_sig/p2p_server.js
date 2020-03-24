@@ -101,6 +101,7 @@ class P2pServer {
             // check if limit reached
             if (thresholdReached) {
               console.log("THRESHOLD REACHED");
+              this.transactionPool.clear();
             } else {
               console.log("Transaction Added");
             }

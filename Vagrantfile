@@ -6,7 +6,7 @@
 
 BOX_IMAGE = "bento/ubuntu-16.04"
 BOX_MEMORY = "2048"
-BOX_CPU = 2
+BOX_CPU = 1
 
 NODE_COUNT = 4
 

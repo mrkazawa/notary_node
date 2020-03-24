@@ -1,5 +1,5 @@
 // Maximum number of transactions that can be present in a block and transaction pool
-const PENDING_TRANSACTION_THRESHOLD = 100000;
+const PENDING_TRANSACTION_THRESHOLD = 1000;
 
 // Maximum number of request before the node send a bundle them in a transaction
 // and then broadcast it to peers
