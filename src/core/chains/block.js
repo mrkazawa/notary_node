@@ -29,7 +29,7 @@ class Block {
       [], // data
       'P4@P@53R', // proposer
       'SIGN', // signature
-      0 // sequenceNo
+      0 // sequenceId
     );
   }
 

@@ -16,6 +16,8 @@ const PBFTPool = require('./pools/pbft_pool');
 const P2pServer = require('./p2p_server');
 const Config = require('./config');
 const config = new Config();
+const MESSAGE_TYPE = config.MESSAGE_TYPE;
+
 const HTTP_PORT = process.env.HTTP_PORT || 3001;
 
 // Instantiate all objects
@@ -78,7 +80,7 @@ app.post('/transact', (req, res) => {
     requestPool.clear();
 
     const transaction = wallet.createTransaction(tx_data);
-    p2pServer.broadcastTransaction(transaction);
+    p2pServer.broadcast(MESSAGE_TYPE.transaction, transaction);
   }
 
   res.status(200).send('transaction_received');
@@ -130,6 +132,8 @@ app.listen(HTTP_PORT, () => {
 // starts the p2p server
 p2pServer.listen();
 
+/*
 setInterval(() => {
   log(chalk.yellow(`Request Pool Size : ${requestPool.getCurrentPendingSize()}`));
 }, 2000);
+*/

@@ -5,16 +5,10 @@ const log = console.log;
 
 const Config = require('./config');
 const config = new Config();
+const MESSAGE_TYPE = config.MESSAGE_TYPE;
 
 const P2P_PORT = process.env.P2P_PORT || 5001;
 const PEERS = process.env.PEERS ? process.env.PEERS.split(',') : [];
-
-const MESSAGE_TYPE = {
-  transaction: 'TRANSACTION',
-  prepare: 'PREPARE',
-  pre_prepare: 'PRE_PREPARE',
-  commit: 'COMMIT'
-};
 
 class P2pServer {
   constructor(
@@ -46,8 +40,6 @@ class P2pServer {
 
   // Creates a server on a given port
   // TODO: detect and restore broken connection scenario
-  // TODO: try to use uWebSocket
-  // https://github.com/uNetworking/uWebSockets.js
   listen() {
     const server = new WebSocket.Server({
       port: P2P_PORT,
@@ -65,7 +57,6 @@ class P2pServer {
     setInterval(this.doGarbageProcessing.bind(this), config.getGarbageInterval());
   }
 
-  // connects to a given socket and registers the message handler on it
   connectSocket(socket) {
     this.sockets.push(socket);
     log(chalk.blue('Socket connected'));
@@ -82,64 +73,17 @@ class P2pServer {
     });
   }
 
-  //-------------------------- Send Broadcasts --------------------------//
-
-  broadcastTransaction(transaction) {
+  broadcast(type, payload) {
     this.sockets.forEach(socket => {
-      this.sendTransaction(socket, transaction);
+      this.sendPayload(socket, type, payload);
     });
   }
 
-  sendTransaction(socket, transaction) {
+  sendPayload(socket, type, payload) {
     socket.send(
       JSON.stringify({
-        type: MESSAGE_TYPE.transaction,
-        transaction: transaction
-      })
-    );
-  }
-
-  broadcastPrePrepare(block) {
-    this.sockets.forEach(socket => {
-      this.sendPrePrepare(socket, block);
-    });
-  }
-
-  sendPrePrepare(socket, block) {
-    socket.send(
-      JSON.stringify({
-        type: MESSAGE_TYPE.pre_prepare,
-        block: block
-      })
-    );
-  }
-
-  broadcastPrepare(prepare) {
-    this.sockets.forEach(socket => {
-      this.sendPrepare(socket, prepare);
-    });
-  }
-
-  sendPrepare(socket, prepare) {
-    socket.send(
-      JSON.stringify({
-        type: MESSAGE_TYPE.prepare,
-        prepare: prepare
-      })
-    );
-  }
-
-  broadcastCommit(commit) {
-    this.sockets.forEach(socket => {
-      this.sendCommit(socket, commit);
-    });
-  }
-
-  sendCommit(socket, commit) {
-    socket.send(
-      JSON.stringify({
-        type: MESSAGE_TYPE.commit,
-        commit: commit
+        type: type,
+        payload: payload
       })
     );
   }
@@ -154,16 +98,18 @@ class P2pServer {
         //------------------ Transaction Process ------------------//
 
         case MESSAGE_TYPE.transaction: {
+          const transaction = data.payload;
+
           if (config.isDebugging()) {
-            log(chalk.cyan(`Receiving Transaction ${data.transaction.id}`));
+            log(chalk.cyan(`Receiving Transaction ${transaction.id}`));
           }
 
-          if (!this.validators.isValidValidator(data.transaction.from)) break;
-          if (this.transactionPool.isExist(data.transaction)) break;
-          if (!this.transactionPool.isValidTransaction(data.transaction)) break;
+          if (!this.validators.isValidValidator(transaction.from)) break;
+          if (this.transactionPool.isExist(transaction)) break;
+          if (!this.transactionPool.isValidTransaction(transaction)) break;
 
-          this.broadcastTransaction(data.transaction);
-          this.transactionPool.add(data.transaction);
+          this.broadcast(MESSAGE_TYPE.transaction, transaction);
+          this.transactionPool.add(transaction);
           
           break;
         }
@@ -171,19 +117,22 @@ class P2pServer {
         //------------------ PBFT Process (Pre-Prepare) ------------------//
         
         case MESSAGE_TYPE.pre_prepare: {
+          const block = data.payload;
+
           if (config.isDebugging()) {
-            log(chalk.yellow(`Receiving Block ${data.block.hash}`));
+            log(chalk.yellow(`Receiving Block ${block.hash}`));
           }
 
-          if (!this.validators.isValidValidator(data.block.proposer)) break;
-          if (this.blockPool.isExist(data.block)) break;
-          if (!this.blockPool.isValidBlock(data.block)) break;
+          if (!this.validators.isValidValidator(block.proposer)) break;
+          if (this.blockPool.isExist(block)) break;
+          if (!this.blockPool.isValidBlock(block)) break;
 
-          this.broadcastPrePrepare(data.block);
-          this.blockPool.add(data.block);
+          this.broadcast(MESSAGE_TYPE.pre_prepare, block);
+          this.blockPool.add(block);
 
+          
           // test: direct add to blockchain
-          const blockObj = data.block;
+          let blockObj = block;
           this.blockchain.addBlockToBlockhain(blockObj).then(isAdded => {
             if (isAdded) {
               this.deleteAlreadyIncludedPBFTMessages(blockObj.hash);
@@ -196,15 +145,15 @@ class P2pServer {
 
           /*
           if (
-            !this.preparePool.isInitiated(data.block.hash) &&
-            !this.preparePool.isCompleted(data.block.hash)
+            !this.preparePool.isInitiated(block.hash) &&
+            !this.preparePool.isCompleted(block.hash)
           ) {
             let prepare = this.preparePool.init(
-              data.block.hash,
-              data.block.sequenceId,
+              block.hash,
+              block.sequenceId,
               this.wallet
             );
-            this.broadcastPrepare(prepare);
+            this.broadcast(MESSAGE_TYPE.prepare, prepare);
           }*/
 
           break;
@@ -214,40 +163,57 @@ class P2pServer {
 
         /*
         case MESSAGE_TYPE.prepare: {
+          const prepare = data.payload;
+          
           if (config.isDebugging()) {
-            log(chalk.yellow(`Receiving Prepare ${data.prepare.blockHash}`));
+            log(chalk.yellow(`Receiving Prepare ${prepare.blockHash}`));
           }
 
-          if (!this.validators.isValidValidator(data.prepare.from)) break;
-          if (!this.preparePool.isInitiated(data.prepare.blockHash)) break;
-          if (this.preparePool.isCompleted(data.prepare.blockHash)) break;
-          if (this.preparePool.isExistFrom(data.prepare.blockHash, data.prepare.from)) break;
-          if (!this.preparePool.isValid(data.prepare)) break;
+          if (!this.validators.isValidValidator(prepare.from)) break;
+          if (!this.preparePool.isInitiated(prepare.blockHash)) break;
+          if (this.preparePool.isCompleted(prepare.blockHash)) break;
+          if (this.preparePool.isExistFrom(prepare.blockHash, prepare.from)) break;
+          if (!this.preparePool.isValid(prepare)) break;
 
-          this.broadcastPrepare(data.prepare);
+          this.broadcast(MESSAGE_TYPE.prepare, prepare);
 
-          let thresholdReached = this.preparePool.add(data.prepare);
+          let thresholdReached = this.preparePool.add(prepare);
           if (thresholdReached) {
-            this.preparePool.finalize(data.prepare.blockHash);
+            this.preparePool.finalize(prepare.blockHash);
+
+            // test: direct add to blockchain
+            let blockObj = this.blockPool.get(prepare.blockHash);
+            this.blockchain.addBlockToBlockhain(blockObj).then(isAdded => {
+              if (isAdded) {
+                this.deleteAlreadyIncludedPBFTMessages(blockObj.hash);
+                this.deleteAlreadyIncludedTransactions(blockObj);
+
+              } else {
+                this.pendingCommitedBlocks.set(blockObj.sequenceId, blockObj.hash);
+              }
+            });
 
             if (
-              !this.commitPool.isInitiated(data.prepare.blockHash) &&
-              !this.commitPool.isCompleted(data.prepare.blockHash)
+              !this.commitPool.isInitiated(prepare.blockHash) &&
+              !this.commitPool.isCompleted(prepare.blockHash)
             ) {
               let commit = this.commitPool.init(
-                data.prepare.blockHash,
-                data.prepare.sequenceId,
+                prepare.blockHash,
+                prepare.sequenceId,
                 this.wallet
               );
-              this.broadcastCommit(commit);
+              this.broadcast(MESSAGE_TYPE.commit, commit);
             }
           }
 
           break;
-        }
+        }*/
+
+      
 
         //------------------ PBFT Process (Commit) ------------------//
 
+        /*
         case MESSAGE_TYPE.commit: {
           if (config.isDebugging()) {
             log(chalk.yellow(`Receiving Commit ${data.commit.blockHash}`));
@@ -288,8 +254,8 @@ class P2pServer {
 
   deleteAlreadyIncludedPBFTMessages(blockHash) {
     this.blockPool.delete(blockHash);
-    this.preparePool.delete(blockHash);
-    this.commitPool.delete(blockHash);
+    //this.preparePool.delete(blockHash);
+    //this.commitPool.delete(blockHash);
   }
 
   deleteAlreadyIncludedTransactions(block) {
@@ -346,7 +312,7 @@ class P2pServer {
       if (this.blockchain.getCurrentProposer() == this.wallet.getPublicKey()) {
         let transactions = this.transactionPool.getAllPendingTransactions();
         let block = this.blockchain.createBlock(transactions, this.wallet);
-        this.broadcastPrePrepare(block);
+        this.broadcast(config.MESSAGE_TYPE.pre_prepare, block);
       }
     }
   }

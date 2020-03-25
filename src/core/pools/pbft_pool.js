@@ -8,7 +8,7 @@ const config = new Config();
 
 class PBFTMessagePool {
   constructor() {
-    this.pendingPBFTMessages = new HashMap();
+    this.pendingPBFTMessages = new Map();
     this.completedPBFTMessages = new Set();
   }
 
@@ -19,9 +19,9 @@ class PBFTMessagePool {
     }
 
     let message = this.createMessage(blockHash, sequenceId, wallet);
-    let messageMap = new HashMap();
-    messageMap.set(message.from, message.signature);
-    this.pendingPBFTMessages.set(message.blockHash, messageMap);
+    let valueMap = new Map();
+    valueMap.set(message.from, message.signature);
+    this.pendingPBFTMessages.set(message.blockHash, valueMap);
 
     return message;
   }
@@ -36,11 +36,11 @@ class PBFTMessagePool {
   }
 
   add(message) {
-    let messageMap = this.pendingPBFTMessages.get(message.blockHash);
-    messageMap.set(message.from, message.signature);
-    this.pendingPBFTMessages.set(message.blockHash, messageMap);
+    let valueMap = this.pendingPBFTMessages.get(message.blockHash);
+    valueMap.set(message.from, message.signature);
+    this.pendingPBFTMessages.set(message.blockHash, valueMap);
 
-    return (messageMap.size >= config.getMinApprovals());
+    return (valueMap.size >= config.getMinApprovals());
   }
 
   isInitiated(blockHash) {
@@ -48,8 +48,8 @@ class PBFTMessagePool {
   }
 
   isExistFrom(blockHash, from) {
-    let messageMap = this.pendingPBFTMessages.get(blockHash);
-    return messageMap.has(from);
+    let valueMap = this.pendingPBFTMessages.get(blockHash);
+    return valueMap.has(from);
   }
 
   finalize(blockHash) {
@@ -79,6 +79,8 @@ class PBFTMessagePool {
   }
 
   delete(blockHash) {
+    let valueMap = this.pendingPBFTMessages.get(blockHash);
+    valueMap.clear();
     this.pendingPBFTMessages.delete(blockHash);
   }
 
