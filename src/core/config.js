@@ -22,13 +22,13 @@ class Config {
     this.PENDING_REQUEST_THRESHOLD = 500;
 
     // How long the system has to wait before it starts to delete old messages
-    this.OLD_MESSAGES_TIMEOUT = 10;
+    this.OLD_MESSAGES_TIMEOUT = 20;
 
     // How many temporary past PBFT messages that the system has to keep before the garbage collector deletes them
     this.NUMBER_OF_TEMP_MESSAGES = 40;
 
     // How long the period of block generation (in milliseconds)
-    this.BLOCK_INTERVAL = 2000; // every 1 second
+    this.BLOCK_INTERVAL = 1000; // every 1 second
     // How long the period of garbage collector process (in milliseconds)
     this.GARBAGE_INTERVAL = this.OLD_MESSAGES_TIMEOUT * this.BLOCK_INTERVAL;
 
@@ -45,7 +45,7 @@ class Config {
     this.NO_SIG_FLAG = true;
 
     this.BENCHMARK_FLAG = true; // set true during benchmarking
-    this.DEBUGGING_FLAG = true; // set true to display log
+    this.DEBUGGING_FLAG = false; // set true to display log
     this.DYNAMIC_REQUEST_POOL_FLAG = false; // set true to enable dynamic request pool size
   }
 

@@ -35,10 +35,10 @@ class Block {
 
   static createBlock(lastBlock, data, wallet) {
     const lastHash = lastBlock.hash;
-    let hash = this.calculateBlockHash(lastHash, data);
+    let timestamp = Date.now();
+    let hash = this.calculateBlockHash(lastHash, data, timestamp);
     let proposer = wallet.getPublicKey();
     let signature = wallet.sign(hash);
-    let timestamp = Date.now();
     return new this(
       timestamp,
       lastHash,
@@ -50,13 +50,8 @@ class Block {
     );
   }
 
-  static calculateBlockHash(lastHash, data) {
-    return CryptoUtil.hash(`${lastHash}${data}`);
-  }
-
-  static verifyBlockHash(block, hash) {
-    const { lastHash, data } = block;
-    return (hash === this.calculateBlockHash(lastHash, data));
+  static calculateBlockHash(lastHash, data, timestamp) {
+    return CryptoUtil.hash(`${lastHash}${data}${timestamp}`);
   }
 
   static verifyBlockSignature(block) {
@@ -64,13 +59,13 @@ class Block {
       return CryptoUtil.verifySignature(
         block.proposer,
         block.signature,
-        this.calculateBlockHash(block.lastHash, block.data)
+        this.calculateBlockHash(block.lastHash, block.data, block.timestamp)
       );
     } else if (config.isHMAC()) {
       return CryptoUtil.verifyDigest(
         'secret',
         block.signature,
-        this.calculateBlockHash(block.lastHash, block.data)
+        this.calculateBlockHash(block.lastHash, block.data, block.timestamp)
       );
     } else if (config.isNOSIG()) {
       return true;

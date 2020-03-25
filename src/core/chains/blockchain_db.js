@@ -95,9 +95,11 @@ class Blockchain {
   // index is calculated using the hash of the latest block
   // TODO: need to investigate what happen to this when one node fails
   getCurrentProposer() {
-    const lastBlock = this.getLatestBlock();
-    let index = lastBlock.hash[0].charCodeAt(0) % config.getNumberOfNodes();
-    return this.validatorsList[index];
+    //const lastBlock = this.getLatestBlock();
+    //let index = lastBlock.hash[0].charCodeAt(0) % config.getNumberOfNodes();
+    //return this.validatorsList[index];
+    
+    return this.validatorsList[3]; // let notary4 always be the proposer
   }
 
   isValidBlock(block) {
@@ -105,7 +107,6 @@ class Blockchain {
     return (
       block.sequenceId == lastBlock.sequenceId + 1 &&
       block.lastHash === lastBlock.hash &&
-      Block.verifyBlockHash(block, block.hash) &&
       Block.verifyBlockSignature(block) &&
       Block.verifyBlockProposer(block, this.getCurrentProposer())
     );

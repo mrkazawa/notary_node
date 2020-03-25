@@ -1,4 +1,5 @@
 const HashMap = require('hashmap');
+const NodeCache = require("node-cache");
 
 const Block = require('../chains/block');
 
@@ -9,7 +10,14 @@ class BlockPool {
     }
     BlockPool._instance = this;
 
-    this.pendingBlocks = new HashMap();
+    this.pendingBlocks = new NodeCache({
+      stdTTL: 30,
+      checkperiod: 10
+    });
+
+    this.pendingBlocks.on( "expired", function( key, value ){
+      console.log(`${key} expired`);
+    });
   }
 
   add(block) {
@@ -29,16 +37,17 @@ class BlockPool {
   }
 
   delete(blockHash) {
-    this.pendingBlocks.delete(blockHash);
+    this.pendingBlocks.del(blockHash);
   }
 
   getCurrentPendingSize() {
-    return this.pendingBlocks.size;
+    return this.pendingBlocks.getStats();
   }
 
   clear() {
-    this.pendingBlocks.clear();
+    this.pendingBlocks.flushAll();
   }
+
 }
 
 module.exports = BlockPool;

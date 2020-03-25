@@ -130,7 +130,7 @@ class P2pServer {
           this.broadcast(MESSAGE_TYPE.pre_prepare, block);
           this.blockPool.add(block);
 
-          
+          /*
           // test: direct add to blockchain
           let blockObj = block;
           this.blockchain.addBlockToBlockhain(blockObj).then(isAdded => {
@@ -141,9 +141,9 @@ class P2pServer {
             } else {
               this.pendingCommitedBlocks.set(blockObj.sequenceId, blockObj.hash);
             }
-          });
+          });*/
 
-          /*
+          
           if (
             !this.preparePool.isInitiated(block.hash) &&
             !this.preparePool.isCompleted(block.hash)
@@ -154,14 +154,14 @@ class P2pServer {
               this.wallet
             );
             this.broadcast(MESSAGE_TYPE.prepare, prepare);
-          }*/
+          }
 
           break;
         }
 
         //------------------ PBFT Process (Prepare) ------------------//
 
-        /*
+        
         case MESSAGE_TYPE.prepare: {
           const prepare = data.payload;
           
@@ -181,6 +181,7 @@ class P2pServer {
           if (thresholdReached) {
             this.preparePool.finalize(prepare.blockHash);
 
+            /*
             // test: direct add to blockchain
             let blockObj = this.blockPool.get(prepare.blockHash);
             this.blockchain.addBlockToBlockhain(blockObj).then(isAdded => {
@@ -191,8 +192,9 @@ class P2pServer {
               } else {
                 this.pendingCommitedBlocks.set(blockObj.sequenceId, blockObj.hash);
               }
-            });
+            });*/
 
+            
             if (
               !this.commitPool.isInitiated(prepare.blockHash) &&
               !this.commitPool.isCompleted(prepare.blockHash)
@@ -207,30 +209,32 @@ class P2pServer {
           }
 
           break;
-        }*/
+        }
 
       
 
         //------------------ PBFT Process (Commit) ------------------//
 
-        /*
+        
         case MESSAGE_TYPE.commit: {
+          const commit = data.payload;
+
           if (config.isDebugging()) {
-            log(chalk.yellow(`Receiving Commit ${data.commit.blockHash}`));
+            log(chalk.yellow(`Receiving Commit ${commit.blockHash}`));
           }
 
-          if (!this.validators.isValidValidator(data.commit.from)) break;
-          if (!this.commitPool.isInitiated(data.commit.blockHash)) break;
-          if (this.commitPool.isCompleted(data.commit.blockHash)) break;
-          if (this.commitPool.isExistFrom(data.commit.blockHash, data.commit.from)) break;
-          if (!this.commitPool.isValid(data.commit)) break;
+          if (!this.validators.isValidValidator(commit.from)) break;
+          if (!this.commitPool.isInitiated(commit.blockHash)) break;
+          if (this.commitPool.isCompleted(commit.blockHash)) break;
+          if (this.commitPool.isExistFrom(commit.blockHash, commit.from)) break;
+          if (!this.commitPool.isValid(commit)) break;
 
-          this.broadcastCommit(data.commit);
+          this.broadcast(MESSAGE_TYPE.commit, commit);
 
-          let thresholdReached = this.commitPool.add(data.commit);
+          let thresholdReached = this.commitPool.add(commit);
           if (thresholdReached) {
-            this.commitPool.finalize(data.commit.blockHash);
-            let blockObj = this.blockPool.get(data.commit.blockHash);
+            this.commitPool.finalize(commit.blockHash);
+            let blockObj = this.blockPool.get(commit.blockHash);
 
             this.blockchain.addBlockToBlockhain(blockObj).then(isAdded => {
               if (isAdded) {
@@ -244,7 +248,7 @@ class P2pServer {
           }
 
           break;
-        }*/
+        }
 
 
 
@@ -254,8 +258,8 @@ class P2pServer {
 
   deleteAlreadyIncludedPBFTMessages(blockHash) {
     this.blockPool.delete(blockHash);
-    //this.preparePool.delete(blockHash);
-    //this.commitPool.delete(blockHash);
+    this.preparePool.delete(blockHash);
+    this.commitPool.delete(blockHash);
   }
 
   deleteAlreadyIncludedTransactions(block) {
@@ -310,9 +314,10 @@ class P2pServer {
 
       // if it is our turn to create a block, we propose it
       if (this.blockchain.getCurrentProposer() == this.wallet.getPublicKey()) {
+        //log('I am proposing');
         let transactions = this.transactionPool.getAllPendingTransactions();
         let block = this.blockchain.createBlock(transactions, this.wallet);
-        this.broadcast(config.MESSAGE_TYPE.pre_prepare, block);
+        this.broadcast(MESSAGE_TYPE.pre_prepare, block);
       }
     }
   }
@@ -333,6 +338,8 @@ class P2pServer {
         break;
       }
     }
+
+    //this.blockPool.clear();
 
     /*
     log(chalk.yellow(`Tx Pool Size: ${this.transactionPool.getCurrentPendingSize()}`));
