@@ -1,4 +1,4 @@
-const NodeCache = require("node-cache");
+const NodeCache = require('node-cache');
 const chalk = require('chalk');
 const log = console.log;
 

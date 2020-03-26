@@ -1,5 +1,5 @@
 const HashMap = require('hashmap');
-const NodeCache = require("node-cache");
+const NodeCache = require('node-cache');
 const chalk = require('chalk');
 const log = console.log;
 
@@ -39,7 +39,7 @@ class PBFTMessagePool {
     }
 
     let message = this.createMessage(blockHash, sequenceId, wallet);
-    let valueMap = new Map();
+    let valueMap = new HashMap();
     valueMap.set(message.from, message.signature);
     this.pendingPBFTMessages.set(message.blockHash, valueMap);
 
@@ -99,17 +99,7 @@ class PBFTMessagePool {
   }
 
   delete(blockHash) {
-    let valueMap = this.pendingPBFTMessages.get(blockHash);
-    valueMap.clear();
     this.pendingPBFTMessages.delete(blockHash);
-  }
-
-  getAllCompleted() {
-    return this.completedPBFTMessages;
-  }
-
-  deleteCompleted(blockHash) {
-    this.completedPBFTMessages.del(blockHash);
   }
 
   getCurrentPendingSize() {

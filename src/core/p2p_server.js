@@ -10,6 +10,15 @@ const MESSAGE_TYPE = config.MESSAGE_TYPE;
 const P2P_PORT = process.env.P2P_PORT || 5001;
 const PEERS = process.env.PEERS ? process.env.PEERS.split(',') : [];
 
+// default TTL (Time-To-Live) in seconds
+// when it expires, the entry will be deleted
+const DEFAULT_TTL = 20;
+
+// check interval to check for TTL in seconds
+// shorter duration is better,
+// longer duration cause the system to take time to delete entries
+const CHECK_PERIOD = 10;
+
 class P2pServer {
   constructor(
     blockchain,
@@ -126,26 +135,12 @@ class P2pServer {
 
           this.broadcast(MESSAGE_TYPE.pre_prepare, block);
           this.blockPool.add(block);
-
-          /*
-          // test: direct add to blockchain
-          let blockObj = block;
-          this.blockchain.addBlockToBlockhain(blockObj).then(isAdded => {
-            if (isAdded) {
-              this.deleteAlreadyIncludedPBFTMessages(blockObj.hash);
-              this.deleteAlreadyIncludedTransactions(blockObj);
-
-            } else {
-              this.pendingCommitedBlocks.set(blockObj.sequenceId, blockObj.hash);
-            }
-          });*/
-
           
           if (
             !this.preparePool.isInitiated(block.hash) &&
             !this.preparePool.isCompleted(block.hash)
           ) {
-            let prepare = this.preparePool.init(
+            const prepare = this.preparePool.init(
               block.hash,
               block.sequenceId,
               this.wallet
@@ -157,7 +152,6 @@ class P2pServer {
         }
 
         //------------------ PBFT Process (Prepare) ------------------//
-
         
         case MESSAGE_TYPE.prepare: {
           const prepare = data.payload;
@@ -174,29 +168,15 @@ class P2pServer {
 
           this.broadcast(MESSAGE_TYPE.prepare, prepare);
 
-          let thresholdReached = this.preparePool.add(prepare);
+          const thresholdReached = this.preparePool.add(prepare);
           if (thresholdReached) {
             this.preparePool.finalize(prepare.blockHash);
-
-            /*
-            // test: direct add to blockchain
-            let blockObj = this.blockPool.get(prepare.blockHash);
-            this.blockchain.addBlockToBlockhain(blockObj).then(isAdded => {
-              if (isAdded) {
-                this.deleteAlreadyIncludedPBFTMessages(blockObj.hash);
-                this.deleteAlreadyIncludedTransactions(blockObj);
-
-              } else {
-                this.pendingCommitedBlocks.set(blockObj.sequenceId, blockObj.hash);
-              }
-            });*/
-
-            
+ 
             if (
               !this.commitPool.isInitiated(prepare.blockHash) &&
               !this.commitPool.isCompleted(prepare.blockHash)
             ) {
-              let commit = this.commitPool.init(
+              const commit = this.commitPool.init(
                 prepare.blockHash,
                 prepare.sequenceId,
                 this.wallet
@@ -208,11 +188,8 @@ class P2pServer {
           break;
         }
 
-      
-
         //------------------ PBFT Process (Commit) ------------------//
 
-        
         case MESSAGE_TYPE.commit: {
           const commit = data.payload;
 
@@ -228,27 +205,24 @@ class P2pServer {
 
           this.broadcast(MESSAGE_TYPE.commit, commit);
 
-          let thresholdReached = this.commitPool.add(commit);
+          const thresholdReached = this.commitPool.add(commit);
           if (thresholdReached) {
             this.commitPool.finalize(commit.blockHash);
-            let blockObj = this.blockPool.get(commit.blockHash);
+            const block = this.blockPool.get(commit.blockHash);
 
-            this.blockchain.addBlockToBlockhain(blockObj).then(isAdded => {
+            this.blockchain.addBlockToBlockhain(block).then(isAdded => {
               if (isAdded) {
-                this.deleteAlreadyIncludedPBFTMessages(blockObj.hash);
-                this.deleteAlreadyIncludedTransactions(blockObj);
+                this.deleteAlreadyIncludedPBFTMessages(block.hash);
+                this.deleteAlreadyIncludedTransactions(block);
 
               } else {
-                this.pendingCommitedBlocks.set(blockObj.sequenceId, blockObj.hash);
+                this.pendingCommitedBlocks.set(block.sequenceId, block.hash);
               }
             });
           }
 
           break;
         }
-
-
-
       }
     });
   }
@@ -260,28 +234,26 @@ class P2pServer {
   }
 
   deleteAlreadyIncludedTransactions(block) {
-    let i;
-    for (i = 0; i < block.data.length; i++) {
+    for (let i = 0; i < block.data.length; i++) {
       this.transactionPool.delete(block.data[i][0]);
     }
   }
 
   proposeBlock() {
-    // if first time, create the genesis
+    // if it is our first time, create the genesis
     if (this.blockchain.getBlockHeight() == 0) {
       this.blockchain.addGenesisBlock();
 
     } else {
-      // check if we have pending commits because of out of order delivery
+      // if we have pending commits because of out of order delivery, complete it first
       if (this.pendingCommitedBlocks.size > 0) {
         const keys = this.pendingCommitedBlocks.keys();
         keys.sort(); // begin inserting from the lowest sequence id
 
-        let i;
-        for (i = 0; i < keys.length; i++) {
-          let sequenceId = keys[i];
-          let blockHash = this.pendingCommitedBlocks.get(sequenceId);
-          let blockObj = this.blockPool.get(blockHash);
+        for (let i = 0; i < keys.length; i++) {
+          const sequenceId = keys[i];
+          const blockHash = this.pendingCommitedBlocks.get(sequenceId);
+          const blockObj = this.blockPool.get(blockHash);
 
           this.blockchain.addBlockToBlockhain(blockObj).then(isAdded => {
             if (isAdded) {
@@ -311,9 +283,8 @@ class P2pServer {
 
       // if it is our turn to create a block, we propose it
       if (this.blockchain.getCurrentProposer() == this.wallet.getPublicKey()) {
-        //log('I am proposing');
-        let transactions = this.transactionPool.getAllPendingTransactions();
-        let block = this.blockchain.createBlock(transactions, this.wallet);
+        const transactions = this.transactionPool.getAllPendingTransactions();
+        const block = this.blockchain.createBlock(transactions, this.wallet);
         this.broadcast(MESSAGE_TYPE.pre_prepare, block);
       }
     }

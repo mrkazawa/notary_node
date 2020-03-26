@@ -92,9 +92,11 @@ class Blockchain {
   // index is calculated using the hash of the latest block
   // TODO: Implement a better leader election scheme
   getCurrentProposer() {
-    const lastBlock = this.getLatestBlock();
+    return this.validatorsList[this.validatorsList.length - 1];
+
+    /*const lastBlock = this.getLatestBlock();
     let index = lastBlock.hash[0].charCodeAt(0) % config.getNumberOfNodes();
-    return this.validatorsList[index];
+    return this.validatorsList[index];*/
   }
 
   isValidBlock(block) {
