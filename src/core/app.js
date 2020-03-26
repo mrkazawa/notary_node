@@ -147,9 +147,3 @@ function adjustReqeustThreshold() {
 if (config.isUsingDynamicRequestPool()) {
   setInterval(adjustReqeustThreshold, 1000);
 }
-
-/*
-setInterval(() => {
-  log(chalk.yellow(`Request Pool Size : ${requestPool.getCurrentPendingSize()}`));
-}, 2000);
-*/

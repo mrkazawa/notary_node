@@ -35,7 +35,7 @@ class Blockchain {
       return true;
 
     } catch (err) {
-      log(chalk.bgRed(`FATAL ERROR ${err}`));
+      log(chalk.bgRed.black(`FATAL ERROR ${err}`));
       return false;
     }
   }
@@ -45,7 +45,7 @@ class Blockchain {
       return JSON.parse(await this.blockchainDB.get(key));
       
     } catch (err) {
-      log(chalk.bgRed(`FATAL ERROR ${err}`));
+      log(chalk.bgRed.black(`FATAL ERROR ${err}`));
       return false;
     }
   }
@@ -119,8 +119,6 @@ class Blockchain {
     return this.numberOfTxs;
   }
 
-  // TODO: Because we change the structure of the block
-  // Check if this still working
   countNumberOfTxInBlock(block) {
     let txs = block.data;
     let number_of_tx = 0;

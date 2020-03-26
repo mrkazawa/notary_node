@@ -1,3 +1,5 @@
+const HashMap = require('hashmap');
+const NodeCache = require("node-cache");
 const chalk = require('chalk');
 const log = console.log;
 
@@ -5,15 +7,34 @@ const CryptoUtil = require('../utils/crypto_util');
 const Config = require('../config');
 const config = new Config();
 
+// default TTL (Time-To-Live) in seconds
+// when it expires, the entry will be deleted
+const DEFAULT_TTL = 30;
+
+// check interval to check for TTL in seconds
+// shorter duration is better,
+// longer duration cause the system to take time to delete entries
+const CHECK_PERIOD = 10;
+
 class PBFTMessagePool {
   constructor() {
-    this.pendingPBFTMessages = new Map();
-    this.completedPBFTMessages = new Set();
+    this.pendingPBFTMessages = new HashMap();
+
+    this.completedPBFTMessages = new NodeCache({
+      stdTTL: DEFAULT_TTL,
+      checkperiod: CHECK_PERIOD
+    });
+
+    if (config.isDebugging()) {
+      this.completedPBFTMessages.on("expired", function (key, value) {
+        log(chalk.bgGreen.black(`NEW EVENT: ${key} expired from PBFT Pool`));
+      });
+    }
   }
 
   init(blockHash, sequenceId, wallet) {
     if (this.pendingPBFTMessages.has(blockHash)) {
-      log(chalk.red(`ERROR! PBFT Message Pool should be empty!`));
+      log(chalk.bgRed.black(`FATAL ERROR! PBFT Message Pool should be empty!`));
       process.exitCode = 1;
     }
 
@@ -52,7 +73,7 @@ class PBFTMessagePool {
   }
 
   finalize(blockHash) {
-    this.completedPBFTMessages.add(blockHash);
+    this.completedPBFTMessages.set(blockHash);
   }
 
   isCompleted(blockHash) {
@@ -88,7 +109,7 @@ class PBFTMessagePool {
   }
 
   deleteCompleted(blockHash) {
-    this.completedPBFTMessages.delete(blockHash);
+    this.completedPBFTMessages.del(blockHash);
   }
 
   getCurrentPendingSize() {
@@ -96,7 +117,7 @@ class PBFTMessagePool {
   }
 
   getCurrentCompletedSize() {
-    return this.completedPBFTMessages.size;
+    return this.completedPBFTMessages.getStats().keys;
   }
 }
 

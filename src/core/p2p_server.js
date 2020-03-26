@@ -38,8 +38,7 @@ class P2pServer {
     this.timeoutCommitedBlocks = new HashMap(); // store commits that cannot be inserted after multiple trials
   }
 
-  // Creates a server on a given port
-  // TODO: detect and restore broken connection scenario
+  // TODO: Implement detect and restore broken connection scenario
   listen() {
     const server = new WebSocket.Server({
       port: P2P_PORT,
@@ -53,8 +52,6 @@ class P2pServer {
 
     // timer for proposing a block
     setInterval(this.proposeBlock.bind(this), config.getBlockInterval());
-    // timer for garbage process
-    setInterval(this.doGarbageProcessing.bind(this), config.getGarbageInterval());
   }
 
   connectSocket(socket) {
@@ -262,8 +259,6 @@ class P2pServer {
     this.commitPool.delete(blockHash);
   }
 
-  // TODO: Because we change the structure of the block
-  // Check if this still working
   deleteAlreadyIncludedTransactions(block) {
     let i;
     for (i = 0; i < block.data.length; i++) {
@@ -322,37 +317,6 @@ class P2pServer {
         this.broadcast(MESSAGE_TYPE.pre_prepare, block);
       }
     }
-  }
-
-  doGarbageProcessing() {
-    // FIXME: Should delete PBFT messages that already insert in the blockchain,
-    // Not the only that has passed APPROVAL in the COMMIT phase
-    const completeCommits = this.commitPool.getAllCompleted();
-    const completeSize = completeCommits.size;
-    const toDelete = completeSize - config.getNumberOfTempMessages();
-    
-    var deleted = 0;
-    for (let item of completeCommits) {
-      this.preparePool.deleteCompleted(item);
-      this.commitPool.deleteCompleted(item);
-      deleted += 1;
-      if (deleted == toDelete) {
-        break;
-      }
-    }
-
-    //this.blockPool.clear();
-
-    /*
-    log(chalk.yellow(`Tx Pool Size: ${this.transactionPool.getCurrentPendingSize()}`));
-    log(chalk.yellow(`Block Pool Size: ${this.blockPool.getCurrentPendingSize()}`));
-    log(chalk.yellow(`Prepare Pool Size: ${this.preparePool.getCurrentPendingSize()}`));
-    log(chalk.yellow(`Commit Pool Size: ${this.commitPool.getCurrentPendingSize()}`));
-    log(chalk.yellow(`Prepare FINAL Pool Size: ${this.preparePool.getCurrentCompletedSize()}`));
-    log(chalk.yellow(`Commit FINAL Size: ${this.commitPool.getCurrentCompletedSize()}`));
-    log(chalk.yellow(`Pending Commited Block Pool Size: ${this.pendingCommitedBlocks.size}`));
-    log(chalk.yellow(`Timeout Commited Block Pool Size: ${this.timeoutCommitedBlocks.size}`));
-    */
   }
 }
 

@@ -11,6 +11,7 @@ class Config {
     }
     Config._instance = this;
 
+    // The list of PBFT message types
     this.MESSAGE_TYPE = {
       transaction: 'TRANSACTION',
       prepare: 'PREPARE',
@@ -29,8 +30,6 @@ class Config {
 
     // How long the period of block generation (in milliseconds)
     this.BLOCK_INTERVAL = 1000; // every 1 second
-    // How long the period of garbage collector process (in milliseconds)
-    this.GARBAGE_INTERVAL = this.OLD_MESSAGES_TIMEOUT * this.BLOCK_INTERVAL;
 
     // Total number of nodes in the network
     this.NUMBER_OF_NODES = 4;
@@ -67,10 +66,6 @@ class Config {
 
   getBlockInterval() {
     return this.BLOCK_INTERVAL;
-  }
-
-  getGarbageInterval() {
-    return this.GARBAGE_INTERVAL;
   }
 
   getNumberOfNodes() {

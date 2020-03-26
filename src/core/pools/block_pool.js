@@ -29,7 +29,7 @@ class BlockPool {
 
     if (config.isDebugging()) {
       this.pendingBlocks.on("expired", function (key, value) {
-        log(chalk.bgGreen(`NEW EVENT: ${key} expired`));
+        log(chalk.bgGreen.black(`NEW EVENT: ${key} expired from Block Pool`));
       });
     }
   }
