@@ -1,4 +1,3 @@
-const HashMap = require('hashmap');
 const chalk = require('chalk');
 const log = console.log;
 

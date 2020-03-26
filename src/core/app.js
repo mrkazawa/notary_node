@@ -14,19 +14,19 @@ const BlockPool = require('./pools/block_pool'); // pre-prepare pool
 const PBFTPool = require('./pools/pbft_pool');
 
 const P2pServer = require('./p2p_server');
+
 const Config = require('./config');
 const config = new Config();
 const MESSAGE_TYPE = config.MESSAGE_TYPE;
 
 const HTTP_PORT = process.env.HTTP_PORT || 3001;
 
-// Instantiate all objects
 const app = express();
 app.use(bodyParser.json());
 
-// FIXME: Using other SECRET will not work only use NODE0, NODE1, and so on..
+// FIXME: Using other SECRET string will not work only use NODE0, NODE1, and so on..
 const wallet = new Wallet(process.env.SECRET);
-// TODO: add proposer validator registraion procedure
+// TODO: add validator registration procedure
 const validators = new Validators(config.getNumberOfNodes());
 const blockchain = new Blockchain(validators);
 
@@ -46,7 +46,10 @@ const p2pServer = new P2pServer(
   validators
 );
 
-var requestCount = 0;
+// starts the p2p server
+p2pServer.listen();
+
+//------------------ Express Methods ------------------//
 
 app.get('/pending_requests', (req, res) => {
   res.json(requestPool.getAllPendingRequests());
@@ -68,10 +71,39 @@ app.get('/tx_count_per_block', (req, res) => {
   res.json(blockchain.getListNumberOfTxs());
 });
 
-// creates transactions for the sent data
+app.get('/pools_size', (req, res) => {
+  let poolSizes = [];
+
+  poolSizes.push({
+    requestPool: requestPool.getCurrentPendingSize()
+  });
+  poolSizes.push({
+    transactionPool: transactionPool.getCurrentPendingSize()
+  });
+  poolSizes.push({
+    blockPool: blockPool.getCurrentPendingSize()
+  });
+  poolSizes.push({
+    preparePool: preparePool.getCurrentPendingSize()
+  });
+  poolSizes.push({
+    commitPool: commitPool.getCurrentPendingSize()
+  });
+  poolSizes.push({
+    preparePoolFinal: preparePool.getCurrentCompletedSize()
+  });
+  poolSizes.push({
+    commitPoolFinal: commitPool.getCurrentCompletedSize()
+  });
+
+  res.json(poolSizes);
+});
+
 app.post('/transact', (req, res) => {
-  const { data } = req.body;
-  
+  const {
+    data
+  } = req.body;
+
   requestCount++;
   const thresholdReached = requestPool.add(data);
 
@@ -86,22 +118,14 @@ app.post('/transact', (req, res) => {
   res.status(200).send('transaction_received');
 });
 
-app.get('/pools_size', (req, res) => {
-  let poolSizes = [];
-
-  poolSizes.push(requestPool.getCurrentPendingSize());
-  poolSizes.push(transactionPool.getCurrentPendingSize());
-  poolSizes.push(blockPool.getCurrentPendingSize());
-  poolSizes.push(preparePool.getCurrentPendingSize());
-  poolSizes.push(commitPool.getCurrentPendingSize());
-  poolSizes.push(preparePool.getCurrentCompletedSize());
-  poolSizes.push(commitPool.getCurrentCompletedSize());
-
-  res.json(poolSizes);
+// starts the express server
+app.listen(HTTP_PORT, () => {
+  log(chalk.blue(`Listening on requests on port : ${HTTP_PORT}`));
 });
 
+//------------------ Timer Methods ------------------//
 
-
+let requestCount = 0;
 
 function adjustReqeustThreshold() {
   if (requestCount > 500) {
@@ -123,14 +147,6 @@ function adjustReqeustThreshold() {
 if (config.isUsingDynamicRequestPool()) {
   setInterval(adjustReqeustThreshold, 1000);
 }
-
-// starts the app server
-app.listen(HTTP_PORT, () => {
-  log(chalk.blue(`Listening on requests on port : ${HTTP_PORT}`));
-});
-
-// starts the p2p server
-p2pServer.listen();
 
 /*
 setInterval(() => {

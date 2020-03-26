@@ -51,7 +51,7 @@ class BlockPool {
   }
 
   getCurrentPendingSize() {
-    return this.pendingBlocks.getStats();
+    return this.pendingBlocks.getStats().keys;
   }
 
   delete(blockHash) {

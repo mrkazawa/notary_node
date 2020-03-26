@@ -19,7 +19,7 @@ class Config {
     };
 
     // Maximum number of GENERAL request before the node bundles them in a transaction and then broadcast it to peers
-    this.PENDING_REQUEST_THRESHOLD = 500;
+    this.PENDING_REQUEST_THRESHOLD = 10;
 
     // How long the system has to wait before it starts to delete old messages
     this.OLD_MESSAGES_TIMEOUT = 20;
