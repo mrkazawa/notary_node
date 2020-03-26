@@ -90,13 +90,11 @@ class Blockchain {
 
   // calculates the next proposers by calculating a random index of the validators list
   // index is calculated using the hash of the latest block
-  // TODO: need to investigate what happen to this when one node fails
+  // TODO: Implement a better leader election scheme
   getCurrentProposer() {
-    //const lastBlock = this.getLatestBlock();
-    //let index = lastBlock.hash[0].charCodeAt(0) % config.getNumberOfNodes();
-    //return this.validatorsList[index];
-    
-    return this.validatorsList[3]; // let notary4 always be the proposer
+    const lastBlock = this.getLatestBlock();
+    let index = lastBlock.hash[0].charCodeAt(0) % config.getNumberOfNodes();
+    return this.validatorsList[index];
   }
 
   isValidBlock(block) {
