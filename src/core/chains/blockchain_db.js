@@ -16,25 +16,26 @@ class Blockchain {
 
     this.validatorsList = validators.list;
     
-    // TODO: Open exisitng blockchain data scenario
     this.blockchainDB = levelup(leveldown('./blockchain_data'));
-    this.blockchainDB.clear();
     if (!this.blockchainDB.supports.permanence) {
       throw new Error('Persistent storage is required');
     }
 
+    // TODO: Open exisitng blockchain data scenario
+    this.blockchainDB.clear();
+
     this.latestBlock = {} // temporary object to store the latest block
     this.latestBlockHeight = 0; // temporary to store the latest block height
-    this.numberOfTxs = [];
+    this.numberOfTxs = []; // to store lists of number of transacttions per block
   }
   
   async addToStore(key, value) {
     try {
-      //await this.blockchainDB.put(key, JSON.stringify(value));
+      await this.blockchainDB.put(key, JSON.stringify(value));
       return true;
 
     } catch (err) {
-      log(chalk.red(`ERROR ${err}`));
+      log(chalk.bgRed(`FATAL ERROR ${err}`));
       return false;
     }
   }
@@ -44,40 +45,36 @@ class Blockchain {
       return JSON.parse(await this.blockchainDB.get(key));
       
     } catch (err) {
-      log(chalk.red(`ERROR ${err}`));
+      log(chalk.bgRed(`FATAL ERROR ${err}`));
       return false;
     }
   }
 
-  async addGenesisBlock() {
-    const genesisBlock = Block.genesis();
-    const result = await this.addToStore(genesisBlock.hash, genesisBlock);
-    if (result) {
-      this.latestBlock = genesisBlock;
-      this.numberOfTxs.push(this.countNumberOfTxInBlock(this.getLatestBlock()));
-      this.latestBlockHeight += 1;
-      this.printLog(genesisBlock.hash);
-    } else {
-      log(chalk.red(`ERROR! Genesis block cannot be created!`));
-    }
-  }
-
-  async addBlockToBlockhain(blockObj) {
-    if (this.isValidBlock(blockObj)) {
-      const result = await this.addToStore(blockObj.hash, blockObj);
+  async doAddProcedure(block) {
+    const result = await this.addToStore(block.hash, block);
       if (result) {
-        this.latestBlock = blockObj;
-        this.numberOfTxs.push(this.countNumberOfTxInBlock(this.getLatestBlock()));
+        this.latestBlock = block;
+        this.numberOfTxs.push(this.countNumberOfTxInBlock(block));
         this.latestBlockHeight += 1;
-        this.printLog(blockObj.hash);
+        this.printLog(block.hash);
 
         return true;
       } else {
-        log(chalk.red(`ERROR! Block ${blockObj.hash} cannot be inserted!`));
+        log(chalk.red(`ERROR! Block ${block.hash} cannot be inserted!`));
         return false;
       }      
+  }
+
+  async addGenesisBlock() {
+    const genesisBlock = Block.genesis();
+    return await this.doAddProcedure(genesisBlock);
+  }
+
+  async addBlockToBlockhain(block) {
+    if (this.isValidBlock(block)) {
+      return await this.doAddProcedure(block);
     } else {
-      log(chalk.red(`ERROR! Block ${blockObj.hash} invalid!`));
+      log(chalk.red(`ERROR! Block ${block.hash} invalid!`));
       return false;
     }
   }
@@ -124,12 +121,8 @@ class Blockchain {
     return this.numberOfTxs;
   }
 
-  getLastValueFromSet(set){
-    let value;
-    for(value of set);
-    return value;
-  }
-
+  // TODO: Because we change the structure of the block
+  // Check if this still working
   countNumberOfTxInBlock(block) {
     let txs = block.data;
     let number_of_tx = 0;

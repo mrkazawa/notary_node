@@ -124,7 +124,7 @@ class P2pServer {
           }
 
           if (!this.validators.isValidValidator(block.proposer)) break;
-          if (this.blockPool.isExist(block)) break;
+          if (this.blockPool.isExist(block.hash)) break;
           if (!this.blockPool.isValidBlock(block)) break;
 
           this.broadcast(MESSAGE_TYPE.pre_prepare, block);
@@ -262,6 +262,8 @@ class P2pServer {
     this.commitPool.delete(blockHash);
   }
 
+  // TODO: Because we change the structure of the block
+  // Check if this still working
   deleteAlreadyIncludedTransactions(block) {
     let i;
     for (i = 0; i < block.data.length; i++) {
