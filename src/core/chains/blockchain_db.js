@@ -4,8 +4,6 @@ const chalk = require('chalk');
 const log = console.log;
 
 const Block = require('./block');
-const Config = require('../config');
-const config = new Config();
 
 class Blockchain {
   constructor(validators) {
@@ -15,7 +13,7 @@ class Blockchain {
     Blockchain._instance = this;
 
     this.validatorsList = validators.list;
-    
+
     this.blockchainDB = levelup(leveldown('./blockchain_data'));
     if (!this.blockchainDB.supports.permanence) {
       throw new Error('Persistent storage is required');
@@ -28,7 +26,7 @@ class Blockchain {
     this.latestBlockHeight = 0; // temporary to store the latest block height
     this.numberOfTxs = []; // to store lists of number of transacttions per block
   }
-  
+
   async addToStore(key, value) {
     try {
       await this.blockchainDB.put(key, JSON.stringify(value));
@@ -43,7 +41,7 @@ class Blockchain {
   async getFromStore(key) {
     try {
       return JSON.parse(await this.blockchainDB.get(key));
-      
+
     } catch (err) {
       log(chalk.bgRed.black(`FATAL ERROR ${err}`));
       return false;
@@ -52,17 +50,17 @@ class Blockchain {
 
   async doAddProcedure(block) {
     const result = await this.addToStore(block.hash, block);
-      if (result) {
-        this.latestBlock = block;
-        this.numberOfTxs.push(this.countNumberOfTxInBlock(block));
-        this.latestBlockHeight += 1;
-        this.printLog(block.hash);
+    if (result) {
+      this.latestBlock = block;
+      this.numberOfTxs.push(this.countNumberOfTxInBlock(block));
+      this.latestBlockHeight += 1;
+      this.printLog(block);
 
-        return true;
-      } else {
-        log(chalk.red(`ERROR! Block ${block.hash} cannot be inserted!`));
-        return false;
-      }      
+      return true;
+    } else {
+      log(chalk.red(`ERROR! Block ${block.hash} cannot be inserted!`));
+      return false;
+    }
   }
 
   async addGenesisBlock() {
@@ -74,7 +72,7 @@ class Blockchain {
     if (this.isValidBlock(block)) {
       return await this.doAddProcedure(block);
     } else {
-      log(chalk.red(`ERROR! Block ${block.hash} invalid!`));
+      log(chalk.bgYellow.black(`WARNING! Block ID ${block.sequenceId} HASH ${block.hash} invalid!`));
       return false;
     }
   }
@@ -88,15 +86,9 @@ class Blockchain {
     return block;
   }
 
-  // calculates the next proposers by calculating a random index of the validators list
-  // index is calculated using the hash of the latest block
   // TODO: Implement a better leader election scheme
   getCurrentProposer() {
     return this.validatorsList[this.validatorsList.length - 1];
-
-    /*const lastBlock = this.getLatestBlock();
-    let index = lastBlock.hash[0].charCodeAt(0) % config.getNumberOfNodes();
-    return this.validatorsList[index];*/
   }
 
   isValidBlock(block) {
@@ -135,8 +127,8 @@ class Blockchain {
     return number_of_tx;
   }
 
-  printLog(blockHash) {
-    log(chalk.bgWhite.black(`Added Block to Blockchain: ${blockHash}`));
+  printLog(block) {
+    log(chalk.bgWhite.black(`Added Block to Blockchain: ID ${block.sequenceId} HASH ${block.hash}`));
   }
 }
 

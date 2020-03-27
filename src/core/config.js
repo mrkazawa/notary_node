@@ -22,9 +22,6 @@ class Config {
     // Maximum number of GENERAL request before the node bundles them in a transaction and then broadcast it to peers
     this.PENDING_REQUEST_THRESHOLD = 500;
 
-    // How long the system has to wait before it starts to delete old messages
-    this.OLD_MESSAGES_TIMEOUT = 20;
-
     // How long the period of block generation (in milliseconds)
     this.BLOCK_INTERVAL = 1000; // every 1 second
 
@@ -51,10 +48,6 @@ class Config {
 
   getRequestThreshold() {
     return this.PENDING_REQUEST_THRESHOLD;
-  }
-
-  getOldMessagesTimeout() {
-    return this.OLD_MESSAGES_TIMEOUT;
   }
 
   getBlockInterval() {

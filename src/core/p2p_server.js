@@ -1,5 +1,6 @@
 const WebSocket = require('ws');
 const HashMap = require('hashmap');
+const NodeCache = require('node-cache');
 const chalk = require('chalk');
 const log = console.log;
 
@@ -12,7 +13,7 @@ const PEERS = process.env.PEERS ? process.env.PEERS.split(',') : [];
 
 // default TTL (Time-To-Live) in seconds
 // when it expires, the entry will be deleted
-const DEFAULT_TTL = 20;
+const DEFAULT_TTL = 25;
 
 // check interval to check for TTL in seconds
 // shorter duration is better,
@@ -43,8 +44,18 @@ class P2pServer {
     this.validators = validators;
 
     this.sockets = [];
-    this.pendingCommitedBlocks = new HashMap(); // store pending out of order commits
-    this.timeoutCommitedBlocks = new HashMap(); // store commits that cannot be inserted after multiple trials
+
+    // store pending out of order commits
+    this.pendingCommitedBlocks = new NodeCache({
+      stdTTL: DEFAULT_TTL,
+      checkperiod: CHECK_PERIOD
+    });
+
+    if (config.isDebugging()) {
+      this.pendingCommitedBlocks.on("expired", function (key, value) {
+        log(chalk.bgGreen.black(`NEW EVENT: ${key} expired from PBFT Pool`));
+      });
+    }
   }
 
   // TODO: Implement detect and restore broken connection scenario
@@ -116,12 +127,12 @@ class P2pServer {
 
           this.broadcast(MESSAGE_TYPE.transaction, transaction);
           this.transactionPool.add(transaction);
-          
+
           break;
         }
 
         //------------------ PBFT Process (Pre-Prepare) ------------------//
-        
+
         case MESSAGE_TYPE.pre_prepare: {
           const block = data.payload;
 
@@ -135,7 +146,7 @@ class P2pServer {
 
           this.broadcast(MESSAGE_TYPE.pre_prepare, block);
           this.blockPool.add(block);
-          
+
           if (
             !this.preparePool.isInitiated(block.hash) &&
             !this.preparePool.isCompleted(block.hash)
@@ -152,10 +163,10 @@ class P2pServer {
         }
 
         //------------------ PBFT Process (Prepare) ------------------//
-        
+
         case MESSAGE_TYPE.prepare: {
           const prepare = data.payload;
-          
+
           if (config.isDebugging()) {
             log(chalk.yellow(`Receiving Prepare ${prepare.blockHash}`));
           }
@@ -171,7 +182,7 @@ class P2pServer {
           const thresholdReached = this.preparePool.add(prepare);
           if (thresholdReached) {
             this.preparePool.finalize(prepare.blockHash);
- 
+
             if (
               !this.commitPool.isInitiated(prepare.blockHash) &&
               !this.commitPool.isCompleted(prepare.blockHash)
@@ -247,13 +258,14 @@ class P2pServer {
 
     } else {
       // if we have pending commits because of out of order delivery, complete it first
-      if (this.pendingCommitedBlocks.size > 0) {
+      if (this.pendingCommitedBlocks.getStats().keys > 0) {
         const keys = this.pendingCommitedBlocks.keys();
         keys.sort(); // begin inserting from the lowest sequence id
 
         for (let i = 0; i < keys.length; i++) {
           const sequenceId = keys[i];
           const blockHash = this.pendingCommitedBlocks.get(sequenceId);
+          if (blockHash == undefined) break;
           const block = this.blockPool.get(blockHash);
           if (block == undefined) break;
 
@@ -261,23 +273,7 @@ class P2pServer {
             if (isAdded) {
               this.deleteAlreadyIncludedPBFTMessages(block.hash);
               this.deleteAlreadyIncludedTransactions(block);
-              this.pendingCommitedBlocks.delete(sequenceId);
-
-            } else {
-              if (!this.timeoutCommitedBlocks.has(sequenceId)) {
-                this.timeoutCommitedBlocks.set(sequenceId, 0);
-
-              } else {
-                let count = this.timeoutCommitedBlocks.get(sequenceId);
-                count += 1;
-                this.timeoutCommitedBlocks.set(sequenceId, count);
-
-                if (count > config.getOldMessagesTimeout()) {
-                  this.deleteAlreadyIncludedPBFTMessages(block.hash); // seems like out of order block
-                  this.pendingCommitedBlocks.delete(sequenceId);
-                  this.timeoutCommitedBlocks.delete(sequenceId);
-                }
-              }
+              this.pendingCommitedBlocks.del(sequenceId);
             }
           });
         }
