@@ -209,6 +209,7 @@ class P2pServer {
           if (thresholdReached) {
             this.commitPool.finalize(commit.blockHash);
             const block = this.blockPool.get(commit.blockHash);
+            if (block == undefined) break;
 
             this.blockchain.addBlockToBlockhain(block).then(isAdded => {
               if (isAdded) {
@@ -253,12 +254,13 @@ class P2pServer {
         for (let i = 0; i < keys.length; i++) {
           const sequenceId = keys[i];
           const blockHash = this.pendingCommitedBlocks.get(sequenceId);
-          const blockObj = this.blockPool.get(blockHash);
+          const block = this.blockPool.get(blockHash);
+          if (block == undefined) break;
 
-          this.blockchain.addBlockToBlockhain(blockObj).then(isAdded => {
+          this.blockchain.addBlockToBlockhain(block).then(isAdded => {
             if (isAdded) {
-              this.deleteAlreadyIncludedPBFTMessages(blockObj.hash);
-              this.deleteAlreadyIncludedTransactions(blockObj);
+              this.deleteAlreadyIncludedPBFTMessages(block.hash);
+              this.deleteAlreadyIncludedTransactions(block);
               this.pendingCommitedBlocks.delete(sequenceId);
 
             } else {
@@ -271,7 +273,7 @@ class P2pServer {
                 this.timeoutCommitedBlocks.set(sequenceId, count);
 
                 if (count > config.getOldMessagesTimeout()) {
-                  this.deleteAlreadyIncludedPBFTMessages(blockObj.hash); // seems like out of order block
+                  this.deleteAlreadyIncludedPBFTMessages(block.hash); // seems like out of order block
                   this.pendingCommitedBlocks.delete(sequenceId);
                   this.timeoutCommitedBlocks.delete(sequenceId);
                 }
