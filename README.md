@@ -4,12 +4,47 @@
 
 All of the required softwares and tools has been included in the `Vagrantfile` and it will be installed during the `vagrant up` using shell provisioning scripts in `/shell` directory.
 
+```bash
+git clone https://github.com/mrkazawa/notary_node.git
+cd notary_node
+
+vagrant up # if it is our first time, this will take some times
+vagrant rsync-auto
+
+# open another terminal for notary1
+vagrant ssh notary1
+# open another terminal for notary2
+vagrant ssh notary2
+# open another terminal for notary3
+vagrant ssh notary3
+# open another terminal for notary4
+vagrant ssh notary4
+```
+
+Other useful commands,
+
+```bash
+cd notary_node
+vagrant reload # to restart VM
+vagrant halt # to shutdwon VM
+vagrant destroy -f # to completely delete VM
+```
+
+- - - -
+
 ## How to run ##
 
-First, clone the repository
-Second, ssh to vagrant machine
-
 ### Running the Core Engine ###
+
+After we SSH to the respective VM (either `notary1`, `notary2`, `notary3`, and `notary4`).
+We need to go to the Core Engine directory
+
+```bash
+cd src/core
+npm install # install all the required Node JS packages
+```
+
+Then, we run the core engine separately in each of the VM machines.
 
 In `notary1`
 
@@ -35,14 +70,24 @@ In `notary4`
 SECRET=NODE3 P2P_PORT=5100 HTTP_PORT=3000 PEERS=ws://notary3.local:5100,ws://notary2.local:5100,ws://notary1.local:5100 node app --max-old-space-size=2048
 ```
 
-Shortcut, or you can also run the following command in the respective notary node machine
+`OR` you can run the following command in the respective notary node machine
 
 ```bash
-npm run notary1 // run this in notary 1 machine
-npm run notary2 // run this in notary 2 machine
-npm run notary3 // run this in notary 3 machine
-npm run notary4 // run this in notary 4 machine
+npm run notary1 # run this in notary 1 machine
+npm run notary2 # run this in notary 2 machine
+npm run notary3 # run this in notary 3 machine
+npm run notary4 # run this in notary 4 machine
 ```
+
+You will see that the VM machines start to creating blocks.
+To check if the system works correctly, we can run the following commands.
+
+```bash
+npm run posters
+npm run getters
+```
+
+Those commands should display HTTP status of 200, indicating that the core engine server can process the commands.
 
 - - - -
 
