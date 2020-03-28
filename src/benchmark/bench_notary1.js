@@ -27,7 +27,7 @@ const instance = autocannon({
   connections: 8, // concurrent connection
   pipelining: 1, // default
   bailout: 10, // tolerable number of errors
-  //overallRate: 10, // rate of requests to make per second from all connections
+  //overallRate: 2000, // rate of requests to make per second from all connections
   amount: 15000000, // ITU-T suggests 15,000,000 IoT requests per day
   duration: 1
 }, console.log);

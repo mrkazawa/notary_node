@@ -1,5 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const os = require('os');
 const chalk = require('chalk');
 const log = console.log;
 
@@ -126,6 +127,7 @@ app.listen(HTTP_PORT, () => {
 //------------------ Timer Methods ------------------//
 
 let requestCount = 0;
+let isOverload = false;
 
 function adjustReqeustThreshold() {
   if (requestCount > 500) {
@@ -143,7 +145,20 @@ function adjustReqeustThreshold() {
   requestCount = 0;
 }
 
+function isCurrentlyOverload() {
+  const one_minute_avg_load = os.loadavg()[0];
+  if (one_minute_avg_load > 1) {
+    isOverload = true;
+    console.log('SYSTEM IS OVERLOAD!!!');
+  } else {
+    isOverload = false;
+  }
+}
+
 // starts request rate detection timers
 if (config.isUsingDynamicRequestPool()) {
   setInterval(adjustReqeustThreshold, 1000);
 }
+
+// timer every 5 seconds to detect if the system overload
+setInterval(isCurrentlyOverload, 5000);
