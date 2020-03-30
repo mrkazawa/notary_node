@@ -19,8 +19,18 @@ class Config {
       commit: 'COMMIT'
     };
 
+    // The list of PRIORITY types
+    this.PRIORITY_TYPE = {
+      high: 1,
+      medium: 2,
+      low: 3
+    };
+
     // Maximum number of GENERAL request before the node bundles them in a transaction and then broadcast it to peers
-    this.PENDING_REQUEST_THRESHOLD = 500;
+    this.PENDING_REQUEST_THRESHOLD = 500; // for mixed, no priority feature
+    this.PENDING_REQUEST_THRESHOLD_HIGH = 20; // for high priority
+    this.PENDING_REQUEST_THRESHOLD_MEDIUM = 100; // for medium priority
+    this.PENDING_REQUEST_THRESHOLD_LOW = 200; // for low priority
 
     // How long the period of block generation (in milliseconds)
     this.BLOCK_INTERVAL = 1000; // every 1 second
@@ -40,14 +50,45 @@ class Config {
     this.BENCHMARK_FLAG = true; // set true during benchmarking
     this.DEBUGGING_FLAG = false; // set true to display log
     this.DYNAMIC_REQUEST_POOL_FLAG = false; // set true to enable dynamic request pool size
+    this.PRIORITY_FLAG = false; // set true to enable priority feature
   }
 
-  setRequestThreshold(newThreshold) {
-    this.PENDING_REQUEST_THRESHOLD = newThreshold;
+  setRequestThreshold(priority, newThreshold) {
+    if (this.isUsingPriority()) {
+      if (this.PRIORITY_TYPE.high == priority) {
+        this.PENDING_REQUEST_THRESHOLD_HIGH = newThreshold;
+
+      } else if (this.PRIORITY_TYPE.medium == priority) {
+        this.PENDING_REQUEST_THRESHOLD_MEDIUM = newThreshold;
+
+      } else if (this.PRIORITY_TYPE.low == priority) {
+        this.PENDING_REQUEST_THRESHOLD_LOW = newThreshold;
+      } else {
+        console.log(`ERROR! ${priority} is unknowned`);
+      }
+
+    } else {
+      this.PENDING_REQUEST_THRESHOLD = newThreshold;
+    }
   }
 
-  getRequestThreshold() {
-    return this.PENDING_REQUEST_THRESHOLD;
+  getRequestThreshold(priority) {
+    if (this.isUsingPriority()) {
+      if (this.PRIORITY_TYPE.high == priority) {
+        return this.PENDING_REQUEST_THRESHOLD_HIGH;
+
+      } else if (this.PRIORITY_TYPE.medium == priority) {
+        return this.PENDING_REQUEST_THRESHOLD_MEDIUM;
+
+      } else if (this.PRIORITY_TYPE.low == priority) {
+        return this.PENDING_REQUEST_THRESHOLD_LOW;
+      } else {
+        console.log(`ERROR! ${priority} is unknowned`);
+      }
+      
+    } else {
+      return this.PENDING_REQUEST_THRESHOLD;
+    }
   }
 
   getBlockInterval() {
@@ -84,6 +125,10 @@ class Config {
 
   isUsingDynamicRequestPool() {
     return this.DYNAMIC_REQUEST_POOL_FLAG;
+  }
+
+  isUsingPriority() {
+    return this.PRIORITY_FLAG;
   }
 }
 

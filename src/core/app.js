@@ -32,6 +32,10 @@ const validators = new Validators(config.getNumberOfNodes());
 const blockchain = new Blockchain(validators);
 
 const requestPool = new RequestPool();
+const highPriorityRequestPool = new RequestPool();
+const mediumPriorityRequestPool = new RequestPool();
+const lowPriorityRequestPool = new RequestPool();
+
 const transactionPool = new TransactionPool();
 const blockPool = new BlockPool();
 const preparePool = new PBFTPool();
@@ -101,22 +105,67 @@ app.get('/pools_size', (req, res) => {
 });
 
 app.post('/transact', (req, res) => {
+  requestCount++;
+
   const {
     data
   } = req.body;
 
-  requestCount++;
-  const thresholdReached = requestPool.add(data);
+  if (config.isUsingPriority()) {
+    const priority = data.priority;
 
-  if (thresholdReached) {
-    const tx_data = requestPool.getAllPendingRequests();
-    requestPool.clear();
+    if (config.PRIORITY_TYPE.high == priority) {
+      const thresholdReached = highPriorityRequestPool.add(data);
 
-    const transaction = wallet.createTransaction(tx_data);
-    p2pServer.broadcast(MESSAGE_TYPE.transaction, transaction);
+      if (thresholdReached) {
+        const tx_data = highPriorityRequestPool.getAllPendingRequests();
+        highPriorityRequestPool.clear();
+        const transaction = wallet.createTransaction(tx_data);
+        p2pServer.broadcast(MESSAGE_TYPE.transaction, transaction);
+      }
+      
+      res.status(200).send('high priority request received!');
+
+    } else if (config.PRIORITY_TYPE.medium == priority) {
+      const thresholdReached = mediumPriorityRequestPool.add(data);
+
+      if (thresholdReached) {
+        const tx_data = mediumPriorityRequestPool.getAllPendingRequests();
+        mediumPriorityRequestPool.clear();
+        const transaction = wallet.createTransaction(tx_data);
+        p2pServer.broadcast(MESSAGE_TYPE.transaction, transaction);
+      }
+      
+      res.status(200).send('medium priority request received!');
+
+    } else if (config.PRIORITY_TYPE.low == priority) {
+      const thresholdReached = lowPriorityRequestPool.add(data);
+
+      if (thresholdReached) {
+        const tx_data = lowPriorityRequestPool.getAllPendingRequests();
+        lowPriorityRequestPool.clear();
+        const transaction = wallet.createTransaction(tx_data);
+        p2pServer.broadcast(MESSAGE_TYPE.transaction, transaction);
+      }
+      
+      res.status(200).send('low priority request received!');
+
+    } else {
+      res.status(400).send(`ERROR! ${priority} is unknowned`);
+    }
+
+  } else {
+    const thresholdReached = requestPool.add(data);
+
+    if (thresholdReached) {
+      const tx_data = requestPool.getAllPendingRequests();
+      requestPool.clear();
+      const transaction = wallet.createTransaction(tx_data);
+      p2pServer.broadcast(MESSAGE_TYPE.transaction, transaction);
+    }
+
+    res.status(200).send('request received!');
   }
-
-  res.status(200).send('transaction_received');
 });
 
 // starts the express server

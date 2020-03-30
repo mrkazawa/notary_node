@@ -6,11 +6,6 @@ const config = new Config();
 
 class RequestPool {
   constructor() {
-    if (RequestPool._instance) {
-      throw new Error('RequestPool already has an instance!!!');
-    }
-    RequestPool._instance = this;
-
     this.pendingRequests = new HashMap();
   }
 
@@ -27,7 +22,7 @@ class RequestPool {
       this.pendingRequests.set(hash, request);
     }
 
-    return (this.pendingRequests.size >= config.getRequestThreshold());
+    return (this.pendingRequests.size >= config.getRequestThreshold(request.priority));
   }
 
   getAllPendingRequests() {
