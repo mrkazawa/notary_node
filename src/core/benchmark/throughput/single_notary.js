@@ -24,7 +24,7 @@ const instance = autocannon({
     "content-type": "application/json"
   },
   body: JSON.stringify(payload_400_bytes),
-  connections: 8, // concurrent connection
+  connections: 10, // concurrent connection
   pipelining: 1, // default
   bailout: 50, // tolerable number of errors
   //overallRate: 2000, // rate of requests to make per second from all connections
@@ -40,10 +40,15 @@ process.once('SIGINT', () => {
 // just render results
 autocannon.track(instance, {
   renderProgressBar: true,
-  renderResultsTable: true,
+  renderResultsTable: false,
   renderLatencyTable: false
 });
 
 instance.on('tick', (counter) => {
-  console.log(counter);
+  console.log(counter); // {counter, bytes}
+});
+
+instance.on('done', (results) => {
+  console.log(`Avg Tput (Req/sec): ${results.requests.average}`);
+  console.log(`Avg Lat (ms): ${results.latency.average}`);
 });

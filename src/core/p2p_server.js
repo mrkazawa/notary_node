@@ -13,12 +13,12 @@ const PEERS = process.env.PEERS ? process.env.PEERS.split(',') : [];
 
 // default TTL (Time-To-Live) in seconds
 // when it expires, the entry will be deleted
-const DEFAULT_TTL = 25;
+const DEFAULT_TTL = 10;
 
 // check interval to check for TTL in seconds
 // shorter duration is better,
 // longer duration cause the system to take time to delete entries
-const CHECK_PERIOD = 10;
+const CHECK_PERIOD = 5;
 
 class P2pServer {
   constructor(
