@@ -30,9 +30,9 @@ class Config {
     this.PENDING_REQUEST_THRESHOLD = 500; // no priority feature
 
     // when using priority feature
-    this.PENDING_REQUEST_THRESHOLD_HIGH = 20; // for high priority
-    this.PENDING_REQUEST_THRESHOLD_MEDIUM = 100; // for medium priority
-    this.PENDING_REQUEST_THRESHOLD_LOW = 200; // for low priority
+    this.PENDING_REQUEST_THRESHOLD_HIGH = 25; // for high priority
+    this.PENDING_REQUEST_THRESHOLD_MEDIUM = 50; // for medium priority
+    this.PENDING_REQUEST_THRESHOLD_LOW = 500; // for low priority
 
     // How long the period of block generation (in milliseconds)
     this.BLOCK_INTERVAL = 1000; // every 1 second
@@ -52,7 +52,7 @@ class Config {
     this.BENCHMARK_FLAG = true; // set true during benchmarking
     this.DEBUGGING_FLAG = false; // set true to display log
     this.DYNAMIC_REQUEST_POOL_FLAG = false; // set true to enable dynamic request pool size
-    this.PRIORITY_FLAG = false; // set true to enable priority feature
+    this.PRIORITY_FLAG = true; // set true to enable priority feature
   }
 
   setRequestThreshold(priority, newThreshold) {

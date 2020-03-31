@@ -124,13 +124,9 @@ function createGetRequest(url) {
 
 function executeRequest(scenario, options) {
   rp(options).then(function (response) {
-    console.log(`--------------------------------------------`);
-    console.log(scenario);
-    console.log(`--------------------------------------------`);
-    console.log('Response status code: ', response.statusCode);
-    console.log('Response body: ', response.body);
-
-    fs.appendFileSync(COUNT_PATH, JSON.stringify(response.body) + "\r\n");
+    if (response.statusCode == 200) {
+      fs.appendFileSync(COUNT_PATH, JSON.stringify(response.body) + "\r\n");
+    }
 
   }).catch(function (err) {
     console.log(err);

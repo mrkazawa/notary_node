@@ -22,7 +22,7 @@ class RequestPool {
       this.pendingRequests.set(hash, request);
     }
 
-    return (this.pendingRequests.size >= config.getRequestThreshold(request.priority));
+    return (this.pendingRequests.size >= config.getRequestThreshold(request.priority_id));
   }
 
   getAllPendingRequests() {

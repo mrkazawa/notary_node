@@ -111,8 +111,9 @@ app.post('/transact', (req, res) => {
     data
   } = req.body;
 
+  // executed only in overload
   if (config.isUsingPriority()) {
-    const priority = data.priority;
+    const priority = data.priority_id;
 
     if (config.PRIORITY_TYPE.high == priority) {
       const thresholdReached = highPriorityRequestPool.add(data);
@@ -151,7 +152,7 @@ app.post('/transact', (req, res) => {
       res.status(200).send('low priority request received!');
 
     } else {
-      res.status(400).send(`ERROR! ${priority} is unknowned`);
+      //res.status(400).send(`ERROR! ${priority} is unknowned`);
     }
 
   } else {
