@@ -1,13 +1,23 @@
 'use strict'
 
 const autocannon = require('autocannon');
+const rp = require('request-promise-native');
+const fs = require('fs');
+
+const RESULT_PATH = '/home/yustus/priority_result.csv';
+const COUNT_PATH = '/home/yustus/count_result.json';
 
 const notaryOneURL = `http://notary1.local:3000/transact`;
 const notaryTwoURL = `http://notary2.local:3000/transact`;
 const notaryThreeURL = `http://notary3.local:3000/transact`;
 const notaryFourURL = `http://notary4.local:3000/transact`;
 
+const txCountPerBlockURL = 'http://notary1.local:3000/tx_count_per_block';
+
 let instances = [];
+
+fs.writeFileSync(RESULT_PATH, '');
+fs.writeFileSync(COUNT_PATH, '');
 
 instances.push(constructAutoCannonInstance('Notary #1 Priority #1', notaryOneURL, 1));
 instances.push(constructAutoCannonInstance('Notary #1 Priority #2', notaryOneURL, 2));
@@ -26,15 +36,15 @@ instances.push(constructAutoCannonInstance('Notary #4 Priority #2', notaryFourUR
 instances.push(constructAutoCannonInstance('Notary #4 Priority #3', notaryFourURL, 3));
 
 // run benchmark
-instances.forEach(function(instance){
+instances.forEach(function (instance) {
   runAutoCannon(instance);
-  //registerTickEvent(instance);
+  registerTickEvent(instance);
   registerDoneEvent(instance);
 });
 
 // this is used to kill the instance on CTRL-C
 process.once('SIGINT', () => {
-  instances.forEach(function(instance){
+  instances.forEach(function (instance) {
     instance.stop();
   });
 });
@@ -61,7 +71,9 @@ function constructAutoCannonInstance(title, url, priority_id) {
     headers: {
       "content-type": "application/json"
     },
-    body: JSON.stringify( {data:constructPayload(priority_id)} ),
+    body: JSON.stringify({
+      data: constructPayload(priority_id)
+    }),
     connections: 10, // ITU-T suggests using 10 gateways (concurent connection)
     pipelining: 1, // default
     bailout: 50, // tolerable number of errors
@@ -84,11 +96,43 @@ function registerDoneEvent(instance) {
     console.log(`${instance.opts.title} Results:`);
     console.log(`Avg Tput (Req/sec): ${results.requests.average}`);
     console.log(`Avg Lat (ms): ${results.latency.average}`);
+
+    const row = instance.opts.title + "," + results.requests.average + "," + results.latency.average + "\r\n";
+    fs.appendFileSync(RESULT_PATH, row);
+
+    const option = createGetRequest(txCountPerBlockURL);
+    executeRequest(`Getting Tx Count Per Block`, option);
   });
 }
 
 function registerTickEvent(instance) {
   instance.on('tick', (counter) => {
-    console.log(`${instance.opts.title} Counter: ${counter.counter}`); // {counter, bytes}
+    if (counter.counter == 0) {
+      console.log(`${instance.opts.title} WARN! requests possibly is not being processed`);
+    }
+  });
+}
+
+function createGetRequest(url) {
+  return {
+    method: 'GET',
+    uri: url,
+    resolveWithFullResponse: true,
+    json: true, // Automatically stringifies the body to JSON
+  };
+}
+
+function executeRequest(scenario, options) {
+  rp(options).then(function (response) {
+    console.log(`--------------------------------------------`);
+    console.log(scenario);
+    console.log(`--------------------------------------------`);
+    console.log('Response status code: ', response.statusCode);
+    console.log('Response body: ', response.body);
+
+    fs.appendFileSync(COUNT_PATH, JSON.stringify(response.body) + "\r\n");
+
+  }).catch(function (err) {
+    console.log(err);
   });
 }
