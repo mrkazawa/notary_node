@@ -27,7 +27,9 @@ class Config {
     };
 
     // Maximum number of GENERAL request before the node bundles them in a transaction and then broadcast it to peers
-    this.PENDING_REQUEST_THRESHOLD = 500; // for mixed, no priority feature
+    this.PENDING_REQUEST_THRESHOLD = 500; // no priority feature
+    
+    // when using priority feature
     this.PENDING_REQUEST_THRESHOLD_HIGH = 20; // for high priority
     this.PENDING_REQUEST_THRESHOLD_MEDIUM = 100; // for medium priority
     this.PENDING_REQUEST_THRESHOLD_LOW = 200; // for low priority

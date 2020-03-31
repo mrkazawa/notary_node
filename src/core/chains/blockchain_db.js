@@ -34,7 +34,7 @@ class Blockchain {
 
     } catch (err) {
       log(chalk.bgRed.black(`FATAL ERROR ${err}`));
-      return false;
+      return process.exit(69);
     }
   }
 
@@ -44,22 +44,20 @@ class Blockchain {
 
     } catch (err) {
       log(chalk.bgRed.black(`FATAL ERROR ${err}`));
-      return false;
+      return process.exit(69);
     }
   }
 
   async doAddProcedure(block) {
+    this.latestBlock = block;
+    this.numberOfTxs.push(this.countNumberOfTxInBlock(block));
+    this.latestBlockHeight += 1;
+
     const result = await this.addToStore(block.hash, block);
     if (result) {
-      this.latestBlock = block;
-      this.numberOfTxs.push(this.countNumberOfTxInBlock(block));
-      this.latestBlockHeight += 1;
       this.printLog(block);
 
       return true;
-    } else {
-      log(chalk.red(`ERROR! Block ${block.hash} cannot be inserted!`));
-      return false;
     }
   }
 

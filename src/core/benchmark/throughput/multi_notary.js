@@ -31,7 +31,7 @@ instances.push(constructAutoCannonInstance('Send Request To Notary #4', notaryFo
 // run benchmark
 instances.forEach(function(instance){
   runAutoCannon(instance);
-  registerTickEvent(instance);
+  //registerTickEvent(instance);
   registerDoneEvent(instance);
 });
 

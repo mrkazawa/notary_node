@@ -1,5 +1,4 @@
 const WebSocket = require('ws');
-const HashMap = require('hashmap');
 const NodeCache = require('node-cache');
 const chalk = require('chalk');
 const log = console.log;
@@ -56,6 +55,11 @@ class P2pServer {
         log(chalk.bgGreen.black(`NEW EVENT: ${key} expired from PBFT Pool`));
       });
     }
+
+    // temporary to keep track of current proposed Sequence ID
+    // used to limit the notary to generate a lot of block with the same ID
+    // while the previous block has not been inserted yet
+    this.proposedSequenceId = 0;
   }
 
   // TODO: Implement detect and restore broken connection scenario
@@ -142,6 +146,7 @@ class P2pServer {
 
           if (!this.validators.isValidValidator(block.proposer)) break;
           if (this.blockPool.isExist(block.hash)) break;
+          if (this.preparePool.isCompleted(block.hash)) break;
           if (!this.blockPool.isValidBlock(block)) break;
 
           this.broadcast(MESSAGE_TYPE.pre_prepare, block);
@@ -254,8 +259,9 @@ class P2pServer {
   proposeBlock() {
     // if it is our first time, create the genesis
     if (this.blockchain.getBlockHeight() == 0) {
+      this.proposedSequenceId += 1;
       this.blockchain.addGenesisBlock();
-
+      
     } else {
       // if we have pending commits because of out of order delivery, complete it first
       if (this.pendingCommitedBlocks.getStats().keys > 0) {
@@ -278,12 +284,16 @@ class P2pServer {
           });
         }
       }
-
+      
       // if it is our turn to create a block, we propose it
       if (this.blockchain.getCurrentProposer() == this.wallet.getPublicKey()) {
         const transactions = this.transactionPool.getAllPendingTransactions();
         const block = this.blockchain.createBlock(transactions, this.wallet);
-        this.broadcast(MESSAGE_TYPE.pre_prepare, block);
+
+        if (block.sequenceId == this.proposedSequenceId) {
+          this.proposedSequenceId += 1;
+          this.broadcast(MESSAGE_TYPE.pre_prepare, block);
+        }
       }
     }
   }
