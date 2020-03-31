@@ -17,8 +17,8 @@ const payload_400_bytes = {
 };
 
 const instance = autocannon({
-  title: 'Send Request To Notary #1',
-  url: 'http://notary1.local:3000/transact',
+  title: 'Send Request To Notary #4',
+  url: 'http://notary4.local:3000/transact',
   method: 'POST',
   headers: {
     "content-type": "application/json"

@@ -3,6 +3,8 @@ const leveldown = require('leveldown');
 const chalk = require('chalk');
 const log = console.log;
 
+const Config = require('../config');
+const config = new Config();
 const Block = require('./block');
 
 class Blockchain {
@@ -24,7 +26,11 @@ class Blockchain {
 
     this.latestBlock = {} // temporary object to store the latest block
     this.latestBlockHeight = 0; // temporary to store the latest block height
+
     this.numberOfTxs = []; // to store lists of number of transacttions per block
+    this.numberOfHighPriorityTxs = [];
+    this.numberOfMediumPriorityTxs = [];
+    this.numberOfLowPriorityTxs = [];
   }
 
   async addToStore(key, value) {
@@ -50,8 +56,20 @@ class Blockchain {
 
   async doAddProcedure(block) {
     this.latestBlock = block;
-    this.numberOfTxs.push(this.countNumberOfTxInBlock(block));
     this.latestBlockHeight += 1;
+
+    const counts = this.countNumberOfTxInBlock(block);
+    this.numberOfTxs.push(counts[0]);
+    this.numberOfHighPriorityTxs.push(counts[1]);
+    this.numberOfMediumPriorityTxs.push(counts[2]);
+    this.numberOfLowPriorityTxs.push(counts[3]);
+
+    console.log([
+      counts[0] / counts[0] * 100,
+      counts[1] / counts[0] * 100,
+      counts[2] / counts[0] * 100,
+      counts[3] / counts[0] * 100
+    ]);
 
     const result = await this.addToStore(block.hash, block);
     if (result) {
@@ -108,21 +126,45 @@ class Blockchain {
   }
 
   getListNumberOfTxs() {
-    return this.numberOfTxs;
+    return [
+      this.numberOfTxs,
+      this.numberOfHighPriorityTxs,
+      this.numberOfMediumPriorityTxs,
+      this.numberOfLowPriorityTxs
+    ];
   }
 
   countNumberOfTxInBlock(block) {
-    let txs = block.data;
-    let number_of_tx = 0;
-    let j;
+    const txs = block.data;
+    let all = 0;
+    let high_priority = 0;
+    let medium_priority = 0;
+    let low_priority = 0;
 
-    for (j = 0; j < txs.length; j++) {
-      let tx = txs[j][1];
-      let requests = tx.input.data;
-      number_of_tx += requests.length;
+    for (let j = 0; j < txs.length; j++) {
+      const tx = txs[j][1];
+      const requests = tx.input.data;
+      all += requests.length;
+      
+      for (let k = 0; k < requests.length; k++) {
+        let request = requests[k][1];
+
+        if (request.priority_id == config.PRIORITY_TYPE.high) {
+          high_priority += 1;
+
+        } else if (request.priority_id == config.PRIORITY_TYPE.medium) {
+          medium_priority += 1;
+
+        } else if (request.priority_id == config.PRIORITY_TYPE.low) {
+          low_priority += 1;
+
+        } else {
+          log(chalk.red(`ERROR! ${priority_id} is unknowned`));
+        }
+      }
     }
 
-    return number_of_tx;
+    return [all, high_priority, medium_priority, low_priority];
   }
 
   printLog(block) {
