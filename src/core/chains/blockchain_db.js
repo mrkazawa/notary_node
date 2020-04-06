@@ -65,7 +65,7 @@ class Blockchain {
     this.numberOfLowPriorityTxs.push(counts[3]);
 
     console.log([
-      counts[0] / counts[0] * 100,
+      counts[0],
       counts[1] / counts[0] * 100,
       counts[2] / counts[0] * 100,
       counts[3] / counts[0] * 100
