@@ -10,7 +10,8 @@
     "notary4": "SECRET=NODE3 P2P_PORT=5100 HTTP_PORT=3000 PEERS=ws://notary3.local:5100,ws://notary2.local:5100,ws://notary1.local:5100 node app --max-old-space-size=2048",
     "getters": "node ./examples/run_get.js",
     "posters": "node ./examples/run_post.js",
-    "bench-single": "node ./benchmark/single_notary.js"
+    "bench-single": "node ./benchmark/single_notary.js",
+    "bench-multi": "node ./benchmark/multi_notary.js"
   },
   "repository": {
     "type": "git",
