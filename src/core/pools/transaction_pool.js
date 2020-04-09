@@ -1,6 +1,8 @@
 const HashMap = require('hashmap');
 
 const Transaction = require('../chains/transaction');
+const Config = require('../config');
+const config = new Config();
 
 class TransactionPool {
   constructor() {
@@ -25,7 +27,15 @@ class TransactionPool {
   }
 
   getAllPendingTransactions() {
-    return this.pendingTransactions.entries();
+    const MAX_TX_IN_BLOCK = 8000;
+    const trimLimit = MAX_TX_IN_BLOCK / config.getRequestThreshold();
+    const pendings = this.pendingTransactions.entries();
+
+    if (pendings.length > trimLimit) {
+      return pendings.splice(0, trimLimit);
+    } else {
+      return pendings;
+    }
   }
 
   getCurrentPendingSize() {

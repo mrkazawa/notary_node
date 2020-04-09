@@ -87,7 +87,7 @@ function constructAutoCannonInstance(title, url) {
     }),
     connections: 10, // ITU-T suggests using 10 gateways (concurent connection)
     pipelining: 1, // default
-    bailout: 500, // tolerable number of errors
+    bailout: 1000, // tolerable number of errors
     //overallRate: 6000, // rate of requests to make per second from all connections
     amount: 1500000, // ITU-T suggests 15,000,000 IoT requests per day
     duration: 1
