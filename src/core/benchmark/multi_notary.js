@@ -32,8 +32,10 @@ instances.forEach(function(instance){
 });
 
 // this is used to kill the instance on CTRL-C
-process.once('SIGINT', () => {
-  instances.forEach(function(instance){
+process.on('SIGINT', function() {
+  console.log( "\nGracefully shutting down from SIGINT (Ctrl-C)" );
+
+  instances.forEach(function (instance) {
     instance.stop();
   });
 });
@@ -50,7 +52,7 @@ function runAutoCannon(instance) {
 function registerTickEvent(instance) {
   instance.on('tick', (counter) => {
     if (counter.counter == 0) {
-      log(chalk.redBright(`${instance.opts.title} WARN! requests possibly is not being processed`));
+      log(chalk.red(`${instance.opts.title} WARN! requests possibly is not being processed`));
     }
   });
 }
@@ -109,8 +111,8 @@ function constructAutoCannonInstance(title, url) {
     connections: 10, // ITU-T suggests using 10 gateways (concurent connection)
     pipelining: 1, // default
     bailout: 500, // tolerable number of errors
-    overallRate: 1500, // rate of requests to make per second from all connections
-    amount: 1500000, // ITU-T suggests 15,000,000 IoT requests per day
+    overallRate: 1700, // rate of requests to make per second from all connections
+    amount: 375000, // ITU-T suggests 15,000,000 IoT requests per day
     duration: 1
   }, console.log);
 }

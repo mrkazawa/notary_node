@@ -43,7 +43,9 @@ instance.on('done', (results) => {
 });
 
 // this is used to kill the instance on CTRL-C
-process.once('SIGINT', () => {
+process.on('SIGINT', function() {
+  console.log( "\nGracefully shutting down from SIGINT (Ctrl-C)" );
+
   instance.stop();
 });
 

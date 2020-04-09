@@ -27,7 +27,7 @@ class Config {
     };
 
     // Maximum number of GENERAL request before the node bundles them in a transaction and then broadcast it to peers
-    this.PENDING_REQUEST_THRESHOLD = 500; // no priority feature
+    this.PENDING_REQUEST_THRESHOLD = 500;
 
     // How long the period of block generation (in milliseconds)
     this.BLOCK_INTERVAL = 1000; // every 1 second

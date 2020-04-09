@@ -74,8 +74,7 @@ class P2pServer {
     this.connectToPeers();
     log(chalk.blue(`Listening for peer to peer connection on port : ${P2P_PORT}`));
 
-    // timer for proposing a block
-    setInterval(this.proposeBlock.bind(this), config.getBlockInterval());
+    this.proposeBlock();
   }
 
   connectSocket(socket) {
@@ -296,6 +295,8 @@ class P2pServer {
         }
       }
     }
+
+    setTimeout(this.proposeBlock.bind(this), config.getBlockInterval());
   }
 }
 
