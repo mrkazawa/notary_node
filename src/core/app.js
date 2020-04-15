@@ -139,7 +139,9 @@ function adjustReqeustThreshold() {
     config.setRequestThreshold(100);
   } else if (requestCount > 50 && requestCount <= 100) {
     config.setRequestThreshold(50);
-  } else if (requestCount <= 50) {
+  } else if (requestCount > 10 && requestCount <= 50) {
+    config.setRequestThreshold(10);
+  } else if (requestCount <= 10) {
     config.setRequestThreshold(1);
   }
 

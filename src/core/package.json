@@ -11,7 +11,8 @@
     "getters": "node ./examples/run_get.js",
     "posters": "node ./examples/run_post.js",
     "bench-single": "node ./benchmark/single_notary.js",
-    "bench-multi": "node ./benchmark/multi_notary.js"
+    "bench-multi": "node ./benchmark/multi_notary.js",
+    "bench-dynamic": "node ./benchmark/dynamic_rp.js"
   },
   "repository": {
     "type": "git",
