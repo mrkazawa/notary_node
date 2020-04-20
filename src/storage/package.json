@@ -1,15 +1,31 @@
 {
   "name": "storage",
   "version": "1.0.0",
-  "description": "",
+  "description": "Storage Engine: IPFS Implementation",
   "main": "ipfs_engine.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
-  "author": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrkazawa/notary_node.git"
+  },
+  "keywords": [
+    "ipfs"
+  ],
+  "author": "Yustus Oktian",
   "license": "ISC",
   "dependencies": {
     "ipfs-http-client": "^40.1.0",
     "is-ipfs": "^0.6.1"
+  },
+  "devDependencies": {
+    "jest": "^25.4.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coveragePathIgnorePatterns": [
+      "/node_modules/"
+    ]
   }
 }
