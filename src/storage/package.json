@@ -4,6 +4,8 @@
   "description": "Storage Engine: IPFS Implementation",
   "main": "ipfs_engine.js",
   "scripts": {
+    "start-ipfs": "./start_ipfs.sh",
+    "stop-ipfs": "./stop_ipfs.sh",
     "test": "jest"
   },
   "repository": {

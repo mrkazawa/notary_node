@@ -46,32 +46,6 @@ npm install # install all the required Node JS packages
 
 Then, we run the core engine separately in each of the VM machines.
 
-In `notary1`
-
-```bash
-SECRET=NODE0 P2P_PORT=5100 HTTP_PORT=3000 node app --max-old-space-size=2048
-```
-
-In `notary2`
-
-```bash
-SECRET=NODE1 P2P_PORT=5100 HTTP_PORT=3000 PEERS=ws://notary1.local:5100 node app --max-old-space-size=2048
-```
-
-In `notary3`
-
-```bash
-SECRET=NODE2 P2P_PORT=5100 HTTP_PORT=3000 PEERS=ws://notary2.local:5100,ws://notary1.local:5100 node app --max-old-space-size=2048
-```
-
-In `notary4`
-
-```bash
-SECRET=NODE3 P2P_PORT=5100 HTTP_PORT=3000 PEERS=ws://notary3.local:5100,ws://notary2.local:5100,ws://notary1.local:5100 node app --max-old-space-size=2048
-```
-
-`OR` you can run the following command in the respective notary node machine
-
 ```bash
 npm run notary1 # run this in notary 1 machine
 npm run notary2 # run this in notary 2 machine
@@ -149,31 +123,19 @@ For example, in this vagrant we get IP of `10.0.0.11` and PeerID `QmS9UwaXhKHkQP
 IPFS_PATH=~/.ipfs ipfs bootstrap add /ip4/10.0.0.11/tcp/4001/ipfs/QmS9UwaXhKHkQP4BHTa8ydRGC5yN3QxC1fNheuLf9omofm
 ```
 
-#### 4. Start the IPFS swarm node ####
+#### 4. Start or Stop the IPFS swarm node ####
 
 ***Run this on all nodes.***
 
 ```bash
-# By default, IPFS dameon is only accessible through localhost
-# To make it be accessible from other hosts use this
-IPFS_PATH=~/.ipfs ipfs config Addresses.API /ip4/0.0.0.0/tcp/5001
-IPFS_PATH=~/.ipfs ipfs config Addresses.Gateway /ip4/0.0.0.0/tcp/9001
-
-# LIBP2P_FORCE_PNET=1 is to force the IPFS to run on private network
-# otherwise the IPFS daemon will fail
-export LIBP2P_FORCE_PNET=1 && IPFS_PATH=~/.ipfs ipfs daemon &
-
-# in case we want to shutdown the daemon
-ipfs shutdown
-```
-
-#### 5. Test if the IPFS is working correctly ####
-
-***Run this one of of the nodes.***
-
-```bash
 cd ~/src/storage
 npm install # installing all the dependencies
+chmod +x ./start_ipfs.sh
+chmod +x ./stop_ipfs.sh
+
+npm run start-ipfs # to start IPFS daemon
+npm run stop-ipfs # to stop IPFS daemon
+
 npm test # if all is working correctly, the test should pass
 ```
 
@@ -335,3 +297,30 @@ docker ps # get the CCONTAINER_ID
 # docker stop <CCONTAINER_ID>
 docker stop 6bd47de08e3b
 ```
+
+- - - -
+
+## Known Issues ##
+
+If the node cannot ping to one another, perhaps it has the problem with the Avahi DNS.
+Try to ping to itself using the configured domain in all nodes.
+Then, try to ping one another.
+
+```bash
+ping notary1.local # run this in notary #1
+ping notary2.local # run this in notary #1
+ping notary3.local # run this in notary #1
+ping notary4.local # run this in notary #1
+
+# then try to ping one another, this should solves the issues
+```
+
+## Authors ##
+
+- **Yustus Oktian** - *Initial work*
+
+## Acknowledgments ##
+
+- Hat tip to anyone whose code was used
+- Fellow researchers
+- Korea Government for funding this project
