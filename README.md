@@ -107,7 +107,7 @@ sshpass -p "vagrant" scp -o StrictHostKeyChecking=no ~/.ipfs/swarm.key vagrant@n
 # get the boot node IP from this command
 hostname -I
 # get the PeerID using this command
-IPFS_PATH=~/.ipfs ipfs config show | grep "PeerID"
+IPFS_PATH=~/.ipfs ipfs config show | grep "PeerID" | cut -d ":" -f2 | grep -o '".*"' | sed 's/"//g'
 ```
 
 For example, in this vagrant we get IP of `10.0.0.11` and PeerID `QmS9UwaXhKHkQP4BHTa8ydRGC5yN3QxC1fNheuLf9omofm`
@@ -130,14 +130,18 @@ IPFS_PATH=~/.ipfs ipfs bootstrap add /ip4/10.0.0.11/tcp/4001/ipfs/QmS9UwaXhKHkQP
 ```bash
 cd ~/src/storage
 npm install # installing all the dependencies
-chmod +x ./start_ipfs.sh
-chmod +x ./stop_ipfs.sh
 
 npm run start-ipfs # to start IPFS daemon
 npm run stop-ipfs # to stop IPFS daemon
 
 npm test # if all is working correctly, the test should pass
 ```
+
+- - - -
+
+### Running the Compute Engine ###
+
+
 
 - - - -
 

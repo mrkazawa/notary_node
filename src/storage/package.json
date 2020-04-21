@@ -4,8 +4,8 @@
   "description": "Storage Engine: IPFS Implementation",
   "main": "ipfs_engine.js",
   "scripts": {
-    "start-ipfs": "./start_ipfs.sh",
-    "stop-ipfs": "./stop_ipfs.sh",
+    "start-ipfs": "chmod +x ./start_ipfs.sh && ./start_ipfs.sh",
+    "stop-ipfs": "chmod +x ./stop_ipfs.sh && ./stop_ipfs.sh",
     "test": "jest"
   },
   "repository": {
@@ -13,6 +13,7 @@
     "url": "https://github.com/mrkazawa/notary_node.git"
   },
   "keywords": [
+    "storage-engine",
     "ipfs"
   ],
   "author": "Yustus Oktian",

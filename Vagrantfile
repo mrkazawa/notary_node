@@ -28,7 +28,7 @@ Vagrant.configure("2") do |config|
 
   # Installation (WARNING! the order matters)
   config.vm.provision "shell", path: "shell/base_install.sh", privileged: true
-  config.vm.provision "shell", path: "shell/color_prompt.sh", privileged: true
+  config.vm.provision "shell", path: "shell/color_prompt.sh", privileged: false
   config.vm.provision "docker"
 
   config.vm.provision "shell", path: "shell/go_install.sh", privileged: true
@@ -37,7 +37,6 @@ Vagrant.configure("2") do |config|
   config.vm.provision "shell", path: "shell/bazel_install.sh", privileged: false
   config.vm.provision "shell", path: "shell/conda_install.sh", privileged: false
 
-  # node JS has to be provisioned last
   config.vm.provision "shell", path: "shell/nvm_install.sh", privileged: false
 
   # shared folders setup using RSYNC
