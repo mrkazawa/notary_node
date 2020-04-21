@@ -67,63 +67,45 @@ Those commands should display HTTP status of 200, indicating that the core engin
 
 ### Running the Storage Engine ###
 
-Taken from [here](https://medium.com/@s_van_laar/deploy-a-private-ipfs-network-on-ubuntu-in-5-steps-5aad95f7261b)
+Taken from [here](https://medium.com/@s_van_laar/deploy-a-private-ipfs-network-on-ubuntu-in-5-steps-5aad95f7261b).
+The private key generation in the article is wrong, need to change the code in the MEDIUM link to the one provided [here](https://github.com/ipfs/go-ipfs/issues/6650).
 
-We have to pick ***ONE*** node as the bootnode. For example, we choose `notary1` to be the bootnode in this experiment. Meanwhile, other nodes serve as follower node that connects to the bootnode during boostrapings.
+We have to pick ***ONE*** node as the bootnode.
+We choose `notary1` to be the bootnode in this experiment.
+Meanwhile, other nodes serve as follower node that connects to the bootnode during boostrapings.
 
 Notes!
 
+- First, we SSH to the respective VM (either `notary1`, `notary2`, `notary3`, and `notary4`)
 - For new installation run the following ***steps (1-4)!***
 - If already installed just run the IPFS using ***step 4!***
+- The following steps need to be operated in order for all nodes. After running Step 1, do not go to Step 2 directly before executing Step 1 in other nodes as well
 
 #### 1. Initiate the IPFS nodes ####
-
-After we SSH to the respective VM (either `notary1`, `notary2`, `notary3`, and `notary4`).
 
 ***Run this on all nodes.***
 
 ```bash
-# initiate the IPFS node
-IPFS_PATH=~/.ipfs ipfs init
-# deleting the bootstrap node and peer identity
-IPFS_PATH=~/.ipfs ipfs bootstrap rm --all
+npm run build
 ```
 
 #### 2. Generate private swarm key and distribute the key to other nodes ####
 
-The private key generation in the article is wrong, need to change the code in the MEDIUM link to the one provided here
-<https://github.com/ipfs/go-ipfs/issues/6650>
-
 ***Run ONLY on the boot node.***
 
 ```bash
-# create a private swarm key
-echo -e "/key/swarm/psk/1.0.0/\n/base16/\n$(tr -dc 'a-f0-9' < /dev/urandom | head -c64)" > ~/.ipfs/swarm.key
-# copy the file to other machine
-# we use vagrant, so we use sshpass to add the password in the SCP command
-sshpass -p "vagrant" scp -o StrictHostKeyChecking=no ~/.ipfs/swarm.key vagrant@notary2.local:~/.ipfs/swarm.key
-sshpass -p "vagrant" scp -o StrictHostKeyChecking=no ~/.ipfs/swarm.key vagrant@notary3.local:~/.ipfs/swarm.key
-sshpass -p "vagrant" scp -o StrictHostKeyChecking=no ~/.ipfs/swarm.key vagrant@notary4.local:~/.ipfs/swarm.key
-# get the boot node IP from this command
-hostname -I
-# get the PeerID using this command
-IPFS_PATH=~/.ipfs ipfs config show | grep "PeerID" | cut -d ":" -f2 | grep -o '".*"' | sed 's/"//g'
+npm run distribute-keys
 ```
-
-For example, in this vagrant we get IP of `10.0.0.11` and PeerID `QmS9UwaXhKHkQP4BHTa8ydRGC5yN3QxC1fNheuLf9omofm`
 
 #### 3. Add boostraping to points to `notary1` as a bootnode ####
 
 ***Run this on all nodes.***
 
 ```bash
-# IPFS_PATH=~/.ipfs ipfs bootstrap add /ip4/<ip_address>/tcp/4001/ipfs/<peer_id>
-
-# add boostrap to refer to notary1 as a bootnode
-IPFS_PATH=~/.ipfs ipfs bootstrap add /ip4/10.0.0.11/tcp/4001/ipfs/QmS9UwaXhKHkQP4BHTa8ydRGC5yN3QxC1fNheuLf9omofm
+npm run add-boot-node
 ```
 
-#### 4. Start or Stop the IPFS swarm node ####
+#### 4. Start the IPFS swarm node ####
 
 ***Run this on all nodes.***
 
@@ -131,10 +113,17 @@ IPFS_PATH=~/.ipfs ipfs bootstrap add /ip4/10.0.0.11/tcp/4001/ipfs/QmS9UwaXhKHkQP
 cd ~/src/storage
 npm install # installing all the dependencies
 
-npm run start-ipfs # to start IPFS daemon
-npm run stop-ipfs # to stop IPFS daemon
+npm run start # to start IPFS daemon
+```
 
+#### 5. Test, stop, and destroy IPFS ####
+
+```bash
 npm test # if all is working correctly, the test should pass
+
+npm run stop # to stop IPFS daemon
+npm run destroy # to destroy IPFS
+
 ```
 
 - - - -

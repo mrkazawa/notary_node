@@ -4,8 +4,12 @@
   "description": "Storage Engine: IPFS Implementation",
   "main": "ipfs_engine.js",
   "scripts": {
-    "start-ipfs": "chmod +x ./start_ipfs.sh && ./start_ipfs.sh",
-    "stop-ipfs": "chmod +x ./stop_ipfs.sh && ./stop_ipfs.sh",
+    "build": "chmod +x ./build_ipfs.sh && ./build_ipfs.sh",
+    "distribute-keys": "chmod +x ./distribute_keys_ipfs.sh && ./distribute_keys_ipfs.sh true",
+    "add-boot-node": "chmod +x ./add_boot_ipfs.sh && ./add_boot_ipfs.sh",
+    "start": "chmod +x ./start_ipfs.sh && ./start_ipfs.sh",
+    "stop": "chmod +x ./stop_ipfs.sh && ./stop_ipfs.sh",
+    "destroy": "chmod +x ./destroy_ipfs.sh && ./destroy_ipfs.sh",
     "test": "jest"
   },
   "repository": {
