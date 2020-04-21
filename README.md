@@ -130,7 +130,12 @@ npm run destroy # to destroy IPFS
 
 ### Running the Compute Engine ###
 
+```bash
+cd ~/src/compute
+npm install # installing all the dependencies
 
+npm run network # run ganache-cli (local ethereum)
+```
 
 - - - -
 
