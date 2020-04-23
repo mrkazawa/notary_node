@@ -1,4 +1,4 @@
-#--------------------------- installing Anaconda ---------------------------#
+#!/usr/bin/env bash
 
 MINI_CONDA=Miniconda2-4.7.12.1-Linux-x86_64.sh
 

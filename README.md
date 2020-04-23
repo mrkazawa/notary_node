@@ -306,9 +306,9 @@ Then, try to ping one another.
 
 ```bash
 ping notary1.local # run this in notary #1
-ping notary2.local # run this in notary #1
-ping notary3.local # run this in notary #1
-ping notary4.local # run this in notary #1
+ping notary2.local # run this in notary #2
+ping notary3.local # run this in notary #3
+ping notary4.local # run this in notary #4
 
 # then try to ping one another, this should solves the issues
 ```

@@ -1,4 +1,4 @@
-#--------------------------- Installing Node Version Manager ---------------------------#
+#!/usr/bin/env bash
 
 NVM_INSTALLER=install.sh
 

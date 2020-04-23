@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Add color to the prompt of vagrant ssh
 
 cd /home/vagrant

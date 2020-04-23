@@ -1,4 +1,4 @@
-#--------------------------- Installing IPFS ---------------------------#
+#!/usr/bin/env bash
 
 IPFS_INSTALLER=go-ipfs_v0.4.18_linux-amd64.tar.gz
 

@@ -1,4 +1,4 @@
-#--------------------------- Installing Go ---------------------------#
+#!/usr/bin/env bash
 
 GO_INSTALLER=go1.11.4.linux-amd64.tar.gz
 

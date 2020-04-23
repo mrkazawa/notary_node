@@ -1,4 +1,4 @@
-#--------------------------- installing Bazel ---------------------------#
+#!/usr/bin/env bash
 
 BAZEL_VERSION="1.2.1"
 BAZEL_INSTALLER="bazel-$BAZEL_VERSION-installer-linux-x86_64.sh"
