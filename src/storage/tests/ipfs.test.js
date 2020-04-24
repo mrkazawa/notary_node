@@ -1,4 +1,4 @@
-const ipfs_engine = require('../ipfs_engine');
+const storageEngine = require('../ipfs_engine');
 const fs = require('fs');
 
 const CAR_DATA_PATH = '/home/vagrant/src/storage/tests/car_data.json';
@@ -21,9 +21,9 @@ test('Storing JSON file', async () => {
     flag: 'w'
   });
 
-  const ipfsHash = await ipfs_engine.storeJsonFromLocalFile(CAR_DATA_PATH);
-  expect(ipfs_engine.isValidIpfsHash(ipfsHash)).toBe(true);
+  const ipfsHash = await storageEngine.storeJsonFromLocalFile(CAR_DATA_PATH);
+  expect(storageEngine.isValidIpfsHash(ipfsHash)).toBe(true);
 
-  const queried = await ipfs_engine.getJsonFromIpfsHash(ipfsHash);
+  const queried = await storageEngine.getJsonFromIpfsHash(ipfsHash);
   expect(queried).toEqual(carDataTemplate);
 });
