@@ -1,11 +1,6 @@
 const fs = require('fs');
-const Web3 = require('web3');
+const web3 = require('./web3');
 const bs58 = require('bs58');
-
-// specify the location of the ethereum node
-// for local development, use the following command
-// ganache-cli -m dongseo
-const web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
 
 var self = {
     /**

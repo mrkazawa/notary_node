@@ -7,7 +7,7 @@ const HOSTNAME = os.hostname();
 
 const HTTP_PORT = process.env.HTTP_PORT || 3002;
 
-const CONTRACT_ABI_PATH = '/home/vagrant/src/compute/build/contracts/CarRentalContract.json';
+const CONTRACT_ABI_PATH = '/home/vagrant/src/apps/rental_car/build/contracts/CarRentalContract.json';
 
 const app = express();
 app.use(bodyParser.json());
