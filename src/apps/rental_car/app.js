@@ -1,5 +1,11 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const rp = require('request-promise-native');
+const uuidV1 = require('uuid/v1');
+const {
+  performance
+} = require('perf_hooks');
+const fs = require('fs');
 
 const os = require("os");
 const HOSTNAME = os.hostname();
@@ -10,6 +16,13 @@ const db = new Database('rental-car.db');
 createTable();
 clearTable(); // for demo, we always start with clean state
 
+// app params
+const TASK_ID = {
+  insert_new_car: 1,
+  authorize_rent: 2
+};
+const APP_ID = 1234;
+
 // compute params
 const CarRental = require('./build/contracts/CarRentalContract.json');
 const NETWORK_ID = '2020';
@@ -17,6 +30,13 @@ const computeEngine = require('../../compute/ethereum_engine');
 
 // storage params
 const storageEngine = require('../../storage/ipfs_engine');
+
+// core params
+const coreEngineURL = `http://127.0.0.1:3000/transact`;
+
+// performance params
+const RESULT_DATA_PATH = '/home/vagrant/result_rental_car.csv';
+fs.writeFileSync(RESULT_DATA_PATH, ""); // clear file
 
 const app = express();
 app.use(bodyParser.json());
@@ -33,12 +53,16 @@ app.listen(HTTP_PORT, () => {
 
 //----------------------------- Other Methods -----------------------------//
 
-const carRental = computeEngine.constructSmartContract(CarRental.abi, CarRental.networks[NETWORK_ID].address);
+const contractAbi = CarRental.abi;
+const contractAddress = CarRental.networks[NETWORK_ID].address;
+const carRental = computeEngine.constructSmartContract(contractAbi, contractAddress);
 
 carRental.events.NewRentalCarAdded({
   fromBlock: 0
 }, async function (error, event) {
   if (error) console.log(error);
+
+  const startGetEventCheckpoint = performance.now();
 
   const bytes32Hash = event.returnValues['ipfsHash'];
   const ipfsHash = computeEngine.getIpfsHashFromBytes32(bytes32Hash);
@@ -56,6 +80,47 @@ carRental.events.NewRentalCarAdded({
 
     if (info.changes > 0) {
       console.log(`${ipfsHash} is stored in SQLite database`);
+
+      const endGetEventCheckpoint = performance.now();
+      const startPostCoreCheckpoint = performance.now();
+
+      // TODO: If there are two notary nodes connected to the same compute engine with the same NETWORK ID
+      // (no parallelism), then how to choose which node should post info to the core engine
+      const body = {
+        data: {
+          app_id: APP_ID,
+          task_id: TASK_ID.insert_new_car,
+          process_id: uuidV1(),
+          storage_address: ipfsHash,
+          compute_address: contractAddress,
+          compute_network_id: NETWORK_ID,
+          payment_proof: '',
+          other: '',
+          timestamp: Date.now()
+        }
+      };
+
+      const options = {
+        method: 'POST',
+        uri: coreEngineURL,
+        body: body,
+        resolveWithFullResponse: true,
+        json: true
+      };
+
+      rp(options).then(async function (response) {
+        if (response.statusCode == 200) {
+          console.log("Stored in core engine...");
+
+          const endPostCoreCheckpoint = performance.now();
+          savingResult('Getting Event from ETH', startGetEventCheckpoint, endGetEventCheckpoint);
+          savingResult('Post Car to Core Engine', startPostCoreCheckpoint, endPostCoreCheckpoint);
+        }
+    
+      }).catch(function (err) {
+        console.log(`Error when sending to Core Engine: ${err}`);
+      });
+
     } else {
       console.log('ERROR! cannot insert to SQLite database');
     }
@@ -83,4 +148,19 @@ function createTable() {
     );';
 
   db.prepare(sql).run();
+}
+
+/**
+ * Appending delta of performance.now() checkpoint to file.
+ * 
+ * @param {string} scenario   The scenario description of this delta
+ * @param {number} start      The start point of performance.now()
+ * @param {number} end        The end point of performance.now()
+ */
+function savingResult(scenario, start, end) {
+  const delta = end - start;
+  const row = scenario + "," +
+    delta + "," +
+    "\r\n";
+  fs.appendFileSync(RESULT_DATA_PATH, row);
 }
