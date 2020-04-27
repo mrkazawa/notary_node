@@ -1,5 +1,9 @@
 const levelup = require('levelup');
 const leveldown = require('leveldown');
+
+const CoreEvent = require('../utils/event');
+const coreEvent = new CoreEvent().getEvent();
+
 const chalk = require('chalk');
 const log = console.log;
 
@@ -31,6 +35,10 @@ class Blockchain {
     this.numberOfHighPriorityTxs = [];
     this.numberOfMediumPriorityTxs = [];
     this.numberOfLowPriorityTxs = [];
+
+    coreEvent.on('new_block', function (data) {
+      console.log('First event: ' + data);
+    });
   }
 
   async addToStore(key, value) {
@@ -74,6 +82,7 @@ class Blockchain {
     const result = await this.addToStore(block.hash, block);
     if (result) {
       this.printLog(block);
+      coreEvent.emit('new_block', block);
 
       return true;
     }

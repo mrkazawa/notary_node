@@ -33,6 +33,8 @@ const storageEngine = require('../../storage/ipfs_engine');
 
 // core params
 const coreEngineURL = `http://127.0.0.1:3000/transact`;
+const CoreEvent = require('../../core/utils/event');
+const coreEvent = new CoreEvent().getEvent();
 
 // performance params
 const RESULT_DATA_PATH = '/home/vagrant/result_rental_car.csv';
@@ -96,6 +98,7 @@ carRental.events.NewRentalCarAdded({
           compute_network_id: NETWORK_ID,
           payment_proof: '',
           other: '',
+          priority_id: 3,
           timestamp: Date.now()
         }
       };
@@ -128,6 +131,10 @@ carRental.events.NewRentalCarAdded({
   } else {
     console.log('ERROR! IPFS hash is invalid');
   }
+});
+
+coreEvent.on('new_block', function (data) {
+  console.log('First event: ' + data);
 });
 
 function clearTable() {

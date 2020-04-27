@@ -1,0 +1,71 @@
+{
+  "name": "notary-node",
+  "version": "0.1.2",
+  "description": "Notary node implementation",
+  "main": "index.js",
+  "scripts": {
+    "notary1": "SECRET=NODE0 P2P_PORT=5100 HTTP_PORT=3000 node ./core/app --max-old-space-size=2048",
+    "notary2": "SECRET=NODE1 P2P_PORT=5100 HTTP_PORT=3000 PEERS=ws://notary1.local:5100 node ./core/app --max-old-space-size=2048",
+    "notary3": "SECRET=NODE2 P2P_PORT=5100 HTTP_PORT=3000 PEERS=ws://notary2.local:5100,ws://notary1.local:5100 node ./core/app --max-old-space-size=2048",
+    "notary4": "SECRET=NODE3 P2P_PORT=5100 HTTP_PORT=3000 PEERS=ws://notary3.local:5100,ws://notary2.local:5100,ws://notary1.local:5100 node ./core/app --max-old-space-size=2048",
+    "getters": "node ./core/examples/run_get.js",
+    "posters": "node ./core/examples/run_post.js",
+    "bench-single": "node ./core/benchmark/single_notary.js",
+    "bench-multi": "node ./core/benchmark/multi_notary.js",
+    "bench-dynamic": "node ./core/benchmark/dynamic_rp.js",
+    "ipfs-build": "chmod +x ./storage/build_ipfs.sh && ./storage/build_ipfs.sh",
+    "ipfs-distribute-keys": "chmod +x ./storage/distribute_keys_ipfs.sh && ./storage/distribute_keys_ipfs.sh true",
+    "ipfs-add-boot-node": "chmod +x ./storage/add_boot_ipfs.sh && ./storage/add_boot_ipfs.sh",
+    "ipfs-start": "chmod +x ./storage/start_ipfs.sh && ./storage/start_ipfs.sh",
+    "ipfs-stop": "chmod +x ./storage/stop_ipfs.sh && ./storage/stop_ipfs.sh",
+    "ipfs-destroy": "chmod +x ./storage/destroy_ipfs.sh && ./storage/destroy_ipfs.sh",
+    "eth-network": "ganache-cli --host 10.0.0.11 --networkId 2020 --mnemonic dongseo",
+    "rental-car": "cd ./apps/rental_car && truffle deploy && node app",
+    "test": "jest && cd ./apps/rental_car && truffle test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrkazawa/notary_node.git"
+  },
+  "keywords": [
+    "blockchain",
+    "iot"
+  ],
+  "author": "Yustus Oktian",
+  "license": "ISC",
+  "dependencies": {
+    "autocannon": "^4.6.0",
+    "better-sqlite3": "^6.0.1",
+    "body-parser": "^1.19.0",
+    "bs58": "^4.0.1",
+    "chalk": "^3.0.0",
+    "crypto-js": "^3.1.9-1",
+    "elliptic": "^6.5.0",
+    "express": "^4.17.1",
+    "hashmap": "^2.4.0",
+    "ipfs-http-client": "^40.1.0",
+    "is-ipfs": "^0.6.1",
+    "leveldown": "^5.4.1",
+    "levelup": "^4.3.2",
+    "node-cache": "^5.1.0",
+    "request": "^2.88.2",
+    "request-promise-native": "^1.0.8",
+    "truffle-assertions": "^0.9.2",
+    "uuid": "^3.3.2",
+    "web3": "^1.2.4",
+    "ws": "^7.1.1"
+  },
+  "optionalDependencies": {
+    "bufferutil": "^4.0.1",
+    "utf-8-validate": "^5.0.2"
+  },
+  "devDependencies": {
+    "jest": "^25.4.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coveragePathIgnorePatterns": [
+      "/node_modules/"
+    ]
+  }
+}

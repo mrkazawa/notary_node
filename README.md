@@ -30,6 +30,12 @@ vagrant halt # to shutdwon VM
 vagrant destroy -f # to completely delete VM
 ```
 
+Check all available commands,
+
+```bash
+npm run-script
+```
+
 - - - -
 
 ## How to run ##
