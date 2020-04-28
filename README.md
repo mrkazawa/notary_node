@@ -6,7 +6,7 @@ All of the required softwares and tools has been included in the `Vagrantfile` a
 
 ```bash
 git clone https://github.com/mrkazawa/notary_node.git
-cd notary_node
+cd ~/notary_node
 
 vagrant up # if it is our first time, this will take some times
 vagrant rsync-auto
@@ -24,39 +24,40 @@ vagrant ssh notary4
 Other useful commands,
 
 ```bash
-cd notary_node
+cd ~/notary_node
 vagrant reload # to restart VM
 vagrant halt # to shutdwon VM
 vagrant destroy -f # to completely delete VM
-```
 
-Check all available commands,
-
-```bash
-npm run-script
+cd ~/notary_node/src
+npm run-script # show all available commands
 ```
 
 - - - -
 
-## How to run ##
-
-### Running the Core Engine ###
+## Running the Engines ##
 
 After we SSH to the respective VM (either `notary1`, `notary2`, `notary3`, and `notary4`).
-We need to go to the Core Engine directory
+We need to install all dependencies
 
 ```bash
-cd src/core
+cd ~/src
 npm install # install all the required Node JS packages
 ```
 
-Then, we run the core engine separately in each of the VM machines.
+### 1. Running the Core Engine ###
+
+The original code and idea is taken from [here](https://medium.com/coinmonks/implementing-pbft-in-blockchain-12368c6c9548).
+However, we already enhanced a lot of the code from that reference.
+
+We run the core engine separately in each of the VM machines.
 
 ```bash
-npm run notary1 # run this in notary 1 machine
-npm run notary2 # run this in notary 2 machine
-npm run notary3 # run this in notary 3 machine
-npm run notary4 # run this in notary 4 machine
+cd ~/src
+npm run core1 # run this in notary 1 machine
+npm run core2 # run this in notary 2 machine
+npm run core3 # run this in notary 3 machine
+npm run core4 # run this in notary 4 machine
 ```
 
 You will see that the VM machines start to creating blocks.
@@ -71,7 +72,7 @@ Those commands should display HTTP status of 200, indicating that the core engin
 
 - - - -
 
-### Running the Storage Engine ###
+### 2. Running the Storage Engine ###
 
 Taken from [here](https://medium.com/@s_van_laar/deploy-a-private-ipfs-network-on-ubuntu-in-5-steps-5aad95f7261b).
 The private key generation in the article is wrong, need to change the code in the MEDIUM link to the one provided [here](https://github.com/ipfs/go-ipfs/issues/6650).
@@ -87,50 +88,42 @@ Notes!
 - If already installed just run the IPFS using ***step 4!***
 - The following steps need to be operated in order for all nodes. After running Step 1, do not go to Step 2 directly before executing Step 1 in other nodes as well
 
-#### 1. Initiate the IPFS nodes ####
-
 ***Run this on all nodes.***
 
 ```bash
-npm run build
+cd ~/src/
+# 1. Initiate the IPFS nodes
+npm run ipfs-build
 ```
-
-#### 2. Generate private swarm key and distribute the key to other nodes ####
 
 ***Run ONLY on the boot node.***
 
 ```bash
-npm run distribute-keys
+# 2. Generate private swarm key and distribute the key to other nodes
+npm run ipfs-distribute-keys
 ```
-
-#### 3. Add boostraping to points to `notary1` as a bootnode ####
 
 ***Run this on all nodes.***
 
 ```bash
-npm run add-boot-node
-```
+# 3. Add boostraping to points to `notary1` as a bootnode
+npm run ipfs-add-boot-node
 
-#### 4. Start the IPFS swarm node ####
+# 4. Start the IPFS swarm node
+npm run ipfs-start
 
-***Run this on all nodes.***
-
-```bash
-cd ~/src/storage
-npm install # installing all the dependencies
-
-npm run start # to start IPFS daemon
-```
-
-#### 5. Test, stop, and destroy IPFS ####
-
-```bash
+# 5. Test, stop, and destroy IPFS
 npm test # if all is working correctly, the test should pass
-
-npm run stop # to stop IPFS daemon
-npm run destroy # to destroy IPFS
-
+npm run ipfs-stop
+npm run ipfs-destroy
 ```
+
+
+
+
+
+
+
 
 - - - -
 

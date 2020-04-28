@@ -4,10 +4,10 @@
   "description": "Notary node implementation",
   "main": "index.js",
   "scripts": {
-    "notary1": "SECRET=NODE0 P2P_PORT=5100 HTTP_PORT=3000 node ./core/app --max-old-space-size=2048",
-    "notary2": "SECRET=NODE1 P2P_PORT=5100 HTTP_PORT=3000 PEERS=ws://notary1.local:5100 node ./core/app --max-old-space-size=2048",
-    "notary3": "SECRET=NODE2 P2P_PORT=5100 HTTP_PORT=3000 PEERS=ws://notary2.local:5100,ws://notary1.local:5100 node ./core/app --max-old-space-size=2048",
-    "notary4": "SECRET=NODE3 P2P_PORT=5100 HTTP_PORT=3000 PEERS=ws://notary3.local:5100,ws://notary2.local:5100,ws://notary1.local:5100 node ./core/app --max-old-space-size=2048",
+    "core1": "SECRET=NODE0 P2P_PORT=5100 HTTP_PORT=3000 node ./core/app --max-old-space-size=2048",
+    "core2": "SECRET=NODE1 P2P_PORT=5100 HTTP_PORT=3000 PEERS=ws://notary1.local:5100 node ./core/app --max-old-space-size=2048",
+    "core3": "SECRET=NODE2 P2P_PORT=5100 HTTP_PORT=3000 PEERS=ws://notary2.local:5100,ws://notary1.local:5100 node ./core/app --max-old-space-size=2048",
+    "core4": "SECRET=NODE3 P2P_PORT=5100 HTTP_PORT=3000 PEERS=ws://notary3.local:5100,ws://notary2.local:5100,ws://notary1.local:5100 node ./core/app --max-old-space-size=2048",
     "getters": "node ./core/examples/run_get.js",
     "posters": "node ./core/examples/run_post.js",
     "bench-single": "node ./core/benchmark/single_notary.js",
@@ -28,6 +28,7 @@
     "url": "https://github.com/mrkazawa/notary_node.git"
   },
   "keywords": [
+    "notary-node",
     "blockchain",
     "iot"
   ],
