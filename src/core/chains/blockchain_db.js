@@ -1,15 +1,15 @@
 const levelup = require('levelup');
 const leveldown = require('leveldown');
-
-const CoreEvent = require('../utils/event');
-const coreEvent = new CoreEvent().getEvent();
-
+const rp = require('request-promise-native');
 const chalk = require('chalk');
 const log = console.log;
 
 const Config = require('../config');
 const config = new Config();
 const Block = require('./block');
+
+// TODO: a cleaner way to get list of apps notification backend
+const rentalCarURL = `http://127.0.0.1:3002/notification`;
 
 class Blockchain {
   constructor(validators) {
@@ -35,10 +35,6 @@ class Blockchain {
     this.numberOfHighPriorityTxs = [];
     this.numberOfMediumPriorityTxs = [];
     this.numberOfLowPriorityTxs = [];
-
-    coreEvent.on('new_block', function (data) {
-      console.log('First event: ' + data);
-    });
   }
 
   async addToStore(key, value) {
@@ -82,7 +78,28 @@ class Blockchain {
     const result = await this.addToStore(block.hash, block);
     if (result) {
       this.printLog(block);
-      coreEvent.emit('new_block', block);
+
+      // TODO: need a better or cleaner way to notify apps
+      // notify app only when there is transaction in the block
+      if (counts[0] > 0) {
+        
+        const options = {
+          method: 'POST',
+          uri: rentalCarURL,
+          body: block,
+          resolveWithFullResponse: true,
+          json: true
+        };
+
+        rp(options).then(async function (response) {
+          if (response.statusCode == 200) {
+            console.log("Rental car app is notified");
+          }
+
+        }).catch(function (err) {
+          console.log(`Error when notifying app: ${err}`);
+        });
+      }
 
       return true;
     }
@@ -154,7 +171,7 @@ class Blockchain {
       const tx = txs[j][1];
       const requests = tx.input.data;
       all += requests.length;
-      
+
       for (let k = 0; k < requests.length; k++) {
         let request = requests[k][1];
 
