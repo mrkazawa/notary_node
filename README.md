@@ -138,7 +138,7 @@ npm run network # run ganache-cli (local ethereum)
 
 - - - -
 
-### Running the Payment Engine ###
+### 3. Running the Payment Engine ###
 
 Taken from these sources:
 
@@ -166,17 +166,19 @@ cd ~/compass/docs/private_tangle
 
 Otherwise, follow all of these procedures
 
-#### 1. Get the code ####
+#### Get the code ####
 
 ```bash
 # get compass from our forked repo
-git clone https://github.com/mrkazawa/compass.git
-cd compass
+cd ~/
+git clone https://github.com/iotaledger/compass.git
 ```
 
-#### 2. Compute the Merkle tree ####
+#### Compute the Merkle tree ####
 
 ```bash
+cd ~/compass
+
 # build binary and jar
 bazel build //compass:layers_calculator
 # convert it to docker image
@@ -189,7 +191,7 @@ cat /dev/urandom |LC_ALL=C tr -dc 'A-Z9' | fold -w 81 | head -n 1
 # keep this seed safe and private
 
 # copy the seed to config.json
-cd docs/private_tangle
+cd ~/compass/docs/private_tangle
 cp config.example.json config.json
 nano config.json
 ```
@@ -202,14 +204,14 @@ Then, we configure the `depth` to a lower value to save time to build the tree.
 For example, we set it to have the value of `16`.
 The `depth` of the tree will impact on the network uptime.
 The coordinator will crash when it reaches the latest milestones.
-More of info can be found here <https://docs.iota.org/docs/compass/0.1/references/merkle-tree-compute-times>
+More of info can be found [here](https://docs.iota.org/docs/compass/0.1/references/merkle-tree-compute-times)
 
 We can also configure the `tick` value.
 This value represent how many miliseconds the coordinator will send milestones to the network.
 We set this value to `60000`, which 60 seconds.
 The longer the `tick`, the fewer transactions can be confirmed.
 
-More configuration detail can be seen here <https://docs.iota.org/docs/compass/0.1/references/compass-configuration-options>
+More configuration detail can be seen [here](https://docs.iota.org/docs/compass/0.1/references/compass-configuration-options)
 
 ```json
 {
@@ -217,22 +219,23 @@ More configuration detail can be seen here <https://docs.iota.org/docs/compass/0
   "powMode": "CURLP81",
   "sigMode": "CURLP27",
   "security": 1,
-  "depth": 16,
+  "depth": 14,
   "milestoneStart": 0,
   "mwm": 9,
   "tick": 60000,
-  "host": "http://localhost:14265"
+  "host": "http://10.0.0.11:14265"
 }
 ```
 
 After setup the `config.json`.
-***Then, finally we run this***
+Save and exit using Ctrl + X, then press Y.
+Finally, we run this.
 
 ```bash
 ./01_calculate_layers.sh
 ```
 
-#### 3. Run an IRI node ####
+#### Run the IRI node ####
 
 Create an IOTA snapshot.
 This contains list of addresses and its NON-ZERO IOTA values.
@@ -240,6 +243,7 @@ The addressess are generated from the SEED.
 For this project we use two sender and receiver seeds that can be find in the `src/payment/sender_info.json` and `src/payment/receiver_info.json`
 
 ```bash
+cd ~/compass/docs/private_tangle
 touch snapshot.txt
 nano snapshot.txt
 ```
@@ -256,7 +260,8 @@ VZAWPZERLCVLNUCPGPKLNDDDGQLIODLWZNXVRYZVRHGDMKCSEEHRMJXBACJVLPGAQS9GKRJDMSMZEWKU
 OM9ZFKCUDDOK9UCE9IPXENYOIPSJDCIDEEJGYCENLRFR9CIVNEBQCMWBHSROGPOGKJCABAWJHDEIITJSZ;1000000000000000
 ```
 
-***Then, finally we run this***
+Save and exit using Ctrl + X, then press Y.
+Finally, we run this.
 
 ```bash
 ./02_run_iri.sh
@@ -264,7 +269,7 @@ OM9ZFKCUDDOK9UCE9IPXENYOIPSJDCIDEEJGYCENLRFR9CIVNEBQCMWBHSROGPOGKJCABAWJHDEIITJS
 
 Open other terminal to continue.
 
-#### 4. Run Compass ####
+#### Run Compass ####
 
 First, we build and create docker image.
 
@@ -278,12 +283,7 @@ bazel run //docker:coordinator
 # to check if it is indeed created
 docker image list
 
-cd docs/private_tangle
-```
-
-***Then, finally we run this***
-
-```bash
+cd ~/compass/docs/private_tangle
 ./03_run_coordinator.sh -bootstrap -broadcast
 ```
 
@@ -294,6 +294,18 @@ docker ps # get the CCONTAINER_ID
 # docker stop <CCONTAINER_ID>
 docker stop 6bd47de08e3b
 ```
+
+https://github.com/iotaledger/cliri
+sudo apt install maven
+
+npm run iota-init
+npm run iota-layer-build
+npm run iota-iri-start
+npm run iota-coo-build-and-start # first coo run
+npm run iota-coo-start # subsequent coo run
+
+
+
 
 - - - -
 
