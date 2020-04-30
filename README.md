@@ -136,82 +136,40 @@ npm install # installing all the dependencies
 npm run network # run ganache-cli (local ethereum)
 ```
 
+
+
+
+
 - - - -
 
 ### 3. Running the Payment Engine ###
 
-Taken from these sources:
+All of scripts used in this repo are taken from these sources:
 
 - <https://github.com/iotaledger/compass/blob/master/docs/HOWTO_private_tangle.md>
 - <https://github.com/iotaledger/compass/issues/126>
 - <https://docs.iota.org/docs/compass/0.1/how-to-guides/set-up-a-private-tangle>
 
-***WHEN THIS IS NOT OUR FIRST TIME SETUP!***
+We need to run two nodes, IRI (IOTA node) and COO (Coordinator node).
+We only need to only have one COO in our network.
+Thus, we must run it in only one machine.
+Meanwhile, we can have many IRIs in our network.
 
-Just run this code.
+#### Configuration ####
 
-```bash
-# ONLY RUN THIS WHEN MILESTONES ALREADY REACHED!
-# AT THIS POINT, THE COO IS CRASHED!
-# MAKE A BIGGER DEPTH IN config.json
-# THEN RUN THIS
-cd ~/compass/docs/private_tangle
-./01_calculate_layers.sh
-
-# run IRI node
-./02_run_iri.sh
-# run COO node, without bootstrap
-./03_run_coordinator.sh -broadcast
-```
-
-Otherwise, follow all of these procedures
-
-#### Get the code ####
+There are several configurations to customize the private IOTA network (in case you do not want to use the default value we use here).
+First, `seed` is like a private key for your node.
+You need to keep it secret and do not share it with others.
 
 ```bash
-# get compass from our forked repo
-cd ~/
-git clone https://github.com/iotaledger/compass.git
-```
-
-#### Compute the Merkle tree ####
-
-```bash
-cd ~/compass
-
-# build binary and jar
-bazel build //compass:layers_calculator
-# convert it to docker image
-bazel run //docker:layers_calculator
-# to check if it is indeed created
-docker image list
-
 # create a random seed
 cat /dev/urandom |LC_ALL=C tr -dc 'A-Z9' | fold -w 81 | head -n 1
 # keep this seed safe and private
-
-# copy the seed to config.json
-cd ~/compass/docs/private_tangle
-cp config.example.json config.json
-nano config.json
 ```
 
-Edit the `config.json` so that to have the `seed` points to our previous randomly generated seed.
-For simulation purpose, we can use NOT RANDOM SEED just for testing.
-However, for production case, we have to generate RANDOM SEED.
-
-Then, we configure the `depth` to a lower value to save time to build the tree.
-For example, we set it to have the value of `16`.
-The `depth` of the tree will impact on the network uptime.
-The coordinator will crash when it reaches the latest milestones.
-More of info can be found [here](https://docs.iota.org/docs/compass/0.1/references/merkle-tree-compute-times)
-
-We can also configure the `tick` value.
-This value represent how many miliseconds the coordinator will send milestones to the network.
-We set this value to `60000`, which 60 seconds.
-The longer the `tick`, the fewer transactions can be confirmed.
-
-More configuration detail can be seen [here](https://docs.iota.org/docs/compass/0.1/references/compass-configuration-options)
+Second, we need to setup the `config.json` in `src/payment/config/config.json`.
+This json will be use to configure the IRI and COO node that will also determine the properties of our private IOTA network.
+The json will look something like this.
 
 ```json
 {
@@ -227,67 +185,57 @@ More configuration detail can be seen [here](https://docs.iota.org/docs/compass/
 }
 ```
 
-After setup the `config.json`.
-Save and exit using Ctrl + X, then press Y.
-Finally, we run this.
+- `seed` is the random string that we generate earlier.
+For simulation purpose, we can use NOT RANDOM SEED just for testing.
+However, for production case, we have to generate RANDOM SEED.
 
-```bash
-./01_calculate_layers.sh
-```
+- `depth` determines how many milestones that COO can create, the bigger the number, more milestones can be created and result in longer network uptime.
+However, it is very long to process big number.
+More of info can be found [here](https://docs.iota.org/docs/compass/0.1/references/merkle-tree-compute-times).
 
-#### Run the IRI node ####
+- `tick` represents the time interval on how many miliseconds the coordinator will send milestones to the network periodically.
+We set this value to `60000`, which equals to 60 seconds.
+Faster the tick, the COO can reach milestones faster and shorten the network uptime.
+Longer the tick can result in longer transactions confirmation.
 
-Create an IOTA snapshot.
-This contains list of addresses and its NON-ZERO IOTA values.
-The addressess are generated from the SEED.
-For this project we use two sender and receiver seeds that can be find in the `src/payment/sender_info.json` and `src/payment/receiver_info.json`
+- `host` is the host of IRI node.
 
-```bash
-cd ~/compass/docs/private_tangle
-touch snapshot.txt
-nano snapshot.txt
-```
+More configuration detail can be seen [here](https://docs.iota.org/docs/compass/0.1/references/compass-configuration-options)
 
-Add this the following texts to the file.
-It contains lists of sender addresses all with `1000` IOTA.
-The address in `src/payment/sender_info.json` and `src/payment/receiver_info.json` are with checksum.
-In the snapshot we do not need the checksum so we remove THE LAST 9 CHARACTERS!
+Finally, we have to configure the snapshot file in `src/payment/config.snapshot.txt`.
+This file contains list of addresses and its NON-ZERO IOTA values.
+It is our way to produce money in our private IOTA network.
+The addressess are generated from the `seed`.
+The examples of addresses are in `src/payment/sender_info.json` and `src/payment/receiver_info.json`.
+These addresess comes with checksum.
+In the snapshot, we do not need the checksum so we remove THE LAST 9 CHARACTERS!
+
 The format of `snapshot.txt` is `<address>;<value>`.
-Total number of values in the snapshot need to be equal to `2779530283277761`
+Note that the total number of values in the snapshot MUST BE equal to `2779530283277761`
 
 ```txt
 VZAWPZERLCVLNUCPGPKLNDDDGQLIODLWZNXVRYZVRHGDMKCSEEHRMJXBACJVLPGAQS9GKRJDMSMZEWKUY;1779530283277761
 OM9ZFKCUDDOK9UCE9IPXENYOIPSJDCIDEEJGYCENLRFR9CIVNEBQCMWBHSROGPOGKJCABAWJHDEIITJSZ;1000000000000000
 ```
 
-Save and exit using Ctrl + X, then press Y.
-Finally, we run this.
+#### First Run ####
+
+When everything is ready, we can run the Payment Engine with the following commands.
 
 ```bash
-./02_run_iri.sh
+# clone and install compass
+npm run iota-init
+# compute the Merkle tree
+npm run iota-layer-build
+# open a terminal, download and run iri
+npm run iota-iri-start
+# open another terminal, build and run coo
+npm run iota-coo-build-and-start
+
+npm test # if everything is success, the test should pass
 ```
 
-Open other terminal to continue.
-
-#### Run Compass ####
-
-First, we build and create docker image.
-
-```bash
-cd ~/compass/
-
-# build the coordinator
-bazel build //compass:coordinator
-# convert it to docker image
-bazel run //docker:coordinator
-# to check if it is indeed created
-docker image list
-
-cd ~/compass/docs/private_tangle
-./03_run_coordinator.sh -bootstrap -broadcast
-```
-
-#### To stop IRI node or Compass node ####
+#### To stop IRI or COO ####
 
 ```bash
 docker ps # get the CCONTAINER_ID
@@ -295,17 +243,26 @@ docker ps # get the CCONTAINER_ID
 docker stop 6bd47de08e3b
 ```
 
-https://github.com/iotaledger/cliri
-sudo apt install maven
+#### Subsequent Run ####
 
-npm run iota-init
+In case you want to start the Payment Engine again, you do not need to install all over again.
+Just run this code with special care on the `npm run iota-layer-build`.
+Run this command only when the coordinator reached their milestones.
+
+```bash
+cd ~/src
+
+# ONLY RUN THIS WHEN MILESTONES ALREADY REACHED!
+# AT THIS POINT, THE COO IS CRASHED!
+# MAKE A BIGGER DEPTH IN config.json
+# THEN RUN THIS
 npm run iota-layer-build
+
+# open a terminal, then run IRI node
 npm run iota-iri-start
-npm run iota-coo-build-and-start # first coo run
-npm run iota-coo-start # subsequent coo run
-
-
-
+# open another terminal, then run COO node
+npm run iota-coo-start # no build (only run coo)
+```
 
 - - - -
 
