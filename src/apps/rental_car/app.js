@@ -1,36 +1,32 @@
 const http = require('http');
 const express = require('express');
 const bodyParser = require('body-parser');
-const rp = require('request-promise-native');
 const uuidV1 = require('uuid/v1');
 const {
   performance
 } = require('perf_hooks');
-const fs = require('fs');
 
 const os = require("os");
 const HOSTNAME = os.hostname();
 const HTTP_PORT = process.env.HTTP_PORT || 3002;
 
-const Database = require('better-sqlite3');
-const db = new Database('rental-car.db');
-createTable();
-clearTable(); // for demo, we always start with clean state
-
-// app params
-const TASK_ID = {
-  insert_new_car: 1,
-  insert_payment_hash: 2
-};
-const APP_ID = 1234;
+const DB = require('./sqlite_db');
+const db = new DB();
 
 const storageEngine = require('../../storage/ipfs_engine');
 const computeEngine = require('../../compute/ethereum_engine');
 const paymentEngine = require('../../payment/iota_engine');
 const tools = require('./tools');
 
+// app params
+const TASK_ID = {
+  INSERT_NEW_CAR: 1,
+  INSERT_PAYMENT_HASH: 2
+};
+const APP_ID = 1234;
+
 // compute params
-const CarRental = require('./build/contracts/CarRentalContract.json');
+const CAR_RENTAL = require('./build/contracts/CarRentalContract.json');
 const NETWORK_ID = '2020';
 
 // core params
@@ -38,7 +34,7 @@ const CORE_ENGINE_URL = `http://127.0.0.1:3000/transact`;
 
 // performance params
 const RESULT_DATA_PATH = '/home/vagrant/result_rental_car.csv';
-fs.writeFileSync(RESULT_DATA_PATH, ""); // clear file
+tools.clearFIle(RESULT_DATA_PATH);
 
 const app = express();
 app.use(bodyParser.json());
@@ -46,62 +42,80 @@ app.use(bodyParser.json());
 //----------------------------- Express Methods -----------------------------//
 
 app.get('/contract_abi', (req, res) => {
-  res.json(CarRental);
+  res.json(CAR_RENTAL);
 });
 
 app.get('/car_info', (req, res) => {
-  res.json(getOneUnrentedCar());
+  res.json(db.getOneUnrentedCar());
 });
 
+/**
+ * Endpoint for submitting app notification.
+ * 
+ * @param {object} block    The block object from Core Engine
+ */
 app.post('/notification', async (req, res) => {
-  const startGetAppUpdateCheckpoint = performance.now();
+  console.log('Getting notification from Core Engine..');
+  const start = performance.now();
 
   const block = req.body;
-  const appRequests = getAppRequestsFromBlock(block);
+  const appRequests = tools.getAppRequestsFromBlock(block, APP_ID);
 
   if (appRequests.length > 0) {
 
     for (let appRequest of appRequests) {
-      const ipfsHash = appRequest.storage_address;
+      const taskId = appRequest.task_id;
+      console.log(`Processing task id ${taskId}..`);
 
-      if (!checkIfCarExist(ipfsHash)) {
-        if (storageEngine.isValidIpfsHash(ipfsHash)) {
-          const car = await storageEngine.getJsonFromIpfsHash(ipfsHash);
-          const info = insertNewCar(ipfsHash, car);
+      if (taskId == TASK_ID.INSERT_NEW_CAR) {
+        const ipfsHash = appRequest.storage_address;
 
-          if (info.changes > 0) {
-            console.log(`${ipfsHash} is stored in SQLite database`);
+        if (!db.checkIfCarExist(ipfsHash)) {
+          if (storageEngine.isValidIpfsHash(ipfsHash)) {
 
-            const endGetAppUpdateCheckpoint = performance.now();
-            savingResult('Getting App Update from Core', startGetAppUpdateCheckpoint, endGetAppUpdateCheckpoint);
+            const car = await storageEngine.getJsonFromIpfsHash(ipfsHash);
+            if (car instanceof Error) {
+              return tools.logAndExit(`Cannot getting ipfs content ${ipfsHash}`);
+            }
+
+            const info = db.insertNewCar(ipfsHash, car);
+
+            if (info.changes > 0) {
+              const end = performance.now();
+              tools.savingResult('Getting App Update from Core Engine', RESULT_DATA_PATH, start, end);
+              console.log(`car ${ipfsHash} is stored in database`);
+
+            } else {
+              return tools.logAndExit(`Cannot insert car ${ipfsHash} to database`);
+            }
 
           } else {
-            console.log('ERROR! cannot insert to SQLite database');
+            return tools.logAndExit(`Getting invalid ipfs hash: ${ipfsHash}`);
           }
 
         } else {
-          console.log('ERROR! IPFS hash is invalid');
+          return tools.logAndExit(`Not inserting, car ${ipfsHash} already exist`);
         }
 
-      } else {
-        console.log('No insert, hash already exist');
+      } else if (taskId == TASK_ID.INSERT_PAYMENT_HASH) {
+
       }
     }
+
+  } else {
+    return tools.logAndExit('Getting a block with no app request');
   }
 
-  res.status(200).send('notification received!');
+  res.status(200).send('Notification received, not sure if the data is valid or not though');
 });
 
 /**
  * Endpoint for submitting Tx hash.
+ * Expect to get a JSON file with these parameters
  * 
- * Accepting body of JSON, e.g.
- * 
- * {
- *    car_hash: 'ipfs hash of the car that want to be rented',
- *    payment_hash: 'the tail tx hash as proof of payment from iota',
- *    renter_address: 'the eth address of the car renter'
- * }
+ * @param {string} car_hash         The ipfs hash of the car that want to be rented
+ * @param {string} payment_hash     The tail tx hash as proof of payment from iota
+ * @param {string} renter_address   The eth address of the car renter
  */
 app.post('/tx_hash', async (req, res) => {
   console.log('Getting the Tx hash from car renter..');
@@ -112,7 +126,7 @@ app.post('/tx_hash', async (req, res) => {
   const paymentHash = renter.payment_hash;
   const renterAddress = renter.renter_address;
 
-  const car = getCarByHash(carHash);
+  const car = db.getCarByHash(carHash);
   const confirmed = await paymentEngine.isTxVerified(paymentHash);
   if (confirmed instanceof Error) {
     sendError(res, 500, `Oops error happen ${confirmed}`);
@@ -134,7 +148,7 @@ app.post('/tx_hash', async (req, res) => {
       const payload = {
         data: {
           app_id: APP_ID,
-          task_id: TASK_ID.insert_payment_hash,
+          task_id: TASK_ID.INSERT_PAYMENT_HASH,
           process_id: uuidV1(),
           payment_proof: paymentHash,
           renter_address: renterAddress,
@@ -166,7 +180,7 @@ app.post('/tx_hash', async (req, res) => {
     } else {
       sendError(res, 400, 'Tx hash does not match the car information');
     }
-    
+
   } else {
     sendError(res, 400, 'Payment hash has not been verified yet');
   }
@@ -183,175 +197,83 @@ function sendError(res, status, messages) {
 
 //----------------------------- Other Methods -----------------------------//
 
-const contractAbi = CarRental.abi;
-const contractAddress = CarRental.networks[NETWORK_ID].address;
+const contractAbi = CAR_RENTAL.abi;
+const contractAddress = CAR_RENTAL.networks[NETWORK_ID].address;
 const carRental = computeEngine.constructSmartContract(contractAbi, contractAddress);
 
+/**
+ * Processing event NewRentalCarAdded from eth engine.
+ * Expect to get event with these parameters
+ * 
+ * @param {string} ipfsHash   The ipfs hash in bytes32 form
+ * @param {string} carPwner   The eth address of the car owner
+ */
 carRental.events.NewRentalCarAdded({
   fromBlock: 0
 }, async function (error, event) {
   if (error) console.log(error);
 
-  const startGetEventCheckpoint = performance.now();
+  console.log('Getting eth event and store to Core Engine..');
+  const start = performance.now();
 
   const bytes32Hash = event.returnValues['ipfsHash'];
-  const ipfsHash = computeEngine.getIpfsHashFromBytes32(bytes32Hash);
+  const carOwner = event.returnValues['carOwner'];
+
+  const ipfsHash = computeEngine.convertBytes32ToIpfsHash(bytes32Hash);
 
   if (storageEngine.isValidIpfsHash(ipfsHash)) {
-    const carOwner = event.returnValues['carOwner'];
     const car = await storageEngine.getJsonFromIpfsHash(ipfsHash);
+    if (car instanceof Error) {
+      return tools.logAndExit(`Getting invalid IPFS hash: ${ipfsHash}`);
+    }
 
     if (carOwner == car.owner) {
-      const info = insertNewCar(ipfsHash, car);
+      const info = db.insertNewCar(ipfsHash, car);
 
       if (info.changes > 0) {
-        console.log(`${ipfsHash} is stored in SQLite database`);
-
-        const endGetEventCheckpoint = performance.now();
-        const startPostCoreCheckpoint = performance.now();
-
         // TODO: If there are two notary nodes connected to the same compute engine with the same NETWORK ID
-        // (no parallelism), then how to choose which node should post info to the core engine
-        const body = {
+        // (no parallelism), both of them will get events.
+        // Then how to choose which node should post info to the core engine
+        const payload = {
           data: {
             app_id: APP_ID,
-            task_id: TASK_ID.insert_new_car,
+            task_id: TASK_ID.INSERT_NEW_CAR,
             process_id: uuidV1(),
             storage_address: ipfsHash,
             compute_address: contractAddress,
             compute_network_id: NETWORK_ID,
-            payment_proof: '',
-            other: '',
             priority_id: 3,
             timestamp: Date.now()
           }
         };
 
         const options = {
-          method: 'POST',
-          uri: CORE_ENGINE_URL,
-          body: body,
-          resolveWithFullResponse: true,
-          json: true
+          method: 'post',
+          url: CORE_ENGINE_URL,
+          data: payload,
+          httpAgent: new http.Agent({
+            keepAlive: false
+          })
         };
 
-        rp(options).then(async function (response) {
-          if (response.statusCode == 200) {
-            console.log("Stored in core engine...");
+        const response = await tools.sendRequest(options);
+        if (response instanceof Error) {
+          return tools.logAndExit(`Cannot send ${ipfsHash} to Core Engine`);
+        }
 
-            const endPostCoreCheckpoint = performance.now();
-            savingResult('Getting Event from ETH', startGetEventCheckpoint, endGetEventCheckpoint);
-            savingResult('Post Car to Core Engine', startPostCoreCheckpoint, endPostCoreCheckpoint);
-          }
-
-        }).catch(function (err) {
-          console.log(`Error when sending to Core Engine: ${err}`);
-        });
+        const end = performance.now();
+        tools.savingResult('Getting event from ETH and posting Car to Core Engine', RESULT_DATA_PATH, start, end);
+        console.log(`${ipfsHash} sent to Core Engine`);
 
       } else {
-        console.log('ERROR! cannot insert to SQLite database');
+        return tools.logAndExit(`Cannot insert car ${ipfsHash} to database`);
       }
 
     } else {
-      console.log('ERROR! car owner data mismatched');
+      return tools.logAndExit(`Getting mismatch car owner: ${carOwner} with ${car.owner}`);
     }
 
   } else {
-    console.log('ERROR! IPFS hash is invalid');
+    return tools.logAndExit(`Getting invalid IPFS hash: ${ipfsHash}`);
   }
 });
-
-//----------------------------- SQL Queries -----------------------------//
-
-function clearTable() {
-  const sql = 'DELETE FROM rental_cars';
-  db.prepare(sql).run();
-}
-
-function createTable() {
-  const sql = ' \
-    CREATE TABLE IF NOT EXISTS rental_cars ( \
-      hash TEXT PRIMARY KEY, \
-      owner TEXT NOT NULL, \
-      fee_amount INTEGER NOT NULL, \
-      fee_address TEXT NOT NULL, \
-      fee_tag TEXT NOT NULL, \
-      is_rented INTEGER NOT NULL, \
-      renter TEXT \
-    );';
-
-  db.prepare(sql).run();
-}
-
-function checkIfCarExist(ipfsHash) {
-  const sql = `SELECT hash FROM rental_cars \
-    WHERE hash = '${ipfsHash}'`;
-  rows = db.prepare(sql).all();
-
-  return (rows.length == 1);
-}
-
-function insertNewCar(ipfsHash, car) {
-  const sql = `INSERT INTO rental_cars \
-    (hash, owner, fee_amount, fee_address, fee_tag, is_rented) \
-    VALUES \
-    ('${ipfsHash}', '${car.owner}', '${car.paymentFee}', '${car.paymentAddress}', '${car.paymentTag}', 0)
-  `;
-  return db.prepare(sql).run();
-}
-
-function getOneUnrentedCar() {
-  const sql = `SELECT * FROM rental_cars \
-    WHERE is_rented = 0 \
-    LIMIT 1`;
-  return db.prepare(sql).get();
-}
-
-function getCarByHash(ipfsHash) {
-  const sql = `SELECT * FROM rental_cars \
-    WHERE hash = '${ipfsHash}'`;
-  return db.prepare(sql).get();
-}
-
-/**
- * Parse core engine block object to get the application data.
- * It go deep to the object and extract only data related to this
- * application by comparing the app_id.
- * It returns array of object for this application.
- * 
- * @param {object} block  The block from core engine
- */
-function getAppRequestsFromBlock(block) {
-  let appRequests = [];
-  const txs = block.data;
-
-  for (let j = 0; j < txs.length; j++) {
-    const tx = txs[j][1];
-    const requests = tx.input.data;
-
-    for (let k = 0; k < requests.length; k++) {
-      let request = requests[k][1];
-
-      if (request.app_id == APP_ID) {
-        appRequests.push(request);
-      }
-    }
-  }
-
-  return appRequests;
-}
-
-/**
- * Appending delta of performance.now() checkpoint to file.
- * 
- * @param {string} scenario   The scenario description of this delta
- * @param {number} start      The start point of performance.now()
- * @param {number} end        The end point of performance.now()
- */
-function savingResult(scenario, start, end) {
-  const delta = end - start;
-  const row = scenario + "," +
-    delta + "," +
-    "\r\n";
-  fs.appendFileSync(RESULT_DATA_PATH, row);
-}

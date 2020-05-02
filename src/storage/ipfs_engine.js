@@ -27,8 +27,12 @@ var ipfs_engine = {
    * @param {string} filePath     The path to the file that you want to store in IPFS
    */
   storeJsonFromLocalFile: async function (filePath) {
-    const results = await ipfs.addFromFs(filePath);
-    return results[0].hash;
+    try {
+      const results = await ipfs.addFromFs(filePath);
+      return results[0].hash;
+    } catch (err) {
+      return new Error(`Error storing file ${err}`);
+    }
   },
 
   /**
@@ -38,14 +42,18 @@ var ipfs_engine = {
    * @param {string} ipfsHash     The IPFS hash CID of the file 
    */
   getJsonFromIpfsHash: async function (ipfsHash) {
-    const files = await ipfs.get(ipfsHash);
+    try {
+      const files = await ipfs.get(ipfsHash);
 
-    var result;
-    files.forEach((file) => {
-      result = JSON.parse(file.content.toString('utf8'));
-    })
+      var result;
+      files.forEach((file) => {
+        result = JSON.parse(file.content.toString('utf8'));
+      })
 
-    return result;
+      return result;
+    } catch (err) {
+      return new Error(`Error getting file ${err}`);
+    }
   }
 }
 

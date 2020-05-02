@@ -75,7 +75,36 @@ var tools = {
    */
   logAndExit: function (error) {
     console.log(error);
-    process.exit(69);
+    return;
+  },
+
+  /**
+   * Parse core engine block object to get the application data.
+   * It goes deep to the object and extract only data related to this
+   * application by comparing the APP ID.
+   * It returns array of object for this application.
+   * 
+   * @param {object} block  The block from Core Engine
+   * @param {number} appId  The application identifier
+   */
+  getAppRequestsFromBlock: function (block, appId) {
+    let appRequests = [];
+    const txs = block.data;
+
+    for (let j = 0; j < txs.length; j++) {
+      const tx = txs[j][1];
+      const requests = tx.input.data;
+
+      for (let k = 0; k < requests.length; k++) {
+        let request = requests[k][1];
+
+        if (request.app_id == appId) {
+          appRequests.push(request);
+        }
+      }
+    }
+
+    return appRequests;
   }
 }
 
