@@ -17,6 +17,7 @@ const storageEngine = require('../../storage/ipfs_engine');
 const computeEngine = require('../../compute/ethereum_engine');
 const paymentEngine = require('../../payment/iota_engine');
 const tools = require('./tools');
+const config = require('./config');
 
 // app params
 const TASK_ID = {
@@ -98,6 +99,15 @@ app.post('/notification', async (req, res) => {
         }
 
       } else if (taskId == TASK_ID.INSERT_PAYMENT_HASH) {
+        // update tx hash to local database
+
+        if (config.isMasterNode()) {
+          console.log('Giving car access to renter..');
+
+
+        } else {
+          return tools.logAndExit(`${HOSTNAME} is not a master`);
+        }
 
       }
     }
@@ -231,39 +241,41 @@ carRental.events.NewRentalCarAdded({
       const info = db.insertNewCar(ipfsHash, car);
 
       if (info.changes > 0) {
-        // TODO: If there are two notary nodes connected to the same compute engine with the same NETWORK ID
-        // (no parallelism), both of them will get events.
-        // Then how to choose which node should post info to the core engine
-        const payload = {
-          data: {
-            app_id: APP_ID,
-            task_id: TASK_ID.INSERT_NEW_CAR,
-            process_id: uuidV1(),
-            storage_address: ipfsHash,
-            compute_address: contractAddress,
-            compute_network_id: NETWORK_ID,
-            priority_id: 3,
-            timestamp: Date.now()
+        if (config.isMasterNode()) {
+          const payload = {
+            data: {
+              app_id: APP_ID,
+              task_id: TASK_ID.INSERT_NEW_CAR,
+              process_id: uuidV1(),
+              storage_address: ipfsHash,
+              compute_address: contractAddress,
+              compute_network_id: NETWORK_ID,
+              priority_id: 3,
+              timestamp: Date.now()
+            }
+          };
+
+          const options = {
+            method: 'post',
+            url: CORE_ENGINE_URL,
+            data: payload,
+            httpAgent: new http.Agent({
+              keepAlive: false
+            })
+          };
+
+          const response = await tools.sendRequest(options);
+          if (response instanceof Error) {
+            return tools.logAndExit(`Cannot send ${ipfsHash} to Core Engine`);
           }
-        };
 
-        const options = {
-          method: 'post',
-          url: CORE_ENGINE_URL,
-          data: payload,
-          httpAgent: new http.Agent({
-            keepAlive: false
-          })
-        };
+          const end = performance.now();
+          tools.savingResult('Getting event from ETH and posting Car to Core Engine', RESULT_DATA_PATH, start, end);
+          console.log(`${ipfsHash} sent to Core Engine`);
 
-        const response = await tools.sendRequest(options);
-        if (response instanceof Error) {
-          return tools.logAndExit(`Cannot send ${ipfsHash} to Core Engine`);
+        } else {
+          return tools.logAndExit(`${HOSTNAME} is not a master`);
         }
-
-        const end = performance.now();
-        tools.savingResult('Getting event from ETH and posting Car to Core Engine', RESULT_DATA_PATH, start, end);
-        console.log(`${ipfsHash} sent to Core Engine`);
 
       } else {
         return tools.logAndExit(`Cannot insert car ${ipfsHash} to database`);
