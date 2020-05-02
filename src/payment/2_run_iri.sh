@@ -17,13 +17,13 @@ if [[ -d ~/compass ]]; then
     -v /home/vagrant/compass/docs/private_tangle/snapshot.txt:/snapshot.txt \
     -p 14265 iotaledger/iri:latest \
     --remote true \
-    --remote-limit-api "addNeighbors, getNeighbors, removeNeighbors" \
+    --remote-limit-api "removeNeighbors, addNeighbors" \
     --testnet true \
     --testnet-coordinator $COO_ADDRESS \
     --testnet-coordinator-security-level $security \
     --testnet-coordinator-signature-mode $sigMode \
     --auto-tethering true \
-    --neighbors "udp://10.0.0.31:14600" \
+    --neighbors tcp://10.0.0.31:15600 \
     --max-neighbors 5 \
     --mwm $mwm \
     --milestone-start $milestoneStart \

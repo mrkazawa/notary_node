@@ -4,7 +4,7 @@ const Extract = require('@iota/extract-json');
 
 // specify the location of the IRI node
 const iota = Iota.composeAPI({
-  provider: 'http://localhost:14265'
+  provider: 'http://10.0.0.11:14265'
 });
 
 const DEPTH = 3;
@@ -48,12 +48,16 @@ var iota_engine = {
     try {
       return await iota.getNodeInfo();
     } catch (err) {
-      console.log(`Error when getting node info: ${err}`);
+      return new Error(`Error getting node info: ${err}`);
     }
   },
 
   convertAsciiToTrytes: function (message) {
-    return Converter.asciiToTrytes(message);
+    try {
+      return Converter.asciiToTrytes(message);
+    } catch (err) {
+      return new Error(`Error converting message: ${err}`);
+    }
   },
 
   sendTx: async function (transfers) {
@@ -64,7 +68,7 @@ var iota_engine = {
 
       return tailTxHash;
     } catch (err) {
-      console.log(`Error when sending Tx: ${err}`);
+      return new Error(`Error sending Tx: ${err}`);
     }
   },
 
@@ -73,7 +77,7 @@ var iota_engine = {
       const bundle = await iota.getBundle(tailTxHash);
       return JSON.parse(Extract.extractJson(bundle));
     } catch (err) {
-      console.log(`Error when reading Tx: ${err}`);
+      return new Error(`Error reading Tx: ${err}`);
     }
   },
 
@@ -85,15 +89,16 @@ var iota_engine = {
         total: 1
       });
     } catch (err) {
-      console.log(`Error when generating new address: ${err}`);
+      return new Error(`Error generating new address: ${err}`);
     }
   },
 
   isTxVerified: async function (tailTxHash) {
     try {
-      return await iota.getLatestInclusion([tailTxHash]);
+      const state = await iota.getLatestInclusion([tailTxHash]);
+      return state[0];
     } catch (err) {
-      console.log(`Error when checking tx: ${err}`);
+      return new Error(`Error checking tx: ${err}`);
     }
   },
 
@@ -102,7 +107,20 @@ var iota_engine = {
       const balance = await iota.getBalances([address], 100);
       return parseInt(balance.balances);
     } catch (err) {
-      console.log(`Error when checking balances: ${err}`);
+      return new Error(`Error checking balances: ${err}`);
+    }
+  },
+
+  getPaymentInfo: async function (tailTxHash) {
+    try {
+      const bundleObj = await iota.getBundle(tailTxHash);
+      return [
+        bundleObj[0].address,
+        bundleObj[0].value,
+        bundleObj[0].tag
+      ];
+    } catch (err) {
+      return new Error(`Error getting payment info: ${err}`);
     }
   },
 

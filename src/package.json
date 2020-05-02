@@ -44,6 +44,7 @@
     "@iota/core": "^1.0.0-beta.27",
     "@iota/extract-json": "^1.0.0-beta.23",
     "autocannon": "^4.6.0",
+    "axios": "^0.19.2",
     "better-sqlite3": "^6.0.1",
     "body-parser": "^1.19.0",
     "bs58": "^4.0.1",

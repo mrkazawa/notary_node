@@ -56,7 +56,7 @@ test('Sending iota in a transaction', async () => {
     // the COO node.
 
     const confirmed = await paymentEngine.isTxVerified(tailTxHash);
-    if (confirmed[0]) {
+    if (confirmed) {
       const afterBalance = await paymentEngine.getBalances(address);
       expect(afterBalance).toEqual(beforeBalance + transfers[0].value);
       break;
