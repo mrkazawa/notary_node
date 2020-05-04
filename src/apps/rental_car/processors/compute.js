@@ -20,6 +20,28 @@ const {
 const DB = require('../db/sqlite_db');
 const db = new DB();
 
+const CAR_RENTAL = require('../build/contracts/CarRentalContract.json');
+const contractAbi = CAR_RENTAL.abi;
+const contractAddress = CAR_RENTAL.networks[COMPUTE_NETWORK_ID].address;
+const carRental = computeEngine.constructSmartContract(contractAbi, contractAddress);
+
+const getContract = function (req, res)  {
+  res.status(200).send(JSON.stringify(CAR_RENTAL));
+}
+
+const addNewRentalCarListener = function () {
+  carRental.events.NewRentalCarAdded({
+    fromBlock: 0
+  }, function (error, event) {
+    if (error) console.log(error);
+  
+    const bytes32Hash = event.returnValues['ipfsHash'];
+    const carOwner = event.returnValues['carOwner'];
+  
+    doNewRentalCarEvent(bytes32Hash, carOwner, contractAddress);
+  });
+}
+
 /**
  * Processing event NewRentalCarAdded from eth engine.
  * 
@@ -90,6 +112,7 @@ const doNewRentalCarEvent = async function (bytes32Hash, carOwner, contractAddre
   } else {
     return tools.logAndExit(`Getting invalid IPFS hash: ${ipfsHash}`);
   }
-}
+};
 
-exports.doNewRentalCarEvent = doNewRentalCarEvent;
+exports.getContract = getContract;
+exports.addNewRentalCarListener = addNewRentalCarListener;

@@ -1,38 +1,17 @@
-const http = require('http');
 const express = require('express');
 const bodyParser = require('body-parser');
-const uuidV1 = require('uuid/v1');
-const {
-  performance
-} = require('perf_hooks');
 
 const os = require("os");
 const HOSTNAME = os.hostname();
 const HTTP_PORT = process.env.HTTP_PORT || 3002;
 
-const DB = require('./db/sqlite_db');
-const db = new DB();
+const ethProcessor = require('./processors/compute');
+const coreProcessor = require('./processors/core');
+const paymentProcessor = require('./processors/payment');
+const carProcessor = require('./processors/car');
 
-const storageEngine = require('../../storage/ipfs_engine');
-const computeEngine = require('../../compute/ethereum_engine');
-const paymentEngine = require('../../payment/iota_engine');
+const { RESULT_DATA_PATH } = require('./config');
 const tools = require('./tools');
-const config = require('./config');
-
-const ethProcessor = require('./processors/eth_event');
-const expressProcessor = require('./processors/express');
-
-
-
-// compute params
-const CAR_RENTAL = require('./build/contracts/CarRentalContract.json');
-const NETWORK_ID = '2020';
-
-// core params
-const CORE_ENGINE_URL = `http://127.0.0.1:3000/transact`;
-
-// performance params
-const RESULT_DATA_PATH = '/home/vagrant/result_rental_car.csv';
 tools.clearFIle(RESULT_DATA_PATH);
 
 const app = express();
@@ -40,182 +19,22 @@ app.use(bodyParser.json());
 
 //----------------------------- Express Methods -----------------------------//
 
-app.get('/contract_abi', (req, res) => {
-  res.json(CAR_RENTAL);
-});
+// GET contract abi
+app.get('/contract_abi', ethProcessor.getContract);
 
-app.get('/car_info', (req, res) => {
-  res.json(db.getOneUnrentedCar());
-});
+// GET car info
+app.get('/car_info', carProcessor.getUnrentedCar);
 
-/**
- * Endpoint for submitting app notification.
- * 
- * @param {object} block    The block object from Core Engine
- */
-app.post('/notification', async (req, res) => {
-  console.log('Getting notification from Core Engine..');
-  const start = performance.now();
+// POST app notification
+app.post('/notification', coreProcessor.processCoreEvent);
 
-  const block = req.body;
-  const appRequests = tools.getAppRequestsFromBlock(block, APP_ID);
-
-  if (appRequests.length > 0) {
-
-    for (let appRequest of appRequests) {
-      const taskId = appRequest.task_id;
-      console.log(`Processing task id ${taskId}..`);
-
-      if (taskId == TASK_ID.INSERT_NEW_CAR) {
-        const ipfsHash = appRequest.storage_address;
-
-        if (!db.checkIfCarExist(ipfsHash)) {
-          if (storageEngine.isValidIpfsHash(ipfsHash)) {
-
-            const car = await storageEngine.getJsonFromIpfsHash(ipfsHash);
-            if (car instanceof Error) {
-              return tools.logAndExit(`Cannot getting ipfs content ${ipfsHash}`);
-            }
-
-            const info = db.insertNewCar(ipfsHash, car);
-
-            if (info.changes > 0) {
-              const end = performance.now();
-              tools.savingResult('Getting App Update from Core Engine', RESULT_DATA_PATH, start, end);
-              console.log(`car ${ipfsHash} is stored in database`);
-
-            } else {
-              return tools.logAndExit(`Cannot insert car ${ipfsHash} to database`);
-            }
-
-          } else {
-            return tools.logAndExit(`Getting invalid ipfs hash: ${ipfsHash}`);
-          }
-
-        } else {
-          return tools.logAndExit(`Not inserting, car ${ipfsHash} already exist`);
-        }
-
-      } else if (taskId == TASK_ID.INSERT_PAYMENT_HASH) {
-        // update tx hash to local database
-
-        if (config.isMasterNode()) {
-          console.log('Giving car access to renter..');
-
-
-        } else {
-          return tools.logAndExit(`${HOSTNAME} is not a master`);
-        }
-
-      }
-    }
-
-  } else {
-    return tools.logAndExit('Getting a block with no app request');
-  }
-
-  res.status(200).send('Notification received, not sure if the data is valid or not though');
-});
-
-/**
- * Endpoint for submitting Tx hash.
- * Expect to get a JSON file with these parameters
- * 
- * @param {string} car_hash         The ipfs hash of the car that want to be rented
- * @param {string} payment_hash     The tail tx hash as proof of payment from iota
- * @param {string} renter_address   The eth address of the car renter
- */
-app.post('/tx_hash', async (req, res) => {
-  console.log('Getting the Tx hash from car renter..');
-  const start = performance.now();
-
-  const renter = req.body;
-  const carHash = renter.car_hash;
-  const paymentHash = renter.payment_hash;
-  const renterAddress = renter.renter_address;
-
-  const car = db.getCarByHash(carHash);
-  const confirmed = await paymentEngine.isTxVerified(paymentHash);
-  if (confirmed instanceof Error) {
-    sendError(res, 500, `Oops error happen ${confirmed}`);
-  }
-
-  if (confirmed) {
-    const paymentInfo = await paymentEngine.getPaymentInfo(paymentHash);
-    if (paymentInfo instanceof Error) {
-      sendError(res, 500, `Oops error happen ${paymentInfo}`);
-    }
-
-    const carFeeAddressWithoutChecksum = car.fee_address.slice(0, -9);
-    if (
-      carFeeAddressWithoutChecksum == paymentInfo[0] &&
-      car.fee_amount == paymentInfo[1] &&
-      car.fee_tag == paymentInfo[2]
-    ) {
-
-      const payload = {
-        data: {
-          app_id: APP_ID,
-          task_id: TASK_ID.INSERT_PAYMENT_HASH,
-          process_id: uuidV1(),
-          payment_proof: paymentHash,
-          renter_address: renterAddress,
-          priority_id: 3,
-          timestamp: Date.now()
-        }
-      };
-
-      const options = {
-        method: 'post',
-        url: CORE_ENGINE_URL,
-        data: payload,
-        httpAgent: new http.Agent({
-          keepAlive: false
-        })
-      };
-
-      const response = await tools.sendRequest(options);
-      if (response instanceof Error) {
-        sendError(res, 500, `Error sending to Core Engine ${response}`);
-      }
-
-      const end = performance.now();
-      tools.savingResult('Post Car Payment to Core Engine', RESULT_DATA_PATH, start, end);
-      console.log('Tx hash stored in Core Engine');
-
-      res.status(200).send('Tx hash received!');
-
-    } else {
-      sendError(res, 400, 'Tx hash does not match the car information');
-    }
-
-  } else {
-    sendError(res, 400, 'Payment hash has not been verified yet');
-  }
-});
+// POST tx hash payment
+app.post('/tx_hash', paymentProcessor.processTxHash);
 
 app.listen(HTTP_PORT, () => {
   console.log(`Hit me up on ${HOSTNAME}.local:${HTTP_PORT}`);
 });
 
-function sendError(res, status, messages) {
-  console.log(messages);
-  res.status(status).send(messages);
-}
-
 //----------------------------- Other Methods -----------------------------//
 
-const contractAbi = CAR_RENTAL.abi;
-const contractAddress = CAR_RENTAL.networks[NETWORK_ID].address;
-const carRental = computeEngine.constructSmartContract(contractAbi, contractAddress);
-
-carRental.events.NewRentalCarAdded({
-  fromBlock: 0
-}, function (error, event) {
-  if (error) console.log(error);
-
-  const bytes32Hash = event.returnValues['ipfsHash'];
-  const carOwner = event.returnValues['carOwner'];
-
-  ethProcessor.doNewRentalCarEvent(bytes32Hash, carOwner, contractAddress);
-});
+ethProcessor.addNewRentalCarListener();
