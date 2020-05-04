@@ -2,9 +2,17 @@ const Database = require('better-sqlite3');
 
 class DB {
   constructor() {
+    if (DB._instance) {
+      // Singleton class.
+      // This allows the constructor to be called multiple times
+      // and refer to the same instance.
+      return DB._instance;
+    }
+    DB._instance = this;
+
     this.db = new Database('rental-car.db');
 
-    this.createTable();
+    this.createRentalCarTable();
     this.clearTable(); // for demo, we always start with clean state
   }
 
@@ -13,7 +21,7 @@ class DB {
     this.db.prepare(sql).run();
   }
 
-  createTable() {
+  createRentalCarTable() {
     const sql = ' \
       CREATE TABLE IF NOT EXISTS rental_cars ( \
         hash TEXT PRIMARY KEY, \
