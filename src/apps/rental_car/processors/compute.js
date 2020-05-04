@@ -9,6 +9,14 @@ const computeEngine = require('../../../compute/ethereum_engine');
 const tools = require('../tools');
 
 const {
+  CoreEngineSendError,
+  DatabaseInsertError,
+  CarOwnerMismatchedError,
+  InvalidIpfsHashError,
+  IpfsGetError
+} = require('../errors');
+
+const {
   APP_ID,
   TASK_ID,
   COMPUTE_NETWORK_ID,
@@ -25,7 +33,7 @@ const contractAbi = CAR_RENTAL.abi;
 const contractAddress = CAR_RENTAL.networks[COMPUTE_NETWORK_ID].address;
 const carRental = computeEngine.constructSmartContract(contractAbi, contractAddress);
 
-const getContract = function (req, res)  {
+const getContract = function (req, res) {
   res.status(200).send(JSON.stringify(CAR_RENTAL));
 }
 
@@ -34,10 +42,10 @@ const addNewRentalCarListener = function () {
     fromBlock: 0
   }, function (error, event) {
     if (error) console.log(error);
-  
+
     const bytes32Hash = event.returnValues['ipfsHash'];
     const carOwner = event.returnValues['carOwner'];
-  
+
     doNewRentalCarEvent(bytes32Hash, carOwner, contractAddress);
   });
 }
@@ -58,7 +66,7 @@ const doNewRentalCarEvent = async function (bytes32Hash, carOwner, contractAddre
   if (storageEngine.isValidIpfsHash(ipfsHash)) {
     const car = await storageEngine.getJsonFromIpfsHash(ipfsHash);
     if (car instanceof Error) {
-      return tools.logAndExit(`Getting invalid IPFS hash: ${ipfsHash}`);
+      throw new IpfsGetError(ipfsHash);
     }
 
     if (carOwner == car.owner) {
@@ -90,27 +98,24 @@ const doNewRentalCarEvent = async function (bytes32Hash, carOwner, contractAddre
 
           const response = await tools.sendRequest(options);
           if (response instanceof Error) {
-            return tools.logAndExit(`Cannot send ${ipfsHash} to Core Engine`);
+            throw new CoreEngineSendError(ipfsHash);
           }
 
           const end = performance.now();
           tools.savingResult('Getting event from ETH and posting Car to Core Engine', RESULT_DATA_PATH, start, end);
           console.log(`${ipfsHash} sent to Core Engine`);
-
-        } else {
-          return tools.logAndExit(`This node is not a master`);
         }
 
       } else {
-        return tools.logAndExit(`Cannot insert car ${ipfsHash} to database`);
+        throw new DatabaseInsertError(ipfsHash);
       }
 
     } else {
-      return tools.logAndExit(`Getting mismatch car owner: ${carOwner} with ${car.owner}`);
+      throw new CarOwnerMismatchedError(car.owner, carOwner);
     }
 
   } else {
-    return tools.logAndExit(`Getting invalid IPFS hash: ${ipfsHash}`);
+    throw new InvalidIpfsHashError(ipfsHash);
   }
 };
 

@@ -69,16 +69,6 @@ var tools = {
   },
 
   /**
-   * Print the given error to console and exit the program.
-   * 
-   * @param {object} error    The error object
-   */
-  logAndExit: function (error) {
-    console.log(error);
-    return;
-  },
-
-  /**
    * Parse core engine block object to get the application data.
    * It goes deep to the object and extract only data related to this
    * application by comparing the APP ID.

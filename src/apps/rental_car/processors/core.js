@@ -6,10 +6,14 @@ const storageEngine = require('../../../storage/ipfs_engine');
 const tools = require('../tools');
 
 const {
+  DatabaseInsertError,
+  InvalidIpfsHashError,
+  IpfsGetError
+} = require('../errors');
+
+const {
   APP_ID,
   TASK_ID,
-  COMPUTE_NETWORK_ID,
-  CORE_ENGINE_URL,
   RESULT_DATA_PATH,
   isMasterNode
 } = require('../config');
@@ -17,7 +21,18 @@ const {
 const DB = require('../db/sqlite_db');
 const db = new DB();
 
+/**
+ * Processing appliation notifications that is sent by the Core Engine.
+ * The body of the request will contain the recently included block
+ * in the Core Engine.
+ * 
+ * @param {object} req    The request object from Express
+ * @param {object} res    The response object from Express
+ */
 const processCoreEvent = function (req, res) {
+  // TODO: need to make sure that outsiders cannot send this request.
+  // It only be done from localhost only.
+
   console.log('Getting notification from Core Engine..');
   const start = performance.now();
 
@@ -38,11 +53,9 @@ const processCoreEvent = function (req, res) {
 
       }
     }
-  } else {
-    return tools.logAndExit('Getting a block with no app request');
   }
 
-  res.status(200).send('Notification received, not sure if the data is valid or not though');
+  res.status(200).send('Notification received, please check log to see any errors');
 };
 
 const doInsertNewCarEvent = async function (appRequest, start) {
@@ -53,7 +66,7 @@ const doInsertNewCarEvent = async function (appRequest, start) {
 
       const car = await storageEngine.getJsonFromIpfsHash(ipfsHash);
       if (car instanceof Error) {
-        return tools.logAndExit(`Cannot getting ipfs content ${ipfsHash}`);
+        throw new IpfsGetError(ipfsHash);
       }
 
       const info = db.insertNewCar(ipfsHash, car);
@@ -64,15 +77,12 @@ const doInsertNewCarEvent = async function (appRequest, start) {
         console.log(`car ${ipfsHash} is stored in database`);
 
       } else {
-        return tools.logAndExit(`Cannot insert car ${ipfsHash} to database`);
+        throw new DatabaseInsertError(ipfsHash);
       }
 
     } else {
-      return tools.logAndExit(`Getting invalid ipfs hash: ${ipfsHash}`);
+      throw new InvalidIpfsHashError(ipfsHash);
     }
-
-  } else {
-    return tools.logAndExit(`Not inserting, car ${ipfsHash} already exist`);
   }
 };
 
@@ -81,10 +91,6 @@ const doInsertPaymentHashEvent = async function (appRequest, start) {
 
   if (isMasterNode()) {
     console.log('Giving car access to renter..');
-
-
-  } else {
-    return tools.logAndExit(`this node is not a master`);
   }
 };
 
