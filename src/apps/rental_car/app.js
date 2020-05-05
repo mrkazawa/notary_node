@@ -5,9 +5,9 @@ const os = require("os");
 const HOSTNAME = os.hostname();
 const HTTP_PORT = process.env.HTTP_PORT || 3002;
 
-const ethProcessor = require('./processors/compute');
-const coreProcessor = require('./processors/core');
-const paymentProcessor = require('./processors/payment');
+const ethEvent = require('./processors/eth_event');
+const coreEvent = require('./processors/core_event');
+const iotaProcessor = require('./processors/iota_payment');
 const carProcessor = require('./processors/car');
 
 const { RESULT_DATA_PATH } = require('./config');
@@ -20,16 +20,16 @@ app.use(bodyParser.json());
 //----------------------------- Express Methods -----------------------------//
 
 // GET contract abi
-app.get('/contract_abi', ethProcessor.getContract);
+app.get('/contract_abi', carProcessor.getContract);
 
 // GET car info
 app.get('/car_info', carProcessor.getUnrentedCar);
 
 // POST app notification
-app.post('/notification', coreProcessor.processCoreEvent);
+app.post('/notification', coreEvent.processCoreEvent);
 
 // POST tx hash payment
-app.post('/tx_hash', paymentProcessor.processTxHash);
+app.post('/tx_hash', iotaProcessor.processTxHash);
 
 app.listen(HTTP_PORT, () => {
   console.log(`Hit me up on ${HOSTNAME}.local:${HTTP_PORT}`);
@@ -37,4 +37,4 @@ app.listen(HTTP_PORT, () => {
 
 //----------------------------- Other Methods -----------------------------//
 
-ethProcessor.addNewRentalCarListener();
+ethEvent.addNewRentalCarListener();

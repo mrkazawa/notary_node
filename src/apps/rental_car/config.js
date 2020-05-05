@@ -37,7 +37,7 @@ const APP_ID = 1234;
  */
 const TASK_ID = {
   INSERT_NEW_CAR: 1,
-  INSERT_PAYMENT_HASH: 2
+  AUTHORIZE_CAR: 2
 };
 
 /**
@@ -52,6 +52,11 @@ const COMPUTE_NETWORK_ID = '2020';
  */
 const CORE_ENGINE_URL = `http://127.0.0.1:3000/transact`;
 
+/**
+ * The location of the contract ABI object.
+ */
+const CAR_RENTAL_CONTRACT = require('./build/contracts/CarRentalContract.json');
+
 // the path to store performance measurements
 const RESULT_DATA_PATH = '/home/vagrant/result_rental_car.csv';
 
@@ -63,5 +68,6 @@ exports.APP_ID = APP_ID;
 exports.TASK_ID = TASK_ID;
 exports.COMPUTE_NETWORK_ID = COMPUTE_NETWORK_ID;
 exports.CORE_ENGINE_URL = CORE_ENGINE_URL;
+exports.CAR_RENTAL_CONTRACT = CAR_RENTAL_CONTRACT;
 exports.RESULT_DATA_PATH = RESULT_DATA_PATH;
 exports.isMasterNode = isMasterNode;
