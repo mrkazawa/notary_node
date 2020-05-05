@@ -10,7 +10,7 @@ const tools = require('../tools');
 
 const {
   CoreEngineSendError,
-  DatabaseInsertError,
+  DatabaseWriteError,
   CarOwnerMismatchedError,
   InvalidIpfsHashError,
   IpfsGetError
@@ -72,9 +72,9 @@ const doNewRentalCarEvent = async function (bytes32Hash, carOwner, contractAddre
     throw new CarOwnerMismatchedError(car.owner, carOwner);
   }
 
-  const info = carDB.insertNewCar(ipfsHash, car);
+  const info = carDB.insertNewCar(ipfsHash, car, contractAddress, COMPUTE_NETWORK_ID);
   if (info.changes <= 0) {
-    throw new DatabaseInsertError(ipfsHash);
+    throw new DatabaseWriteError(ipfsHash);
   }
 
   if (isMasterNode()) {

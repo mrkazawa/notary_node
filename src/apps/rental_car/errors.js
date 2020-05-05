@@ -12,7 +12,7 @@ class CoreEngineSendError extends RentalCarError {
   }
 }
 
-class DatabaseInsertError extends RentalCarError {
+class DatabaseWriteError extends RentalCarError {
   constructor(data) {
     super(`Cannot insert ${data} to the local database.`);
   }
@@ -62,7 +62,7 @@ class InvalidDomain extends RentalCarError {
 
 module.exports = {
   CoreEngineSendError,
-  DatabaseInsertError,
+  DatabaseWriteError,
   CarOwnerMismatchedError,
   InvalidIpfsHashError,
   IpfsGetError,

@@ -13,7 +13,7 @@ const {
 } = require('../config');
 
 const {
-  DatabaseInsertError,
+  DatabaseWriteError,
   InvalidIpfsHashError,
   IpfsGetError,
   EthereumExecutionError
@@ -36,6 +36,8 @@ const getContract = function (req, res) {
 
 const insertNewCar = async function (appRequest, start) {
   const ipfsHash = appRequest.storage_address;
+  const contractAddress = appRequest.compute_address;
+  const networkId = appRequest.compute_network_id;
 
   if (!carDB.checkIfCarExist(ipfsHash)) {
     if (!storageEngine.isValidIpfsHash(ipfsHash)) {
@@ -47,9 +49,9 @@ const insertNewCar = async function (appRequest, start) {
       throw new IpfsGetError(ipfsHash);
     }
 
-    const info = carDB.insertNewCar(ipfsHash, car);
+    const info = carDB.insertNewCar(ipfsHash, car, contractAddress, networkId);
     if (info.changes <= 0) {
-      throw new DatabaseInsertError(ipfsHash);
+      throw new DatabaseWriteError(ipfsHash);
     }
 
     const end = performance.now();
@@ -61,6 +63,11 @@ const insertNewCar = async function (appRequest, start) {
 const authorizeCar = async function (appRequest, start) {
   const ipfsHash = appRequest.car_hash;
   const renterAddress = appRequest.renter_address;
+
+  const info = carDB.authorizeCar(ipfsHash, renterAddress);
+  if (info.changes <= 0) {
+    throw new DatabaseWriteError(ipfsHash);
+  }
 
   const contractAbi = CAR_RENTAL_CONTRACT.abi;
   const contractAddress = CAR_RENTAL_CONTRACT.networks[COMPUTE_NETWORK_ID].address;

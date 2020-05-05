@@ -10,7 +10,7 @@ const tools = require('../tools');
 const {
   CoreEngineSendError,
   IotaExecutionError,
-  DatabaseInsertError,
+  DatabaseWriteError,
   PaymentHashAlreadyUsed
 } = require('../errors');
 
@@ -74,6 +74,16 @@ const processTxHash = async function (req, res) {
     return;
   }
 
+  const insert = paymentDB.insertNewPayment(paymentHash, renterAddress);
+  if (insert.changes < 0) {
+    throw new DatabaseWriteError(paymentHash);
+  }
+
+  const update = carDB.authorizeCar(carHash, renterAddress);
+  if (update.changes <= 0) {
+    throw new DatabaseWriteError(carHash);
+  }
+
   const payload = {
     data: {
       app_id: APP_ID,
@@ -99,11 +109,6 @@ const processTxHash = async function (req, res) {
   const response = await tools.sendRequest(options);
   if (response instanceof Error) {
     throw new CoreEngineSendError(paymentHash);
-  }
-
-  const info = paymentDB.insertNewPayment(paymentHash, renterAddress);
-  if (info.changes < 0) {
-    throw new DatabaseInsertError(paymentHash);
   }
 
   const end = performance.now();

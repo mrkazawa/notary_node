@@ -22,7 +22,9 @@ class CarDB extends DB {
         fee_address TEXT NOT NULL, \
         fee_tag TEXT NOT NULL, \
         is_rented INTEGER NOT NULL, \
-        renter TEXT \
+        renter TEXT, \
+        compute_address TEXT NOT NULL, \
+        compute_network_id INTEGER NOT NULL \
       );';
 
     this.db.prepare(sql).run();
@@ -36,11 +38,22 @@ class CarDB extends DB {
     return (rows.length == 1);
   }
 
-  insertNewCar(ipfsHash, car) {
+  insertNewCar(ipfsHash, car, contractAddress, networkId) {
     const sql = `INSERT INTO rental_cars \
-      (hash, owner, fee_amount, fee_address, fee_tag, is_rented) \
+      (hash, owner, fee_amount, fee_address, fee_tag, \
+        is_rented, compute_address, compute_network_id) \
       VALUES \
-      ('${ipfsHash}', '${car.owner}', '${car.paymentFee}', '${car.paymentAddress}', '${car.paymentTag}', 0)
+      ('${ipfsHash}', '${car.owner}', '${car.paymentFee}', \
+        '${car.paymentAddress}', '${car.paymentTag}', 0, \
+        '${contractAddress}', ${networkId}) \
+    `;
+    return this.db.prepare(sql).run();
+  }
+
+  authorizeCar(ipfsHash, renterAddress) {
+    const sql = `UPDATE rental_cars \
+      SET is_rented=1, renter='${renterAddress}' \
+      WHERE hash='${ipfsHash}' \
     `;
     return this.db.prepare(sql).run();
   }
