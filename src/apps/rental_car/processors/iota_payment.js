@@ -79,6 +79,7 @@ const processTxHash = async function (req, res) {
       app_id: APP_ID,
       task_id: TASK_ID.AUTHORIZE_CAR,
       process_id: uuidV1(),
+      car_hash: carHash,
       payment_proof: paymentHash,
       renter_address: renterAddress,
       priority_id: 3,

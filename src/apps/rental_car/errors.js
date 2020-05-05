@@ -48,6 +48,18 @@ class PaymentHashAlreadyUsed extends RentalCarError {
   }
 }
 
+class EthereumExecutionError extends RentalCarError {
+  constructor(error) {
+    super(`Ethereum error: ${error}`);
+  }
+}
+
+class InvalidDomain extends RentalCarError {
+  constructor(ip) {
+    super(`Your ip ${ip} is not eligible to access this request.`);
+  }
+}
+
 module.exports = {
   CoreEngineSendError,
   DatabaseInsertError,
@@ -55,5 +67,7 @@ module.exports = {
   InvalidIpfsHashError,
   IpfsGetError,
   IotaExecutionError,
-  PaymentHashAlreadyUsed
+  PaymentHashAlreadyUsed,
+  EthereumExecutionError,
+  InvalidDomain
 }
