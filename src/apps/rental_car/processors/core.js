@@ -18,8 +18,8 @@ const {
   isMasterNode
 } = require('../config');
 
-const DB = require('../db/sqlite_db');
-const db = new DB();
+const CarDB = require('../db/car_db');
+const carDB = new CarDB();
 
 /**
  * Processing appliation notifications that is sent by the Core Engine.
@@ -61,7 +61,7 @@ const processCoreEvent = function (req, res) {
 const doInsertNewCarEvent = async function (appRequest, start) {
   const ipfsHash = appRequest.storage_address;
 
-  if (!db.checkIfCarExist(ipfsHash)) {
+  if (!carDB.checkIfCarExist(ipfsHash)) {
     if (storageEngine.isValidIpfsHash(ipfsHash)) {
 
       const car = await storageEngine.getJsonFromIpfsHash(ipfsHash);
@@ -69,7 +69,7 @@ const doInsertNewCarEvent = async function (appRequest, start) {
         throw new IpfsGetError(ipfsHash);
       }
 
-      const info = db.insertNewCar(ipfsHash, car);
+      const info = carDB.insertNewCar(ipfsHash, car);
 
       if (info.changes > 0) {
         const end = performance.now();

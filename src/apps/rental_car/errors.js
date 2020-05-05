@@ -42,11 +42,18 @@ class IotaExecutionError extends RentalCarError {
   }
 }
 
+class PaymentHashAlreadyUsed extends RentalCarError {
+  constructor(tailTxHash) {
+    super(`This payment hash ${tailTxHash} already used`);
+  }
+}
+
 module.exports = {
   CoreEngineSendError,
   DatabaseInsertError,
   CarOwnerMismatchedError,
   InvalidIpfsHashError,
   IpfsGetError,
-  IotaExecutionError
+  IotaExecutionError,
+  PaymentHashAlreadyUsed
 }

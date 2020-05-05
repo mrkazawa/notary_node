@@ -25,8 +25,8 @@ const {
   isMasterNode
 } = require('../config');
 
-const DB = require('../db/sqlite_db');
-const db = new DB();
+const CarDB = require('../db/car_db');
+const carDB = new CarDB();
 
 const CAR_RENTAL = require('../build/contracts/CarRentalContract.json');
 const contractAbi = CAR_RENTAL.abi;
@@ -70,7 +70,7 @@ const doNewRentalCarEvent = async function (bytes32Hash, carOwner, contractAddre
     }
 
     if (carOwner == car.owner) {
-      const info = db.insertNewCar(ipfsHash, car);
+      const info = carDB.insertNewCar(ipfsHash, car);
 
       if (info.changes > 0) {
         if (isMasterNode()) {

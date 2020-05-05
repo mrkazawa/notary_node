@@ -9,7 +9,9 @@ const tools = require('../tools');
 
 const {
   CoreEngineSendError,
-  IotaExecutionError
+  IotaExecutionError,
+  DatabaseInsertError,
+  PaymentHashAlreadyUsed
 } = require('../errors');
 
 const {
@@ -19,8 +21,10 @@ const {
   RESULT_DATA_PATH
 } = require('../config');
 
-const DB = require('../db/sqlite_db');
-const db = new DB();
+const CarDB = require('../db/car_db');
+const carDB = new CarDB();
+const PaymentDB = require('../db/payment_db');
+const paymentDB = new PaymentDB();
 
 /**
  * Process the submitted Tx hash from car renter.
@@ -39,7 +43,11 @@ const processTxHash = async function (req, res) {
   const paymentHash = renter.payment_hash;
   const renterAddress = renter.renter_address;
 
-  const car = db.getCarByHash(carHash);
+  const isUsed = paymentDB.checkIfPaymentExist(paymentHash);
+  if (isUsed) {
+    throw new PaymentHashAlreadyUsed(paymentHash);
+  }
+
   const confirmed = await paymentEngine.isTxVerified(paymentHash);
   if (confirmed instanceof Error) {
     throw new IotaExecutionError(confirmed);
@@ -51,6 +59,7 @@ const processTxHash = async function (req, res) {
       throw new IotaExecutionError(paymentInfo);
     }
 
+    const car = carDB.getCarByHash(carHash);
     const carFeeAddressWithoutChecksum = car.fee_address.slice(0, -9);
     if (
       carFeeAddressWithoutChecksum == paymentInfo[0] &&
@@ -84,6 +93,11 @@ const processTxHash = async function (req, res) {
         throw new CoreEngineSendError(paymentHash);
       }
 
+      const info = paymentDB.insertNewPayment(paymentHash, renterAddress);
+      if (info.changes < 0) {
+        throw new DatabaseInsertError(paymentHash);
+      }
+
       const end = performance.now();
       tools.savingResult('Post Car Payment to Core Engine', RESULT_DATA_PATH, start, end);
       console.log('Tx hash stored in Core Engine');
@@ -95,7 +109,7 @@ const processTxHash = async function (req, res) {
     }
 
   } else {
-    res.status(400).send('Payment hash has not been verified yet');
+    res.status(400).send('Payment hash has not been confirmed by the network yet');
   } 
 };
 
