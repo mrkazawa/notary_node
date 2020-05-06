@@ -58,7 +58,7 @@ const processTxHash = async function (req, res) {
     return;
   }
 
-  const paymentInfo = await paymentEngine.getPaymentInfo(paymentHash);
+  const paymentInfo = await paymentEngine.getPaymentInfoAndMessages(paymentHash);
   if (paymentInfo instanceof Error) {
     throw new IotaExecutionError(paymentInfo);
   }

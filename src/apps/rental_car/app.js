@@ -17,8 +17,6 @@ tools.clearFIle(RESULT_DATA_PATH);
 const app = express();
 app.use(bodyParser.json());
 
-//----------------------------- Express Methods -----------------------------//
-
 // GET contract abi
 app.get('/contract_abi', carProcessor.getContract);
 
@@ -34,7 +32,5 @@ app.post('/tx_hash', iotaProcessor.processTxHash);
 app.listen(HTTP_PORT, () => {
   console.log(`Hit me up on ${HOSTNAME}.local:${HTTP_PORT}`);
 });
-
-//----------------------------- Other Methods -----------------------------//
 
 ethEvent.addNewRentalCarListener();

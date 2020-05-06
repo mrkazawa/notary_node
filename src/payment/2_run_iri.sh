@@ -1,9 +1,10 @@
 #!/bin/bash
 
 if [[ -d ~/compass ]]; then
-  cd ~/compass/docs/private_tangle
-
+  cp ~/src/payment/config/config.json ~/compass/docs/private_tangle/
   cp ~/src/payment/config/snapshot.txt ~/compass/docs/private_tangle/
+
+  cd ~/compass/docs/private_tangle
 
   scriptdir=$(dirname "$(readlink -f "$0")")
   . $scriptdir/lib.sh

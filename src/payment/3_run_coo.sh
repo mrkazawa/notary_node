@@ -1,6 +1,8 @@
 #!/bin/bash
 
 if [[ -d ~/compass ]]; then
+  cp ~/src/payment/config/config.json ~/compass/docs/private_tangle/
+  
   cd ~/compass/
 
   # build the coordinator

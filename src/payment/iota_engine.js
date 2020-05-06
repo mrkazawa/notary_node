@@ -7,8 +7,8 @@ const iota = Iota.composeAPI({
   provider: 'http://10.0.0.11:14265'
 });
 
-const DEPTH = 3;
-const MINIMUM_WEIGHT_MAGNITUDE = 9;
+const DEPTH = 1;
+const MINIMUM_WEIGHT_MAGNITUDE = 1;
 const SECURITY_LEVEL = 0;
 const SEED = 'SENDER99999999999999999999999999999999999999999999999999999999999999999999999999A';
 
@@ -107,6 +107,20 @@ var iota_engine = {
       ];
     } catch (err) {
       return new Error(`Error getting payment info: ${err}`);
+    }
+  },
+
+  getPaymentInfoAndMessages: async function (tailTxHash) {
+    try {
+      const bundle = await iota.getBundle(tailTxHash);
+      const messages = JSON.parse(Extract.extractJson(bundle));
+      return [
+        bundle[0].address,
+        messages.amount,
+        bundle[0].tag
+      ]
+    } catch (err) {
+      return new Error(`Error reading Tx: ${err}`);
     }
   },
 

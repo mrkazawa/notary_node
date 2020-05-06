@@ -1,7 +1,7 @@
 const paymentEngine = require('../iota_engine');
 
 const address = 'HEQLOWORLDHELLOWORLDHELLOWORLDHELLOWORLDHELLOWORLDHELLOWORLDHELLOWORLDHELLOWOR99D';
-jest.setTimeout(120000);
+jest.setTimeout(240000);
 
 test('Getting node info', async () => {
   const nodeIndo = await paymentEngine.getNodeInfo();
@@ -37,6 +37,11 @@ test('Generating new address', async () => {
   expect(address).toBeTruthy();
 });
 
+
+/**
+ * FIXME: I dont know why but sending value: 1 takes
+ * more time to complete rather than if value: 0 
+ */
 test('Sending iota in a transaction', async () => {
   const transfers = [{
     value: 1,

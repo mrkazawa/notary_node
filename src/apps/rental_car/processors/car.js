@@ -8,8 +8,8 @@ const tools = require('../tools');
 
 const {
   COMPUTE_NETWORK_ID,
-  CAR_RENTAL_CONTRACT,
-  RESULT_DATA_PATH
+  RESULT_DATA_PATH,
+  CAR_RENTAL_CONTRACT
 } = require('../config');
 
 const {
