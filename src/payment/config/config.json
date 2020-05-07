@@ -6,6 +6,6 @@
   "depth": 14,
   "milestoneStart": 0,
   "mwm": 1,
-  "tick": 60000,
+  "tick": 10000,
   "host": "http://10.0.0.11:14265"
 }

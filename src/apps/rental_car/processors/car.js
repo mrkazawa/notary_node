@@ -8,7 +8,8 @@ const tools = require('../tools');
 
 const {
   COMPUTE_NETWORK_ID,
-  RESULT_DATA_PATH,
+  RESULT_DATA_PATH_TASK_1,
+  RESULT_DATA_PATH_TASK_2,
   CAR_RENTAL_CONTRACT
 } = require('../config');
 
@@ -55,7 +56,7 @@ const insertNewCar = async function (appRequest, start) {
     }
 
     const end = performance.now();
-    tools.savingResult('Getting App Update from Core Engine', RESULT_DATA_PATH, start, end);
+    tools.savingResult('Getting App Update from Core Engine', RESULT_DATA_PATH_TASK_1, start, end);
     console.log(`car ${ipfsHash} is stored in database`);
   }
 };
@@ -84,7 +85,7 @@ const authorizeCar = async function (appRequest, start) {
     const event = tx.events.RentalCarRented; 
     if (typeof event !== 'undefined') {
       const end = performance.now();
-      tools.savingResult('Authorize Car in ETH', RESULT_DATA_PATH, start, end);
+      tools.savingResult('Authorize Car in ETH', RESULT_DATA_PATH_TASK_2, start, end);
 
       console.log('Authorize Car Tx stored in the block!');
       console.log('Car Renter: ', event.returnValues['carRenter']);

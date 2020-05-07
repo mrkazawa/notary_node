@@ -1,4 +1,3 @@
-const http = require('http');
 const {
   performance
 } = require('perf_hooks');
@@ -10,15 +9,14 @@ const tools = require('../tools');
 const {
   CoreEngineSendError,
   IotaExecutionError,
-  DatabaseWriteError,
-  PaymentHashAlreadyUsed
+  DatabaseWriteError
 } = require('../errors');
 
 const {
   APP_ID,
   TASK_ID,
   CORE_ENGINE_URL,
-  RESULT_DATA_PATH
+  RESULT_DATA_PATH_VERIFY_PAYMENT
 } = require('../config');
 
 const CarDB = require('../db/car_db');
@@ -43,9 +41,25 @@ const processTxHash = async function (req, res) {
   const paymentHash = renter.payment_hash;
   const renterAddress = renter.renter_address;
 
+  if (!await isPaymentValid(carHash, paymentHash)) {
+    res.status(400).send('Tx hash is not valid');
+  }
+
+  updateLocalDatabase(carHash, paymentHash, renterAddress);
+  await sendUpdateToCoreEngine(carHash, paymentHash, renterAddress);
+
+  const end = performance.now();
+  tools.savingResult('Post Car Payment to Core Engine', RESULT_DATA_PATH_VERIFY_PAYMENT, start, end);
+  console.log('Tx hash stored in Core Engine');
+
+  res.status(200).send('Tx hash received, please check log to see any errors');
+  return;
+};
+
+async function isPaymentValid(carHash, paymentHash) {
   const isUsed = paymentDB.checkIfPaymentExist(paymentHash);
   if (isUsed) {
-    throw new PaymentHashAlreadyUsed(paymentHash);
+    return false;
   }
 
   const confirmed = await paymentEngine.isTxVerified(paymentHash);
@@ -54,8 +68,7 @@ const processTxHash = async function (req, res) {
   }
 
   if (!confirmed) {
-    res.status(400).send('Payment hash has not been confirmed by the network yet');
-    return;
+    return false;
   }
 
   const paymentInfo = await paymentEngine.getPaymentInfoAndMessages(paymentHash);
@@ -70,12 +83,15 @@ const processTxHash = async function (req, res) {
     car.fee_amount != paymentInfo[1] ||
     car.fee_tag != paymentInfo[2]
   ) {
-    res.status(400).send('Tx hash does not match the car information');
-    return;
+    return false;
   }
 
+  return true;
+}
+
+function updateLocalDatabase(carHash, paymentHash, renterAddress) {
   const insert = paymentDB.insertNewPayment(paymentHash, renterAddress);
-  if (insert.changes < 0) {
+  if (insert.changes <= 0) {
     throw new DatabaseWriteError(paymentHash);
   }
 
@@ -83,7 +99,9 @@ const processTxHash = async function (req, res) {
   if (update.changes <= 0) {
     throw new DatabaseWriteError(carHash);
   }
+}
 
+async function sendUpdateToCoreEngine(carHash, paymentHash, renterAddress) {
   const payload = {
     data: {
       app_id: APP_ID,
@@ -97,26 +115,13 @@ const processTxHash = async function (req, res) {
     }
   };
 
-  const options = {
-    method: 'post',
-    url: CORE_ENGINE_URL,
-    data: payload,
-    httpAgent: new http.Agent({
-      keepAlive: false
-    })
-  };
-
+  const options = tools.formPostRequest(CORE_ENGINE_URL, payload);
   const response = await tools.sendRequest(options);
   if (response instanceof Error) {
     throw new CoreEngineSendError(paymentHash);
   }
 
-  const end = performance.now();
-  tools.savingResult('Post Car Payment to Core Engine', RESULT_DATA_PATH, start, end);
-  console.log('Tx hash stored in Core Engine');
-
-  res.status(200).send('Tx hash received, please check log to see any errors');
-  return;
-};
+  return response.data;
+}
 
 exports.processTxHash = processTxHash;

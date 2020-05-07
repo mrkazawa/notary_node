@@ -1,4 +1,3 @@
-const http = require('http');
 const {
   performance
 } = require('perf_hooks');
@@ -22,7 +21,7 @@ const {
   COMPUTE_NETWORK_ID,
   CORE_ENGINE_URL,
   CAR_RENTAL_CONTRACT,
-  RESULT_DATA_PATH,
+  RESULT_DATA_PATH_INSERT_CAR,
   isMasterNode
 } = require('../config');
 
@@ -72,43 +71,45 @@ const doNewRentalCarEvent = async function (bytes32Hash, carOwner, contractAddre
     throw new CarOwnerMismatchedError(car.owner, carOwner);
   }
 
+  updateLocalDatabase(ipfsHash, car, contractAddress);
+
+  if (isMasterNode()) {
+    await sendUpdateToCoreEngine(ipfsHash, contractAddress);
+
+    const end = performance.now();
+    tools.savingResult('Getting event from ETH and posting Car to Core Engine', RESULT_DATA_PATH_INSERT_CAR, start, end);
+    console.log(`${ipfsHash} sent to Core Engine`);
+  }
+};
+
+function updateLocalDatabase(ipfsHash, car, contractAddress) {
   const info = carDB.insertNewCar(ipfsHash, car, contractAddress, COMPUTE_NETWORK_ID);
   if (info.changes <= 0) {
     throw new DatabaseWriteError(ipfsHash);
   }
+}
 
-  if (isMasterNode()) {
-    const payload = {
-      data: {
-        app_id: APP_ID,
-        task_id: TASK_ID.INSERT_NEW_CAR,
-        process_id: uuidV1(),
-        storage_address: ipfsHash,
-        compute_address: contractAddress,
-        compute_network_id: COMPUTE_NETWORK_ID,
-        priority_id: 3,
-        timestamp: Date.now()
-      }
-    };
-
-    const options = {
-      method: 'post',
-      url: CORE_ENGINE_URL,
-      data: payload,
-      httpAgent: new http.Agent({
-        keepAlive: false
-      })
-    };
-
-    const response = await tools.sendRequest(options);
-    if (response instanceof Error) {
-      throw new CoreEngineSendError(ipfsHash);
+async function sendUpdateToCoreEngine(ipfsHash, contractAddress) {
+  const payload = {
+    data: {
+      app_id: APP_ID,
+      task_id: TASK_ID.INSERT_NEW_CAR,
+      process_id: uuidV1(),
+      storage_address: ipfsHash,
+      compute_address: contractAddress,
+      compute_network_id: COMPUTE_NETWORK_ID,
+      priority_id: 3,
+      timestamp: Date.now()
     }
+  };
 
-    const end = performance.now();
-    tools.savingResult('Getting event from ETH and posting Car to Core Engine', RESULT_DATA_PATH, start, end);
-    console.log(`${ipfsHash} sent to Core Engine`);
+  const options = tools.formPostRequest(CORE_ENGINE_URL, payload);
+  const response = await tools.sendRequest(options);
+  if (response instanceof Error) {
+    throw new CoreEngineSendError(ipfsHash);
   }
-};
+
+  return response.data;
+}
 
 exports.addNewRentalCarListener = addNewRentalCarListener;

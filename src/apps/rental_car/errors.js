@@ -42,12 +42,6 @@ class IotaExecutionError extends RentalCarError {
   }
 }
 
-class PaymentHashAlreadyUsed extends RentalCarError {
-  constructor(tailTxHash) {
-    super(`This payment hash ${tailTxHash} already used`);
-  }
-}
-
 class EthereumExecutionError extends RentalCarError {
   constructor(error) {
     super(`Ethereum error: ${error}`);
@@ -67,7 +61,6 @@ module.exports = {
   InvalidIpfsHashError,
   IpfsGetError,
   IotaExecutionError,
-  PaymentHashAlreadyUsed,
   EthereumExecutionError,
   InvalidDomain
 }

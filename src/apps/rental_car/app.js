@@ -10,9 +10,20 @@ const coreEvent = require('./processors/core_event');
 const iotaProcessor = require('./processors/iota_payment');
 const carProcessor = require('./processors/car');
 
-const { RESULT_DATA_PATH } = require('./config');
+const {
+  RESULT_DATA_PATH_INSERT_CAR,
+  RESULT_DATA_PATH_VERIFY_PAYMENT,
+  RESULT_DATA_PATH_TASK_1,
+  RESULT_DATA_PATH_TASK_2
+} = require('./config');
+
 const tools = require('./tools');
-tools.clearFIle(RESULT_DATA_PATH);
+
+// always begin with clean state
+tools.clearFIle(RESULT_DATA_PATH_INSERT_CAR);
+tools.clearFIle(RESULT_DATA_PATH_VERIFY_PAYMENT);
+tools.clearFIle(RESULT_DATA_PATH_TASK_1);
+tools.clearFIle(RESULT_DATA_PATH_TASK_2);
 
 const app = express();
 app.use(bodyParser.json());

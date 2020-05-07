@@ -58,7 +58,10 @@ const CORE_ENGINE_URL = `http://127.0.0.1:3000/transact`;
 const CAR_RENTAL_CONTRACT = require('./build/contracts/CarRentalContract.json');
 
 // the path to store performance measurements
-const RESULT_DATA_PATH = '/home/vagrant/result_rental_car.csv';
+const RESULT_DATA_PATH_INSERT_CAR = '/home/vagrant/result_rental_car_insert_car.csv';
+const RESULT_DATA_PATH_VERIFY_PAYMENT = '/home/vagrant/result_rental_car_verify_payment.csv';
+const RESULT_DATA_PATH_TASK_1 = '/home/vagrant/result_rental_car_task_1.csv';
+const RESULT_DATA_PATH_TASK_2 = '/home/vagrant/result_rental_car_task_2.csv';
 
 const isMasterNode = function () {
   return (HOSTNAME == MASTER);
@@ -69,5 +72,8 @@ exports.TASK_ID = TASK_ID;
 exports.COMPUTE_NETWORK_ID = COMPUTE_NETWORK_ID;
 exports.CORE_ENGINE_URL = CORE_ENGINE_URL;
 exports.CAR_RENTAL_CONTRACT = CAR_RENTAL_CONTRACT;
-exports.RESULT_DATA_PATH = RESULT_DATA_PATH;
+exports.RESULT_DATA_PATH_INSERT_CAR = RESULT_DATA_PATH_INSERT_CAR;
+exports.RESULT_DATA_PATH_VERIFY_PAYMENT = RESULT_DATA_PATH_VERIFY_PAYMENT;
+exports.RESULT_DATA_PATH_TASK_1 = RESULT_DATA_PATH_TASK_1;
+exports.RESULT_DATA_PATH_TASK_2 = RESULT_DATA_PATH_TASK_2;
 exports.isMasterNode = isMasterNode;
