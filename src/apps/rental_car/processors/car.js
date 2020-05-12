@@ -17,11 +17,14 @@ const {
   DatabaseWriteError,
   InvalidIpfsHashError,
   IpfsGetError,
-  EthereumExecutionError
+  EthereumExecutionError,
+  InvalidPaymentHash
 } = require('../errors');
 
 const CarDB = require('../db/car_db');
 const carDB = new CarDB();
+const PaymentDB = require('../db/payment_db');
+const paymentDB = new PaymentDB();
 
 const appCredsPath = '/home/vagrant/src/apps/rental_car/app_credentials.json';
 const appAddress = computeEngine.convertToChecksumAddress(tools.readJsonFIle(appCredsPath).address);
@@ -65,8 +68,18 @@ const authorizeCar = async function (appRequest, start) {
   const ipfsHash = appRequest.car_hash;
   const renterAddress = appRequest.renter_address;
 
-  const info = carDB.authorizeCar(ipfsHash, renterAddress);
-  if (info.changes <= 0) {
+  const isUsed = paymentDB.checkIfPaymentExist(ipfsHash);
+  if (isUsed) {
+    throw new InvalidPaymentHash(ipfsHash);
+  }
+
+  const insert = paymentDB.insertNewPayment(ipfsHash, renterAddress);
+  if (insert.changes <= 0) {
+    throw new DatabaseWriteError(ipfsHash);
+  }
+
+  const update = carDB.authorizeCar(ipfsHash, renterAddress);
+  if (update.changes <= 0) {
     throw new DatabaseWriteError(ipfsHash);
   }
 

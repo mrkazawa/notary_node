@@ -54,6 +54,12 @@ class InvalidDomain extends RentalCarError {
   }
 }
 
+class InvalidPaymentHash extends RentalCarError {
+  constructor(tailTxHash) {
+    super(`The payment hash ${tailTxHash} is invalid.`);
+  }
+}
+
 module.exports = {
   CoreEngineSendError,
   DatabaseWriteError,
@@ -62,5 +68,6 @@ module.exports = {
   IpfsGetError,
   IotaExecutionError,
   EthereumExecutionError,
-  InvalidDomain
+  InvalidDomain,
+  InvalidPaymentHash
 }

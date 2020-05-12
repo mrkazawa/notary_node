@@ -1,11 +1,6 @@
-const Iota = require('@iota/core');
 const Converter = require('@iota/converter');
 const Extract = require('@iota/extract-json');
-
-// specify the location of the IRI node
-const iota = Iota.composeAPI({
-  provider: 'http://10.0.0.11:14265'
-});
+const iota = require('./iota');
 
 const DEPTH = 1;
 const MINIMUM_WEIGHT_MAGNITUDE = 1;
