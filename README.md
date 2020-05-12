@@ -274,7 +274,7 @@ If the node cannot ping to one another, perhaps it has the problem with the Avah
 Try to ping to itself using the configured domain in all nodes.
 Then, try to ping one another.
 
-```bash
+```console
 vagrant@notary1:~$ ping notary1.local # run this in notary #1
 vagrant@notary2:~$ ping notary2.local # run this in notary #2
 vagrant@notary3:~$ ping notary3.local # run this in notary #3
