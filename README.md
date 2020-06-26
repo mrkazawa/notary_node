@@ -1,6 +1,6 @@
 # Notary Node #
 
-This repository is the implementation of the notary node from our paper "", which is published [here]().
+This repository is the implementation of the notary node from our paper "Hierarchical Multi-Blockchain Architecture for Scalable Internet of Things Environment", which is published [here](https://www.mdpi.com/2079-9292/9/6/1050).
 
 ## Installation ##
 
@@ -9,11 +9,27 @@ So install them first if you do not have it yet in your machine.
 You can download them [here](https://www.vagrantup.com/downloads.html) and [here](https://www.virtualbox.org/wiki/Downloads).
 All of the required softwares and tools has been included in the `Vagrantfile` and it will be installed during the `vagrant up` using shell provisioning scripts in `./shell` directory.
 
+To clone and setup the node.
+
 ```console
 foo@ubuntu:~$ cd ~/
 foo@ubuntu:~$ git clone https://github.com/mrkazawa/notary_node.git
 foo@ubuntu:~$ cd ~/notary_node
+```
 
+***Note!*** Make sure to change the CPU and RAM information to match your needs.
+They will determine the CPU and RAM of your VMs.
+The number of CPU and RAM allowed per VM are bound to the resource in your host machine.
+You can change this setting in `Vagrantfile`.
+
+```ruby
+BOX_MEMORY = "8192"
+BOX_CPU = 4
+```
+
+To install and run the node, follow these steps.
+
+```console
 foo@ubuntu:~$ vagrant up # if it is our first time, this will take some times
 foo@ubuntu:~$ vagrant rsync-auto
 
@@ -131,7 +147,7 @@ vagrant@notary1:~$ npm run ipfs-stop
 vagrant@notary1:~$ npm run ipfs-destroy
 ```
 
-### Running the Compute Engine ###
+### 3. Running the Compute Engine ###
 
 At this moment, we use ganache network for our compute engine.
 We use `notary1` as our master node to host the ganache network.
@@ -144,7 +160,7 @@ vagrant@notary1:~$ npm run eth-network # run ganache-cli (local ethereum)
 
 **TODO:** move the implementation to use Geth instead.
 
-### 3. Running the Payment Engine ###
+### 4. Running the Payment Engine ###
 
 All of scripts used in this repo are taken from these sources:
 

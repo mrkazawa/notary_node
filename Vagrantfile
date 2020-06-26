@@ -5,7 +5,7 @@
 # https://manski.net/2016/09/vagrant-multi-machine-tutorial/
 
 BOX_IMAGE = "bento/ubuntu-16.04"
-BOX_MEMORY = "8096"
+BOX_MEMORY = "8192"
 BOX_CPU = 4
 
 NODE_COUNT = 4
